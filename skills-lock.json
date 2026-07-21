@@ -13,6 +13,12 @@
       "skillPath": "plugins/architecture-patterns/skills/architecture-patterns/SKILL.md",
       "computedHash": "7285580552b6b94630e6fc2c57ebc907c47e55deedc8d167738ebe375db982c0"
     },
+    "bun-package-manager": {
+      "source": "secondsky/claude-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/bun/skills/bun-package-manager/SKILL.md",
+      "computedHash": "6966941f7e062f57ca3884464f9799b5eceef87fa1d6f51eb5e3c6da198214f8"
+    },
     "code-review": {
       "source": "secondsky/claude-skills",
       "sourceType": "github",
@@ -60,6 +66,18 @@
       "sourceType": "github",
       "skillPath": "skills/frontend-design/SKILL.md",
       "computedHash": "4eabc66183767153e404b39d1b839b1c37f2d82d86f0a0d7e880a579d8d62336"
+    },
+    "git-branch-pr-workflow": {
+      "source": "laurigates/claude-plugins",
+      "sourceType": "github",
+      "skillPath": "git-plugin/skills/git-branch-pr-workflow/SKILL.md",
+      "computedHash": "47bf5342ecb34fd50691d16fa70aabfba163329f58bae911f5b873c88a03997e"
+    },
+    "go": {
+      "source": "mindrally/skills",
+      "sourceType": "github",
+      "skillPath": "go/SKILL.md",
+      "computedHash": "5f4c5393a6b612ea79524c7e77184bdfb0ca8007cdbc0ca8c73c59d20dff3adf"
     },
     "microservices-patterns": {
       "source": "secondsky/claude-skills",
