@@ -35,6 +35,20 @@ docker-compose.override.yml
 # Internal docs (private, not for OSS)
 docs-internal/
 
+# Go
+# Exclude generated Ent code — regenerated in Docker
+apps/api/ent/*.go
+!apps/api/ent/generate.go
+!apps/api/ent/schema/*.go
+apps/api/tmp/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
 # Logs
 *.log
 logs/
