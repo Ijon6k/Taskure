@@ -79,6 +79,18 @@
       "skillPath": "go/SKILL.md",
       "computedHash": "5f4c5393a6b612ea79524c7e77184bdfb0ca8007cdbc0ca8c73c59d20dff3adf"
     },
+    "golang-database": {
+      "source": "samber/cc-skills-golang",
+      "sourceType": "github",
+      "skillPath": "skills/golang-database/SKILL.md",
+      "computedHash": "909e31dbc8bb6eea2851985825a81dc53e954c31e76c31bbeaa5b690ee0de9ff"
+    },
+    "golang-gin-api": {
+      "source": "henriqueatila/golang-gin-best-practices",
+      "sourceType": "github",
+      "skillPath": "skills/golang-gin-api/SKILL.md",
+      "computedHash": "d6d1192dfcd91e9078094b46e960de101c7e949ffc822cb6f5ede2d1c0adf4b5"
+    },
     "microservices-patterns": {
       "source": "secondsky/claude-skills",
       "sourceType": "github",
