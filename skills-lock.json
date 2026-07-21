@@ -1,11 +1,137 @@
 {
   "version": 1,
   "skills": {
+    "api-design-reviewer": {
+      "source": "borghei/claude-skills",
+      "sourceType": "github",
+      "skillPath": "engineering/api-design-reviewer/SKILL.md",
+      "computedHash": "c6bcf86dce6ce658d280cc4f146bd8ad8dfafc4c59bb3133ad02a81934a04f3c"
+    },
+    "architecture-patterns": {
+      "source": "secondsky/claude-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/architecture-patterns/skills/architecture-patterns/SKILL.md",
+      "computedHash": "7285580552b6b94630e6fc2c57ebc907c47e55deedc8d167738ebe375db982c0"
+    },
+    "code-review": {
+      "source": "secondsky/claude-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/code-review/skills/code-review/SKILL.md",
+      "computedHash": "4bfb42c56a24792101f3e8271e657bbb59651d9fd23178c914925245aef736e1"
+    },
+    "code-reviewer": {
+      "source": "borghei/claude-skills",
+      "sourceType": "github",
+      "skillPath": "engineering/code-reviewer/SKILL.md",
+      "computedHash": "f8accabfc4eb3db52e2f787d0ecb6f07dfd48f8b0003b380c5a727962bb2cdf9"
+    },
+    "database-designer": {
+      "source": "borghei/claude-skills",
+      "sourceType": "github",
+      "skillPath": "engineering/database-designer/SKILL.md",
+      "computedHash": "3ac190e3f24d34a5a1a7b24887fa60c68e561de58a8bc3b08c7bdd32398005c3"
+    },
+    "design-system-lead": {
+      "source": "borghei/claude-skills",
+      "sourceType": "github",
+      "skillPath": "product-team/design-system-lead/SKILL.md",
+      "computedHash": "0330cec1d29709cefae07b8b93973f53068f813fdc2134427201a6840c507fd2"
+    },
+    "docker-development": {
+      "source": "borghei/claude-skills",
+      "sourceType": "github",
+      "skillPath": "engineering/docker-development/SKILL.md",
+      "computedHash": "95333773bf486dbd3f6262e62f5f0d53bb7b6948f71a572222b727d361dfeb21"
+    },
+    "docker-essentials": {
+      "source": "sundial-org/awesome-openclaw-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-essentials/SKILL.md",
+      "computedHash": "f7d90f0c76e2f560272c84b85b8e27411fd0cddb14921e4866fca1f6373c0e1b"
+    },
+    "fastapi-python": {
+      "source": "mindrally/skills",
+      "sourceType": "github",
+      "skillPath": "fastapi-python/SKILL.md",
+      "computedHash": "1d7346210a6690d2faeb089f074c0dc20a7056c2c83ac1062a11c1b73158be72"
+    },
     "frontend-design": {
       "source": "anthropics/skills",
       "sourceType": "github",
       "skillPath": "skills/frontend-design/SKILL.md",
       "computedHash": "4eabc66183767153e404b39d1b839b1c37f2d82d86f0a0d7e880a579d8d62336"
+    },
+    "microservices-patterns": {
+      "source": "secondsky/claude-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/microservices-patterns/skills/microservices-patterns/SKILL.md",
+      "computedHash": "804d4b3e3cb623f3aa1f0e4efb348f8f6bb5c96d2d8ffbeb452c9499ae9e7c30"
+    },
+    "nextjs": {
+      "source": "secondsky/claude-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/nextjs/skills/nextjs/SKILL.md",
+      "computedHash": "00bca76704da4d45fb490f761f07cff0c541b5e8e75e5dd8379d3f803da6d02e"
+    },
+    "rag-architect": {
+      "source": "borghei/claude-skills",
+      "sourceType": "github",
+      "skillPath": "engineering/rag-architect/SKILL.md",
+      "computedHash": "8c15080eb98f688c613f56551bf92af1553e833d55b79f5e753a2e02b3bc5f51"
+    },
+    "responsive-web-design": {
+      "source": "secondsky/claude-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/responsive-web-design/skills/responsive-web-design/SKILL.md",
+      "computedHash": "e7b09a592129115d711803a7213b16c0626903eeba18dca10127dd126e062081"
+    },
+    "rest-api-design": {
+      "source": "secondsky/claude-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/rest-api-design/skills/rest-api-design/SKILL.md",
+      "computedHash": "60248d72662c4bc3c9ba68f8703b614507181197c52f529e7d5aeb8db3e6523a"
+    },
+    "senior-architect": {
+      "source": "borghei/claude-skills",
+      "sourceType": "github",
+      "skillPath": "engineering/senior-architect/SKILL.md",
+      "computedHash": "9d9d41e0c3bb921c49505a796d9511b66a4c3f371bf9f63cefb7a61a39fa4ea4"
+    },
+    "senior-backend": {
+      "source": "borghei/claude-skills",
+      "sourceType": "github",
+      "skillPath": "engineering/senior-backend/SKILL.md",
+      "computedHash": "36512150d962a4d3314cdce006c80684b9db43c7c87a7a881e71231b1b422884"
+    },
+    "senior-devops": {
+      "source": "borghei/claude-skills",
+      "sourceType": "github",
+      "skillPath": "engineering/senior-devops/SKILL.md",
+      "computedHash": "0ff2821d63e8ca47ce158e167cc55b6048ecb9cd5ecd853b6f328e0960754acd"
+    },
+    "senior-frontend": {
+      "source": "borghei/claude-skills",
+      "sourceType": "github",
+      "skillPath": "engineering/senior-frontend/SKILL.md",
+      "computedHash": "2d4e583c024b14b3367671b2705264f523a5d8f04598ad81db9faa381d204ca2"
+    },
+    "senior-fullstack": {
+      "source": "borghei/claude-skills",
+      "sourceType": "github",
+      "skillPath": "engineering/senior-fullstack/SKILL.md",
+      "computedHash": "87b283cc8c159f2b678d0aef8bcdc661bb31a3fa0fa032a44c2147117b0452c9"
+    },
+    "senior-qa": {
+      "source": "borghei/claude-skills",
+      "sourceType": "github",
+      "skillPath": "engineering/senior-qa/SKILL.md",
+      "computedHash": "aa33aa0341d749566e3954bfc5ec4068eec5434c205647363d6a5cbb7dc9eb3e"
+    },
+    "senior-security": {
+      "source": "borghei/claude-skills",
+      "sourceType": "github",
+      "skillPath": "engineering/senior-security/SKILL.md",
+      "computedHash": "3683d5863e963212f420144503989935d78d2a6200eb793819a1a4c38b5c3959"
     },
     "shadcn": {
       "source": "shadcn/ui",
@@ -19,17 +145,41 @@
       "skillPath": "skills/supabase-postgres-best-practices/SKILL.md",
       "computedHash": "ec56a54fba0e97bee52c7f244ba603bb284bf8d1b739c66a5cc84ec3df709d9d"
     },
+    "tailwind-v4-shadcn": {
+      "source": "secondsky/claude-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/tailwind-v4-shadcn/skills/tailwind-v4-shadcn/SKILL.md",
+      "computedHash": "c2b354b64cbd922c8d93121091d079026e2c8a3ca81c07c4f31b6e738c2695f1"
+    },
+    "turborepo": {
+      "source": "secondsky/claude-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/turborepo/skills/turborepo/SKILL.md",
+      "computedHash": "1a3eb5e61f11c2a56b8da4ad2ad4a505301e1dcd09663fa9e02f4fa4147c6ba8"
+    },
     "vercel-react-best-practices": {
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/react-best-practices/SKILL.md",
       "computedHash": "ca7b0c0c6e5f2750043f7f0cd72d16ac4e2abc48f9b5500d047a4b77a2506212"
     },
+    "vitest-testing": {
+      "source": "secondsky/claude-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/vitest-testing/skills/vitest-testing/SKILL.md",
+      "computedHash": "1c24e993c451a720db0c66b444b2623aee3597699c6054858fb8251b38a5eb3b"
+    },
     "web-design-guidelines": {
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/web-design-guidelines/SKILL.md",
       "computedHash": "f3bc47f890f42a44db1007ab390709ec368e4b8c089baee6b0007182236ac474"
+    },
+    "zod": {
+      "source": "secondsky/claude-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/zod/skills/zod/SKILL.md",
+      "computedHash": "ee85e9c1de4a21eb73826be790e73685715ade9b8105df925d8366c302b2d70f"
     }
   }
 }
