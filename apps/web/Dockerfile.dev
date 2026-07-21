@@ -1,6 +1,17 @@
 FROM oven/bun:1-alpine
 WORKDIR /app
-COPY package.json ./
+
+# Copy monorepo root config
+COPY package.json bun-workspace.yaml ./
+
+# Copy workspace packages (needed for @kanban/shared dependency)
+COPY packages ./packages
+
+# Copy the web app
+COPY apps/web ./apps/web
+
+# Install from root so workspace resolution works
 RUN bun install
-CMD ["bun", "dev"]
+
+CMD ["sh", "-c", "cd apps/web && exec bun dev"]
 EXPOSE 3000

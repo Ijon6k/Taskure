@@ -21,13 +21,16 @@ services:
 
   web:
     build:
-      context: ../apps/web
-      dockerfile: Dockerfile.dev
+      context: ..
+      dockerfile: apps/web/Dockerfile.dev
     container_name: kanban-web
     ports:
       - "3000:3000"
     volumes:
-      - ../apps/web:/app
+      - ../apps/web:/app/apps/web
+      - ../packages:/app/packages
+      - ../bun-workspace.yaml:/app/bun-workspace.yaml:ro
+      - ../package.json:/app/package.json:ro
       - web-node-modules:/app/node_modules
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost/api
