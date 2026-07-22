@@ -1,75 +1,58 @@
-# Stage 1: Install dependencies
-FROM oven/bun:1.3-alpine AS deps
-RUN apk add --no-cache libc6-compat
+# Stage 1: Install dependencies using Bun with hoisted linker
+FROM oven/bun:1.2-alpine AS deps
 WORKDIR /repo
 
 # Copy monorepo root files for workspace resolution
-COPY package.json bun-workspace.yaml turbo.json ./
+COPY package.json bun-workspace.yaml turbo.json bun.lock* ./
 COPY packages ./packages
-
-# Copy this app
 COPY apps/web ./apps/web
-WORKDIR /repo/apps/web
 
-# Install dependencies using cache mount
-RUN --mount=type=cache,target=/root/.bun/install/cache \
-    bun install --frozen-lockfile || bun install
+# Install workspace dependencies with Bun using hoisted linker
+RUN bun install --linker=hoisted
 
-# Development stage
-FROM oven/bun:1.3-alpine AS dev
-WORKDIR /repo/apps/web
-COPY --from=deps /repo/apps/web/node_modules ./node_modules
-COPY --from=deps /repo/node_modules ./node_modules
-COPY --from=deps /repo/packages ./packages
-COPY --from=deps /repo/apps/web ./apps/web
-COPY apps/web ./apps/web
-EXPOSE 3000
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
-ENV NEXT_TELEMETRY_DISABLED=1
-CMD ["bun", "run", "dev"]
-
-# Stage 2: Build the application
-FROM oven/bun:1.3-alpine AS builder
-WORKDIR /repo/apps/web
-COPY --from=deps /repo/apps/web/node_modules ./node_modules
-COPY --from=deps /repo/node_modules ./node_modules
-COPY --from=deps /repo/packages ./packages
-COPY --from=deps /repo/apps/web ./apps/web
-COPY apps/web ./apps/web
+# Stage 2: Build Next.js app using Node.js
+FROM node:20-alpine AS builder
+WORKDIR /repo
 
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
 
-# Build the application (standalone output)
-RUN bun run build
+# Copy workspace with installed dependencies from deps stage
+COPY --from=deps /repo /repo
 
-# Stage 3: Runner
-FROM oven/bun:1.3-alpine AS runner
 WORKDIR /repo/apps/web
+
+# Build production standalone bundle using Next.js CLI
+RUN npx next build
+
+# Stage 3: Lightweight Production Runner
+FROM node:20-alpine AS runner
+WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
-# Create a non-root system user for safety
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Create non-root system user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
 
-# Copy built public files
+# Copy standalone output from builder
+COPY --from=builder /repo/apps/web/.next/standalone ./
+
+# Switch to the web app directory inside standalone
+WORKDIR /app/apps/web
+
+# Copy static assets and public directory into web app folder
 COPY --from=builder /repo/apps/web/public ./public
+COPY --from=builder /repo/apps/web/.next/static ./.next/static
 
-# Set permissions for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Copy built standalone server and static resources
-COPY --from=builder --chown=nextjs:nodejs /repo/apps/web/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /repo/apps/web/.next/static ./.next/static
+# Set permissions
+RUN chown -R nextjs:nodejs /app
 
 USER nextjs
 
 EXPOSE 3000
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
 
-# server.js is created by next build standalone
-CMD ["bun", "run", "server.js"]
+CMD ["node", "server.js"]
