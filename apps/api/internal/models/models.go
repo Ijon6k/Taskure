@@ -59,6 +59,8 @@ type Project struct {
 	OwnerID     string         `gorm:"type:uuid;not null;index" json:"owner_id"`
 	Icon        string         `gorm:"size:10" json:"icon,omitempty"`
 	Color       string         `gorm:"size:7" json:"color,omitempty"`
+	Status      string         `gorm:"size:20;default:'active';index" json:"status"`
+	IsPinned    bool           `gorm:"default:false;index" json:"is_pinned"`
 	IsArchived  bool           `gorm:"default:false;index" json:"is_archived"`
 	Settings    datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"settings"`
 

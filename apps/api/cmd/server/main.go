@@ -13,6 +13,7 @@ import (
 
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/config"
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/db"
+	"github.com/Ijon6k/kanbanproject/apps/api/internal/handler"
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -47,9 +48,16 @@ func main() {
 		})
 	})
 
-	// Placeholder route group — handlers will be added per phase.
+	// API Handler registration
+	apiHandler := handler.New(conn)
+	
+	// Ensure default workspace & seed initial data if database is fresh
+	if ws, err := apiHandler.EnsureDefaultWorkspace(); err == nil {
+		logger.Info().Str("workspace_id", ws.ID).Msg("default workspace initialized")
+	}
+
 	v1 := router.Group("/api/v1")
-	_ = v1
+	apiHandler.RegisterRoutes(v1)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf("%s:%s", cfg.APIHost, cfg.APIPort),
@@ -73,6 +81,4 @@ func main() {
 	if err := srv.Shutdown(ctx); err != nil {
 		logger.Fatal().Err(err).Msg("server forced to shutdown")
 	}
-
-	_ = conn
 }
