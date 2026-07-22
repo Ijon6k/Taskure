@@ -1,9 +1,0 @@
-FROM golang:1.24-alpine
-RUN apk add --no-cache git curl
-RUN GOTOOLCHAIN=go1.25.0 go install github.com/air-verse/air@latest
-WORKDIR /app
-COPY go.mod ./
-RUN go mod tidy
-COPY . .
-CMD ["sh", "-c", "go generate ./ent && air -c .air.toml"]
-EXPOSE 4000

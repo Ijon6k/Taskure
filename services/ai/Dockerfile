@@ -1,11 +1,12 @@
 FROM python:3.12-slim
-WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential curl \
-    && rm -rf /var/lib/apt/lists/*
-COPY pyproject.toml .
-RUN pip install --no-cache-dir pip setuptools wheel \
-    && pip install --no-cache-dir \
+WORKDIR /repo
+
+# Copy this service
+COPY services/ai ./services/ai
+
+# Install dependencies from pyproject.toml via pip
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir \
         fastapi==0.115.6 \
         "uvicorn[standard]==0.34.0" \
         openai==1.57.4 \
@@ -24,7 +25,8 @@ RUN pip install --no-cache-dir pip setuptools wheel \
         tenacity==9.0.0 \
         structlog==24.4.0 \
         python-dotenv==1.0.1
-COPY . .
-ENV PYTHONPATH="/app"
-CMD ["uvicorn", "services.ai.main:app", "--host", "0.0.0.0", "--port", "5000"]
+
+ENV PYTHONPATH=/repo
+WORKDIR /repo/services/ai
 EXPOSE 5000
+CMD ["uvicorn", "services.ai.main:app", "--host", "0.0.0.0", "--port", "5000"]

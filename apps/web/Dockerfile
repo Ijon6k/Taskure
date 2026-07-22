@@ -1,22 +1,36 @@
-FROM oven/bun:1-alpine AS base
-WORKDIR /app
+# Build stage
+FROM oven/bun:1-alpine AS builder
+WORKDIR /repo
 
-FROM base AS deps
-COPY package.json ./
-RUN bun install --frozen-lockfile
+# Copy monorepo root files
+COPY package.json bun-workspace.yaml turbo.json ./
 
-FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+# Copy workspace packages
+COPY packages ./packages
+
+# Copy the web app source
+COPY apps/web ./apps/web
+
+# Install in web app — this resolves the workspace dependency
+WORKDIR /repo/apps/web
+RUN bun install
+
+ENV NEXT_TELEMETRY_DISABLED=1
 RUN bun run build
 
-FROM base AS runner
+# Runtime stage
+FROM oven/bun:1-alpine AS runner
+WORKDIR /repo
 ENV NODE_ENV=production
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./
+ENV NEXT_TELEMETRY_DISABLED=1
 
+COPY --from=builder /repo/apps/web/.next ./apps/web/.next
+COPY --from=builder /repo/apps/web/public ./apps/web/public
+COPY --from=builder /repo/apps/web/package.json ./apps/web/package.json
+COPY --from=builder /repo/apps/web/next.config.ts ./apps/web/next.config.ts
+COPY --from=builder /repo/apps/web/node_modules ./apps/web/node_modules
+
+WORKDIR /repo/apps/web
 EXPOSE 3000
 ENV PORT=3000
-CMD ["bun", "x", "next", "start"]
+CMD ["bun", "run", "start"]

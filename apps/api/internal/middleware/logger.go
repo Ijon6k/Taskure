@@ -7,40 +7,18 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func Logger(logger zerolog.Logger) gin.HandlerFunc {
+// Logger logs every HTTP request with method, path, status, and latency.
+func Logger(log zerolog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
-		path := c.Request.URL.Path
-		query := c.Request.URL.RawQuery
 
 		c.Next()
 
-		latency := time.Since(start)
-		status := c.Writer.Status()
-
-		event := logger.Info()
-		if status >= 500 {
-			event = logger.Error()
-		} else if status >= 400 {
-			event = logger.Warn()
-		}
-
-		event.
+		log.Info().
 			Str("method", c.Request.Method).
-			Str("path", path).
-			Int("status", status).
-			Dur("latency", latency).
-			Str("ip", c.ClientIP()).
-			Str("user_agent", c.Request.UserAgent())
-
-		if query != "" {
-			event.Str("query", query)
-		}
-
-		if len(c.Errors) > 0 {
-			event.Str("errors", c.Errors.String())
-		}
-
-		event.Msg("request")
+			Str("path", c.Request.URL.Path).
+			Int("status", c.Writer.Status()).
+			Dur("latency", time.Since(start)).
+			Msg("request")
 	}
 }

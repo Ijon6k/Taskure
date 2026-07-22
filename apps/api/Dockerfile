@@ -1,10 +1,16 @@
 # Build stage
 FROM golang:1.24-alpine AS builder
-WORKDIR /app
-RUN apk add --no-cache git
-COPY go.mod go.sum ./
+WORKDIR /repo
+
+# Copy monorepo root
+COPY package.json ./
+
+# Copy this app
+COPY apps/api ./apps/api
+
+WORKDIR /repo/apps/api
+ENV GOTOOLCHAIN=auto
 RUN go mod download
-COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o /server ./cmd/server
 
 # Runtime stage

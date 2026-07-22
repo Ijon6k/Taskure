@@ -36,11 +36,8 @@ docker-compose.override.yml
 docs-internal/
 
 # Go
-# Exclude generated Ent code — regenerated in Docker
-apps/api/ent/*.go
-!apps/api/ent/generate.go
-!apps/api/ent/schema/*.go
 apps/api/tmp/
+apps/api/bin/
 
 # Python
 __pycache__/
@@ -48,6 +45,17 @@ __pycache__/
 *.egg-info/
 .venv/
 venv/
+
+# Bun
+node_modules/
+.bun/
+
+# Build artifacts
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
 
 # Logs
 *.log
@@ -65,4 +73,3 @@ coverage/
 # Misc
 .turbo
 .eslintcache
-*.tsbuildinfo
