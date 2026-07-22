@@ -107,7 +107,7 @@ export function computeTaskStats(columns: ColumnData[] = []): TaskStats {
   // Find completed tasks (either task status is done or belongs to a 'done' column)
   const completedTasks = allTasks.filter((t) => {
     if (t.status === "done") return true;
-    const parentCol = safeColumns.find((c) => c.tasks?.some((ct) => ct.id === t.id));
+    const parentCol = safeColumns.find((c) => c.tasks?.some((ct: TaskData) => ct.id === t.id));
     return parentCol?.name.toLowerCase().includes("done");
   });
 

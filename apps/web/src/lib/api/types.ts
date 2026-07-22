@@ -11,6 +11,7 @@ export interface ProjectData {
   updated_at: string;
   columns?: ColumnData[];
   tasks?: TaskData[];
+  contexts?: ProjectContextData[];
 }
 
 export interface ColumnData {
@@ -30,6 +31,33 @@ export interface ChecklistItemData {
   task_id: string;
 }
 
+export interface LabelData {
+  id: string;
+  name: string;
+  color: string;
+  project_id?: string;
+  workspace_id?: string;
+}
+
+export interface AttachmentData {
+  id: string;
+  type: "link" | "file";
+  title: string;
+  url?: string;
+  size?: string;
+  file_size?: number;
+  mime_type?: string;
+}
+
+export interface ProjectContextData {
+  id: string;
+  title?: string;
+  content: string;
+  context_type: string;
+  project_id: string;
+  created_at: string;
+}
+
 export interface TaskData {
   id: string;
   title: string;
@@ -41,6 +69,8 @@ export interface TaskData {
   position: number;
   due_date?: string | undefined;
   checklist_items?: ChecklistItemData[];
+  labels?: (LabelData | string)[];
+  attachments?: AttachmentData[];
 }
 
 export interface FocusResult {
@@ -72,6 +102,7 @@ export interface CreateTaskInput {
   priority?: string;
   description?: string;
   due_date?: string;
+  labels?: string[];
 }
 
 export interface MoveTaskInput {

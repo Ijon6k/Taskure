@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { CheckSquare, Square, ArrowRight } from "lucide-react";
-import { FocusResult } from "@/lib/api";
+import { FocusResult, ChecklistItemData } from "@/lib/api";
 
 interface TodaysFocusCardProps {
   focusData: FocusResult | null;
@@ -64,7 +64,7 @@ export function TodaysFocusCard({ focusData, loading }: TodaysFocusCardProps) {
       {/* Checklist Preview */}
       {checklist.length > 0 && (
         <div className="py-2 border-y border-white/5 space-y-2 text-[14px]">
-          {checklist.slice(0, 3).map((item) => (
+          {checklist.slice(0, 3).map((item: ChecklistItemData) => (
             <div key={item.id} className="flex items-center gap-2.5">
               {item.is_completed ? (
                 <CheckSquare className="w-[15px] h-[15px] text-[#68D391] shrink-0" />

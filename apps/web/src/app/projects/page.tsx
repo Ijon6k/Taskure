@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Search, Plus, Pin, FolderKanban } from "lucide-react";
-import { useProjects } from "@/lib/api";
+import { useProjects, TaskData } from "@/lib/api";
 import { Sidebar } from "@/components/layout/sidebar";
 import { CreateProjectModal } from "@/components/project/create-project-modal";
 
@@ -100,7 +100,7 @@ export default function ProjectsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {pinnedProjects.map((proj) => {
                     const tasks = proj.tasks || [];
-                    const doneCount = tasks.filter((t) => t.status === "done").length;
+                    const doneCount = tasks.filter((t: TaskData) => t.status === "done").length;
                     const totalCount = tasks.length;
                     const percent =
                       totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
@@ -178,7 +178,7 @@ export default function ProjectsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {unpinnedProjects.map((proj) => {
                     const tasks = proj.tasks || [];
-                    const doneCount = tasks.filter((t) => t.status === "done").length;
+                    const doneCount = tasks.filter((t: TaskData) => t.status === "done").length;
                     const totalCount = tasks.length;
 
                     return (

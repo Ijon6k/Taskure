@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { FolderPlus, FolderKanban, Pin, Clock } from "lucide-react";
-import { useProjects, useFocusTask } from "@/lib/api";
+import { useProjects, useFocusTask, TaskData } from "@/lib/api";
 import { Sidebar } from "@/components/layout/sidebar";
 import { TodaysFocusCard } from "@/components/dashboard/todays-focus-card";
 import { CreateProjectModal } from "@/components/project/create-project-modal";
@@ -14,14 +14,15 @@ function getFormattedDate(): string {
     month: "long",
     day: "numeric",
   };
-  return new Date().toLocaleDateString("en-US", options);
+  return new Date().toLocaleDateString("id-ID", options);
 }
 
 function getTimeGreeting(): string {
   const hour = new Date().getHours();
-  if (hour >= 4 && hour < 12) return "Good morning";
-  if (hour >= 12 && hour < 18) return "Good afternoon";
-  return "Good evening";
+  if (hour >= 4 && hour < 11) return "Selamat pagi";
+  if (hour >= 11 && hour < 15) return "Selamat siang";
+  if (hour >= 15 && hour < 18) return "Selamat sore";
+  return "Selamat malam";
 }
 
 export default function HomePage() {
@@ -47,7 +48,7 @@ export default function HomePage() {
             {/* Header Greeting */}
             <div>
               <h1 className="text-[32px] font-normal text-theme-primary tracking-tight leading-tight">
-                {getTimeGreeting()}, Alex.
+                {getTimeGreeting()}.
               </h1>
               <p className="text-[14px] font-mono text-theme-secondary mt-1.5">
                 {getFormattedDate()}
@@ -103,7 +104,7 @@ export default function HomePage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {pinnedProjects.map((proj) => {
                     const tasks = proj.tasks || [];
-                    const doneCount = tasks.filter((t) => t.status === "done").length;
+                    const doneCount = tasks.filter((t: TaskData) => t.status === "done").length;
                     const totalCount = tasks.length;
                     const percent =
                       totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
