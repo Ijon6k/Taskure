@@ -3,7 +3,7 @@
 import { use, useState } from "react";
 import Link from "next/link";
 import { ChevronRight, FileText, LayoutGrid, FileCode, Download, Upload, Edit3 } from "lucide-react";
-import { useProject } from "@/lib/api";
+import { useProject, TaskData } from "@/lib/api";
 import { Sidebar } from "@/components/layout/sidebar";
 import { KanbanBoard } from "@/components/kanban/kanban-board";
 import { TaskDrawer } from "@/components/task/task-drawer";
@@ -11,6 +11,7 @@ import { CreateProjectModal } from "@/components/project/create-project-modal";
 import { EditProjectModal } from "@/components/project/edit-project-modal";
 import { ImportJsonModal } from "@/components/project/import-json-modal";
 import { ProjectOverviewTab } from "@/components/project/project-overview-tab";
+import { ProjectContextTab } from "@/components/project/project-context-tab";
 
 export default function ProjectBoardPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -161,7 +162,7 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
               <KanbanBoard
                 projectId={project.id}
                 columns={project.columns || []}
-                onTaskClick={(task) => setSelectedTaskId(task.id)}
+                onTaskClick={(task: TaskData) => setSelectedTaskId(task.id)}
                 onRefreshProject={refetch}
               />
             )}
@@ -176,12 +177,10 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
         )}
 
         {activeTab === "context" && (
-          <div className="flex-1 p-8 text-[14px] text-theme-secondary">
-            <div className="max-w-2xl space-y-4">
-              <h3 className="text-[18px] text-theme-primary font-medium">Project Context Documents</h3>
-              <p>Dokumen konteks pengetahuan untuk AI RAG (dapat diunggah di Phase 2).</p>
-            </div>
-          </div>
+          <ProjectContextTab
+            projectId={projectId}
+            contexts={project?.contexts || []}
+          />
         )}
       </div>
 

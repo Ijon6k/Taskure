@@ -2,7 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { TaskData } from "@/lib/api";
+import { TaskData, ChecklistItemData, LabelData } from "@/lib/api";
 import { getPriorityConfig, calculateProgress, formatDateShort } from "@/lib/helpers";
 import { ProgressBar } from "@/components/ui/progress-bar";
 
@@ -24,7 +24,7 @@ export function KanbanCard({ task, onClick }: KanbanCardProps) {
   };
 
   const checklistItems = task.checklist_items || [];
-  const completedChecklist = checklistItems.filter((i) => i.is_completed).length;
+  const completedChecklist = checklistItems.filter((i: ChecklistItemData) => i.is_completed).length;
   const checklistPercent = calculateProgress(completedChecklist, checklistItems.length);
   const priorityConfig = getPriorityConfig(task.priority);
 
@@ -53,6 +53,23 @@ export function KanbanCard({ task, onClick }: KanbanCardProps) {
       <h4 className="text-[15px] font-medium text-theme-primary group-hover:text-brand-accent transition-colors leading-snug line-clamp-2">
         {task.title}
       </h4>
+
+      {/* Task Labels / Tags */}
+      {task.labels && task.labels.length > 0 && (
+        <div className="flex flex-wrap gap-1 pt-0.5">
+          {task.labels.map((lbl: LabelData | string) => {
+            const name = typeof lbl === "string" ? lbl : lbl.name;
+            return (
+              <span
+                key={name}
+                className="px-1.5 py-0.5 rounded-[4px] bg-theme-surface text-theme-secondary text-[10px] font-medium border border-theme-subtle"
+              >
+                {name}
+              </span>
+            );
+          })}
+        </div>
+      )}
 
       {/* Progress Bar (if checklist exists) */}
       {checklistItems.length > 0 && (
