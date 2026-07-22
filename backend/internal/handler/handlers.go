@@ -7,7 +7,9 @@ import (
 
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/models"
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/service"
+	"github.com/Ijon6k/kanbanproject/apps/api/pkg/nanoid"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -16,7 +18,60 @@ type APIHandler struct {
 }
 
 func New(db *gorm.DB) *APIHandler {
-	return &APIHandler{db: db}
+	h := &APIHandler{db: db}
+	h.backfillPublicIDs()
+	return h
+}
+
+// backfillPublicIDs generates NanoIDs for any pre-existing records with missing public_id.
+func (h *APIHandler) backfillPublicIDs() {
+	var workspaces []models.Workspace
+	if err := h.db.Where("public_id IS NULL OR public_id = ''").Find(&workspaces).Error; err == nil {
+		for _, ws := range workspaces {
+			if id, err := nanoid.Generate("ws"); err == nil {
+				h.db.Model(&ws).Update("public_id", id)
+			}
+		}
+	}
+
+	var projects []models.Project
+	if err := h.db.Where("public_id IS NULL OR public_id = ''").Find(&projects).Error; err == nil {
+		for _, p := range projects {
+			if id, err := nanoid.Generate("prj"); err == nil {
+				h.db.Model(&p).Update("public_id", id)
+			}
+		}
+	}
+
+	var tasks []models.Task
+	if err := h.db.Where("public_id IS NULL OR public_id = ''").Find(&tasks).Error; err == nil {
+		for _, t := range tasks {
+			if id, err := nanoid.Generate("tsk"); err == nil {
+				h.db.Model(&t).Update("public_id", id)
+			}
+		}
+	}
+}
+
+func isUUID(s string) bool {
+	_, err := uuid.Parse(s)
+	return err == nil
+}
+
+// Helper to find a project by public_id or internal UUID
+func (h *APIHandler) findProject(param string, project *models.Project) error {
+	if isUUID(param) {
+		return h.db.Where("id = ? OR public_id = ?", param, param).First(project).Error
+	}
+	return h.db.Where("public_id = ?", param).First(project).Error
+}
+
+// Helper to find a task by public_id or internal UUID
+func (h *APIHandler) findTask(param string, task *models.Task) error {
+	if isUUID(param) {
+		return h.db.Where("id = ? OR public_id = ?", param, param).First(task).Error
+	}
+	return h.db.Where("public_id = ?", param).First(task).Error
 }
 
 // RegisterRoutes registers all /api endpoint handlers.
@@ -35,7 +90,7 @@ func (h *APIHandler) RegisterRoutes(r *gin.RouterGroup) {
 		projects.PATCH("/:id", h.UpdateProject)
 		projects.DELETE("/:id", h.DeleteProject)
 
-		// Column nested routes
+		// Column & task nested routes
 		projects.POST("/:id/columns", h.CreateColumn)
 		projects.POST("/:id/tasks", h.CreateTask)
 	}
@@ -230,16 +285,24 @@ func (h *APIHandler) CreateProject(c *gin.Context) {
 	c.JSON(http.StatusCreated, project)
 }
 
-// GetProject returns a single project with nested columns and tasks.
+// GetProject returns a single project by public_id or internal ID with nested columns and tasks.
 func (h *APIHandler) GetProject(c *gin.Context) {
-	id := c.Param("id")
+	idParam := c.Param("id")
 	var project models.Project
 
-	if err := h.db.Preload("Columns", func(db *gorm.DB) *gorm.DB {
+	query := h.db.Preload("Columns", func(db *gorm.DB) *gorm.DB {
 		return db.Order("position asc")
 	}).Preload("Columns.Tasks", func(db *gorm.DB) *gorm.DB {
 		return db.Order("position asc").Preload("ChecklistItems").Preload("Labels")
-	}).First(&project, "id = ?", id).Error; err != nil {
+	})
+
+	if isUUID(idParam) {
+		query = query.Where("id = ? OR public_id = ?", idParam, idParam)
+	} else {
+		query = query.Where("public_id = ?", idParam)
+	}
+
+	if err := query.First(&project).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Project not found"})
 		return
 	}
@@ -249,9 +312,9 @@ func (h *APIHandler) GetProject(c *gin.Context) {
 
 // UpdateProject updates project fields.
 func (h *APIHandler) UpdateProject(c *gin.Context) {
-	id := c.Param("id")
+	idParam := c.Param("id")
 	var project models.Project
-	if err := h.db.First(&project, "id = ?", id).Error; err != nil {
+	if err := h.findProject(idParam, &project); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Project not found"})
 		return
 	}
@@ -270,10 +333,16 @@ func (h *APIHandler) UpdateProject(c *gin.Context) {
 	c.JSON(http.StatusOK, project)
 }
 
-// DeleteProject deletes a project.
+// DeleteProject deletes a project by public_id or internal ID.
 func (h *APIHandler) DeleteProject(c *gin.Context) {
-	id := c.Param("id")
-	if err := h.db.Delete(&models.Project{}, "id = ?", id).Error; err != nil {
+	idParam := c.Param("id")
+	var project models.Project
+	if err := h.findProject(idParam, &project); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Project not found"})
+		return
+	}
+
+	if err := h.db.Delete(&project).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -287,7 +356,13 @@ type CreateColumnInput struct {
 
 // CreateColumn creates a new column in a project.
 func (h *APIHandler) CreateColumn(c *gin.Context) {
-	projectID := c.Param("id")
+	idParam := c.Param("id")
+	var project models.Project
+	if err := h.findProject(idParam, &project); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Project not found"})
+		return
+	}
+
 	var input CreateColumnInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -295,13 +370,13 @@ func (h *APIHandler) CreateColumn(c *gin.Context) {
 	}
 
 	var count int64
-	h.db.Model(&models.Column{}).Where("project_id = ?", projectID).Count(&count)
+	h.db.Model(&models.Column{}).Where("project_id = ?", project.ID).Count(&count)
 
 	col := models.Column{
 		Name:      input.Name,
 		Color:     input.Color,
 		Position:  int(count),
-		ProjectID: projectID,
+		ProjectID: project.ID,
 	}
 
 	if err := h.db.Create(&col).Error; err != nil {
@@ -348,7 +423,13 @@ type CreateTaskInput struct {
 
 // CreateTask creates a task inside a column.
 func (h *APIHandler) CreateTask(c *gin.Context) {
-	projectID := c.Param("id")
+	idParam := c.Param("id")
+	var project models.Project
+	if err := h.findProject(idParam, &project); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Project not found"})
+		return
+	}
+
 	var input CreateTaskInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -366,7 +447,7 @@ func (h *APIHandler) CreateTask(c *gin.Context) {
 		Title:       input.Title,
 		Description: input.Description,
 		ColumnID:    input.ColumnID,
-		ProjectID:   projectID,
+		ProjectID:   project.ID,
 		Priority:    input.Priority,
 		Status:      "todo",
 		Position:    int(count),
@@ -381,13 +462,21 @@ func (h *APIHandler) CreateTask(c *gin.Context) {
 	c.JSON(http.StatusCreated, task)
 }
 
-// GetTask returns a single task with full relations.
+// GetTask returns a single task by public_id or internal ID with full relations.
 func (h *APIHandler) GetTask(c *gin.Context) {
-	id := c.Param("id")
+	idParam := c.Param("id")
 	var task models.Task
-	if err := h.db.Preload("ChecklistItems", func(db *gorm.DB) *gorm.DB {
+	query := h.db.Preload("ChecklistItems", func(db *gorm.DB) *gorm.DB {
 		return db.Order("position asc")
-	}).Preload("Labels").First(&task, "id = ?", id).Error; err != nil {
+	}).Preload("Labels")
+
+	if isUUID(idParam) {
+		query = query.Where("id = ? OR public_id = ?", idParam, idParam)
+	} else {
+		query = query.Where("public_id = ?", idParam)
+	}
+
+	if err := query.First(&task).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Task not found"})
 		return
 	}
@@ -397,9 +486,9 @@ func (h *APIHandler) GetTask(c *gin.Context) {
 
 // UpdateTask updates task fields.
 func (h *APIHandler) UpdateTask(c *gin.Context) {
-	id := c.Param("id")
+	idParam := c.Param("id")
 	var task models.Task
-	if err := h.db.First(&task, "id = ?", id).Error; err != nil {
+	if err := h.findTask(idParam, &task); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Task not found"})
 		return
 	}
@@ -415,7 +504,7 @@ func (h *APIHandler) UpdateTask(c *gin.Context) {
 		return
 	}
 
-	h.db.Preload("ChecklistItems").Preload("Labels").First(&task, "id = ?", id)
+	h.db.Preload("ChecklistItems").Preload("Labels").First(&task, "id = ?", task.ID)
 	c.JSON(http.StatusOK, task)
 }
 
@@ -427,7 +516,7 @@ type MoveTaskInput struct {
 
 // MoveTask moves a task between columns or changes its order position.
 func (h *APIHandler) MoveTask(c *gin.Context) {
-	id := c.Param("id")
+	idParam := c.Param("id")
 	var input MoveTaskInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -435,7 +524,7 @@ func (h *APIHandler) MoveTask(c *gin.Context) {
 	}
 
 	var task models.Task
-	if err := h.db.First(&task, "id = ?", id).Error; err != nil {
+	if err := h.findTask(idParam, &task); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Task not found"})
 		return
 	}
@@ -459,8 +548,14 @@ func (h *APIHandler) MoveTask(c *gin.Context) {
 
 // DeleteTask deletes a task.
 func (h *APIHandler) DeleteTask(c *gin.Context) {
-	id := c.Param("id")
-	h.db.Delete(&models.Task{}, "id = ?", id)
+	idParam := c.Param("id")
+	var task models.Task
+	if err := h.findTask(idParam, &task); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Task not found"})
+		return
+	}
+
+	h.db.Delete(&task)
 	c.JSON(http.StatusOK, gin.H{"message": "Task deleted"})
 }
 
@@ -470,7 +565,13 @@ type AddChecklistInput struct {
 
 // AddChecklistItem adds a item to a task's checklist.
 func (h *APIHandler) AddChecklistItem(c *gin.Context) {
-	taskID := c.Param("id")
+	idParam := c.Param("id")
+	var task models.Task
+	if err := h.findTask(idParam, &task); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Task not found"})
+		return
+	}
+
 	var input AddChecklistInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -478,13 +579,13 @@ func (h *APIHandler) AddChecklistItem(c *gin.Context) {
 	}
 
 	var count int64
-	h.db.Model(&models.ChecklistItem{}).Where("task_id = ?", taskID).Count(&count)
+	h.db.Model(&models.ChecklistItem{}).Where("task_id = ?", task.ID).Count(&count)
 
 	item := models.ChecklistItem{
 		Title:       input.Title,
 		IsCompleted: false,
 		Position:    int(count),
-		TaskID:      taskID,
+		TaskID:      task.ID,
 	}
 
 	if err := h.db.Create(&item).Error; err != nil {
