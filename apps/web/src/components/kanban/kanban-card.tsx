@@ -3,6 +3,8 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { TaskData } from "@/lib/api";
+import { getPriorityConfig, calculateProgress, formatDateShort } from "@/lib/helpers";
+import { ProgressBar } from "@/components/ui/progress-bar";
 
 interface KanbanCardProps {
   task: TaskData;
@@ -23,19 +25,8 @@ export function KanbanCard({ task, onClick }: KanbanCardProps) {
 
   const checklistItems = task.checklist_items || [];
   const completedChecklist = checklistItems.filter((i) => i.is_completed).length;
-  const checklistPercent =
-    checklistItems.length > 0
-      ? Math.round((completedChecklist / checklistItems.length) * 100)
-      : 0;
-
-  const priorityColors: Record<string, string> = {
-    urgent: "#F6685E",
-    high: "#F6AD8A",
-    medium: "#7F9CF5",
-    low: "#8A8F98",
-  };
-
-  const dotColor = priorityColors[task.priority] || "#8A8F98";
+  const checklistPercent = calculateProgress(completedChecklist, checklistItems.length);
+  const priorityConfig = getPriorityConfig(task.priority);
 
   return (
     <div
@@ -44,51 +35,39 @@ export function KanbanCard({ task, onClick }: KanbanCardProps) {
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className="w-full p-3 bg-[#0C0C0C] border border-white/6 hover:border-white/20 rounded-[6px] cursor-grab active:cursor-grabbing transition-colors space-y-2.5 select-none group"
+      className="w-full p-3.5 bg-theme-elevated border border-theme-default hover:border-accent rounded-[8px] cursor-grab active:cursor-grabbing transition-all space-y-2.5 select-none group shadow-xs"
     >
       {/* Top Meta: Category / Tag & Priority Dot */}
       <div className="flex items-center justify-between">
-        <span className="px-1.5 py-0.5 rounded-[4px] bg-[#7F9CF5]/10 text-[#7F9CF5] text-[11px] font-medium">
+        <span className="px-2 py-0.5 rounded-[4px] bg-accent-subtle text-accent text-[12px] font-medium border border-brand-accent/20">
           {task.status === "in_progress" ? "In Progress" : task.status === "done" ? "Done" : "Task"}
         </span>
 
         <span
-          className="w-1.5 h-1.5 rounded-full shrink-0"
-          style={{ backgroundColor: dotColor }}
+          className="w-2 h-2 rounded-full shrink-0 shadow-accent-glow"
+          style={{ backgroundColor: priorityConfig.color }}
         />
       </div>
 
-      {/* Title */}
-      <h4 className="text-[14px] font-normal text-[#F0F0F0]/90 group-hover:text-[#F0F0F0] leading-snug line-clamp-2">
+      {/* Title (+1 step font size) */}
+      <h4 className="text-[15px] font-medium text-theme-primary group-hover:text-brand-accent transition-colors leading-snug line-clamp-2">
         {task.title}
       </h4>
 
       {/* Progress Bar (if checklist exists) */}
       {checklistItems.length > 0 && (
-        <div className="w-full h-1 bg-[#1A1A1A] rounded-full overflow-hidden">
-          <div
-            className="h-full bg-[#68D391] rounded-full transition-all duration-300"
-            style={{ width: `${checklistPercent}%` }}
-          />
-        </div>
+        <ProgressBar percent={checklistPercent} color="#68D391" />
       )}
 
       {/* Footer Details: Checklist ratio & Due date */}
-      <div className="flex items-center justify-between text-[11px] font-mono text-[#787878] pt-1">
+      <div className="flex items-center justify-between text-[12px] font-mono text-theme-secondary pt-0.5">
         <span>
           {checklistItems.length > 0
             ? `${completedChecklist}/${checklistItems.length}`
             : ""}
         </span>
 
-        <span>
-          {task.due_date
-            ? new Date(task.due_date).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-              })
-            : ""}
-        </span>
+        <span>{formatDateShort(task.due_date)}</span>
       </div>
     </div>
   );
