@@ -8,12 +8,14 @@
     --bg-surface: #0c0c0c;
     --bg-elevated: #141414;
     --bg-hover: #1c1c1c;
-    --border-subtle: rgba(255, 255, 255, 0.05);
-    --border-default: rgba(255, 255, 255, 0.08);
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-default: rgba(255, 255, 255, 0.10);
     --text-primary: #f0f0f0;
     --text-secondary: #787878;
     --text-tertiary: #525252;
     --brand-accent: #7f9cf5;
+    --brand-accent-subtle: rgba(127, 156, 245, 0.12);
+    --brand-accent-glow: rgba(127, 156, 245, 0.25);
     --brand-accent-text: #000000;
   }
 
@@ -23,12 +25,14 @@
     --bg-surface: #050505;
     --bg-elevated: #0d0d0d;
     --bg-hover: #141414;
-    --border-subtle: rgba(255, 255, 255, 0.05);
-    --border-default: rgba(255, 255, 255, 0.08);
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-default: rgba(255, 255, 255, 0.10);
     --text-primary: #f0f0f0;
     --text-secondary: #787878;
     --text-tertiary: #4a4a4a;
     --brand-accent: #7f9cf5;
+    --brand-accent-subtle: rgba(127, 156, 245, 0.15);
+    --brand-accent-glow: rgba(127, 156, 245, 0.30);
     --brand-accent-text: #000000;
   }
 
@@ -38,12 +42,14 @@
     --bg-surface: #ffffff;
     --bg-elevated: #f0f1f4;
     --bg-hover: #e5e7eb;
-    --border-subtle: rgba(0, 0, 0, 0.06);
-    --border-default: rgba(0, 0, 0, 0.12);
+    --border-subtle: rgba(0, 0, 0, 0.08);
+    --border-default: rgba(0, 0, 0, 0.14);
     --text-primary: #171717;
     --text-secondary: #6b7280;
     --text-tertiary: #9ca3af;
     --brand-accent: #6366f1;
+    --brand-accent-subtle: rgba(99, 102, 241, 0.12);
+    --brand-accent-glow: rgba(99, 102, 241, 0.25);
     --brand-accent-text: #ffffff;
   }
 
@@ -58,6 +64,26 @@
   }
 }
 
+/* Theme Utilities */
+.bg-theme-main { background-color: var(--bg-main); }
+.bg-theme-surface { background-color: var(--bg-surface); }
+.bg-theme-elevated { background-color: var(--bg-elevated); }
+.bg-theme-hover { background-color: var(--bg-hover); }
+
+.text-theme-primary { color: var(--text-primary); }
+.text-theme-secondary { color: var(--text-secondary); }
+.text-theme-tertiary { color: var(--text-tertiary); }
+
+.border-theme-subtle { border-color: var(--border-subtle); }
+.border-theme-default { border-color: var(--border-default); }
+
+/* Accent Color Utilities */
+.bg-brand-accent { background-color: var(--brand-accent); }
+.bg-accent-subtle { background-color: var(--brand-accent-subtle); }
+.text-accent { color: var(--brand-accent); }
+.border-accent { border-color: var(--brand-accent); }
+.shadow-accent-glow { box-shadow: 0 0 15px var(--brand-accent-glow); }
+
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
@@ -69,10 +95,10 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--brand-accent);
 }

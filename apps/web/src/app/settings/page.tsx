@@ -5,23 +5,17 @@ import { Check, CheckCircle2 } from "lucide-react";
 import { Sidebar } from "@/components/layout/sidebar";
 import { CreateProjectModal } from "@/components/project/create-project-modal";
 
+import { useTheme } from "@/components/providers/theme-provider";
+
 export default function SettingsPage() {
-  const [currentTheme, setCurrentTheme] = useState<"dim" | "dark" | "light">("dim");
-  const [selectedAccent, setSelectedAccent] = useState("#7F9CF5");
+  const { theme: currentTheme, accentColor: currentAccent, setTheme, setAccentColor } = useTheme();
   const [focusReminders, setFocusReminders] = useState(true);
   const [compactDensity, setCompactDensity] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  useEffect(() => {
-    const theme = (document.documentElement.getAttribute("data-theme") as "dim" | "dark" | "light") || "dim";
-    setCurrentTheme(theme);
-  }, []);
-
-  const handleThemeChange = (theme: "dim" | "dark" | "light") => {
-    setCurrentTheme(theme);
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
+  const handleThemeChange = (t: "dim" | "dark" | "light") => {
+    setTheme(t);
   };
 
   const accents = [
@@ -33,7 +27,7 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="flex h-screen bg-black text-[#F0F0F0] font-sans select-none overflow-hidden">
+    <div className="flex h-screen bg-theme-surface text-theme-primary font-sans select-none overflow-hidden">
       {/* Sidebar */}
       <Sidebar onOpenCreateProject={() => setIsCreateModalOpen(true)} />
 
@@ -43,28 +37,28 @@ export default function SettingsPage() {
           <div className="w-full max-w-[672px] px-8 py-16 space-y-10">
             {/* Title */}
             <div>
-              <h1 className="text-[24px] font-normal text-[#F0F0F0] tracking-tight">
+              <h1 className="text-[24px] font-normal text-theme-primary tracking-tight">
                 Settings
               </h1>
             </div>
 
             {/* Account Section */}
             <div className="space-y-3">
-              <div className="text-[12px] font-medium text-[#787878] uppercase tracking-[0.6px]">
+              <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.6px]">
                 Account
               </div>
-              <div className="py-4 border-b border-white/6 flex items-center justify-between">
+              <div className="py-4 border-b border-theme-default flex items-center justify-between">
                 <div>
-                  <div className="text-[14px] font-normal text-[#F0F0F0]">
+                  <div className="text-[14px] font-normal text-theme-primary">
                     Developer
                   </div>
-                  <div className="text-[12px] font-normal text-[#787878]">
+                  <div className="text-[12px] font-normal text-theme-secondary">
                     developer@kanban.local
                   </div>
                 </div>
                 <button
                   onClick={() => alert("Profil lokal single-user untuk MVP.")}
-                  className="px-2.5 py-1.5 rounded-[6px] border border-white/6 text-[12px] font-medium text-[#787878] hover:text-[#F0F0F0] hover:bg-[#141414] transition-colors"
+                  className="px-2.5 py-1.5 rounded-[6px] border border-theme-default text-[12px] font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-hover transition-colors"
                 >
                   Edit
                 </button>
@@ -73,17 +67,17 @@ export default function SettingsPage() {
 
             {/* Appearance Section */}
             <div className="space-y-6">
-              <div className="text-[12px] font-medium text-[#787878] uppercase tracking-[0.6px]">
+              <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.6px]">
                 Appearance
               </div>
 
               {/* Theme Picker */}
-              <div className="py-4 border-b border-white/6 space-y-3">
+              <div className="py-4 border-b border-theme-default space-y-3">
                 <div>
-                  <div className="text-[14px] font-normal text-[#F0F0F0]">
+                  <div className="text-[14px] font-normal text-theme-primary">
                     Theme
                   </div>
-                  <p className="text-[12px] text-[#787878]">
+                  <p className="text-[12px] text-theme-secondary">
                     Choose the surface tone for your workspace.
                   </p>
                 </div>
@@ -94,15 +88,15 @@ export default function SettingsPage() {
                     onClick={() => handleThemeChange("dark")}
                     className={`p-2.5 rounded-[6px] border text-left flex flex-col justify-between h-[86px] transition-colors ${
                       currentTheme === "dark"
-                        ? "border-[#7F9CF5] bg-white/5"
-                        : "border-white/6 hover:border-white/20"
+                        ? "border-brand-accent bg-theme-elevated"
+                        : "border-theme-default hover:border-theme-secondary"
                     }`}
                   >
-                    <div className="w-full h-[40px] bg-black rounded-[4px] border border-white/6" />
+                    <div className="w-full h-[40px] bg-black rounded-[4px] border border-white/10" />
                     <div className="flex items-center justify-between pt-2">
-                      <span className="text-[12px] font-medium text-[#F0F0F0]">Dark</span>
+                      <span className="text-[12px] font-medium text-theme-primary">Dark OLED</span>
                       {currentTheme === "dark" && (
-                        <Check className="w-[13px] h-[13px] text-[#7F9CF5]" />
+                        <Check className="w-[13px] h-[13px] text-brand-accent" />
                       )}
                     </div>
                   </button>
@@ -112,15 +106,15 @@ export default function SettingsPage() {
                     onClick={() => handleThemeChange("dim")}
                     className={`p-2.5 rounded-[6px] border text-left flex flex-col justify-between h-[86px] transition-colors ${
                       currentTheme === "dim"
-                        ? "border-[#7F9CF5] bg-white/5"
-                        : "border-white/6 hover:border-white/20"
+                        ? "border-brand-accent bg-theme-elevated"
+                        : "border-theme-default hover:border-theme-secondary"
                     }`}
                   >
-                    <div className="w-full h-[40px] bg-[#17171B] rounded-[4px] border border-white/6" />
+                    <div className="w-full h-[40px] bg-[#17171B] rounded-[4px] border border-white/10" />
                     <div className="flex items-center justify-between pt-2">
-                      <span className="text-[12px] font-medium text-[#F0F0F0]">Dim</span>
+                      <span className="text-[12px] font-medium text-theme-primary">Dim</span>
                       {currentTheme === "dim" && (
-                        <Check className="w-[13px] h-[13px] text-[#7F9CF5]" />
+                        <Check className="w-[13px] h-[13px] text-brand-accent" />
                       )}
                     </div>
                   </button>
@@ -130,15 +124,15 @@ export default function SettingsPage() {
                     onClick={() => handleThemeChange("light")}
                     className={`p-2.5 rounded-[6px] border text-left flex flex-col justify-between h-[86px] transition-colors ${
                       currentTheme === "light"
-                        ? "border-[#7F9CF5] bg-white/5"
-                        : "border-white/6 hover:border-white/20"
+                        ? "border-brand-accent bg-theme-elevated"
+                        : "border-theme-default hover:border-theme-secondary"
                     }`}
                   >
                     <div className="w-full h-[40px] bg-white rounded-[4px] border border-black/10" />
                     <div className="flex items-center justify-between pt-2">
-                      <span className="text-[12px] font-medium text-[#F0F0F0]">Light</span>
+                      <span className="text-[12px] font-medium text-theme-primary">Light</span>
                       {currentTheme === "light" && (
-                        <Check className="w-[13px] h-[13px] text-[#7F9CF5]" />
+                        <Check className="w-[13px] h-[13px] text-brand-accent" />
                       )}
                     </div>
                   </button>
@@ -146,12 +140,12 @@ export default function SettingsPage() {
               </div>
 
               {/* Accent Color */}
-              <div className="py-4 border-b border-white/6 space-y-3">
+              <div className="py-4 border-b border-theme-default space-y-3">
                 <div>
-                  <div className="text-[14px] font-normal text-[#F0F0F0]">
+                  <div className="text-[14px] font-normal text-theme-primary">
                     Accent color
                   </div>
-                  <p className="text-[12px] text-[#787878]">
+                  <p className="text-[12px] text-theme-secondary">
                     Applies to buttons, active navigation, links, progress bars, and focus rings.
                   </p>
                 </div>
@@ -160,16 +154,16 @@ export default function SettingsPage() {
                   {accents.map((acc) => (
                     <button
                       key={acc.hex}
-                      onClick={() => setSelectedAccent(acc.hex)}
+                      onClick={() => setAccentColor(acc.hex)}
                       className={`w-[28px] h-[28px] rounded-full flex items-center justify-center transition-transform ${
-                        selectedAccent === acc.hex
+                        currentAccent === acc.hex
                           ? "ring-2 ring-white ring-offset-2 ring-offset-black scale-110"
                           : "hover:scale-105"
                       }`}
                       style={{ backgroundColor: acc.hex }}
                       title={acc.name}
                     >
-                      {selectedAccent === acc.hex && (
+                      {currentAccent === acc.hex && (
                         <Check className="w-[13px] h-[13px] text-black" />
                       )}
                     </button>

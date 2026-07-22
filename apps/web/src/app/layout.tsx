@@ -20,6 +20,8 @@ export const metadata: Metadata = {
   description: "Personal project workspace for managing your projects",
 };
 
+import { ThemeProvider } from "@/components/providers/theme-provider";
+
 export default function RootLayout({
   children,
 }: {
@@ -28,12 +30,14 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      data-theme="dim"
+      data-theme="dark"
       className={`${interTight.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
       <body className="antialiased font-sans">
-        <QueryProvider>{children}</QueryProvider>
+        <ThemeProvider>
+          <QueryProvider>{children}</QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

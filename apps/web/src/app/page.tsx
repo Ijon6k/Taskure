@@ -36,7 +36,7 @@ export default function HomePage() {
   const recentProjects = projects.slice(0, 3);
 
   return (
-    <div className="flex h-screen bg-black text-[#F0F0F0] font-sans select-none overflow-hidden">
+    <div className="flex h-screen bg-theme-main text-theme-primary font-sans select-none overflow-hidden">
       {/* Sidebar */}
       <Sidebar onOpenCreateProject={() => setIsCreateModalOpen(true)} />
 
@@ -46,17 +46,17 @@ export default function HomePage() {
           <div className="w-full max-w-[672px] px-8 py-16 space-y-12">
             {/* Header Greeting */}
             <div>
-              <h1 className="text-[32px] font-normal text-[#F0F0F0] tracking-tight leading-tight">
+              <h1 className="text-[32px] font-normal text-theme-primary tracking-tight leading-tight">
                 {getTimeGreeting()}, Alex.
               </h1>
-              <p className="text-[14px] font-mono text-[#787878] mt-1.5">
+              <p className="text-[14px] font-mono text-theme-secondary mt-1.5">
                 {getFormattedDate()}
               </p>
             </div>
 
             {/* Today's Focus */}
             <div className="space-y-3">
-              <div className="text-[12px] font-medium text-[#787878] uppercase tracking-[0.6px]">
+              <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.6px]">
                 Today's focus
               </div>
               <TodaysFocusCard focusData={focusData} loading={isLoading} />
@@ -64,13 +64,13 @@ export default function HomePage() {
 
             {/* Quick Actions */}
             <div className="space-y-3">
-              <div className="text-[12px] font-medium text-[#787878] uppercase tracking-[0.6px]">
+              <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.6px]">
                 Quick actions
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   onClick={() => setIsCreateModalOpen(true)}
-                  className="h-[42px] px-3 border border-white/6 rounded-[6px] flex items-center gap-2.5 text-[#787878] hover:text-[#F0F0F0] hover:bg-[#141414] transition-colors text-[14px] font-medium"
+                  className="h-[42px] px-3 border border-theme-default rounded-[6px] flex items-center gap-2.5 text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated transition-colors text-[14px] font-medium"
                 >
                   <FolderPlus className="w-[15px] h-[15px]" />
                   <span>New project</span>
@@ -78,7 +78,7 @@ export default function HomePage() {
 
                 <Link
                   href="/projects"
-                  className="h-[42px] px-3 border border-white/6 rounded-[6px] flex items-center gap-2.5 text-[#787878] hover:text-[#F0F0F0] hover:bg-[#141414] transition-colors text-[14px] font-medium"
+                  className="h-[42px] px-3 border border-theme-default rounded-[6px] flex items-center gap-2.5 text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated transition-colors text-[14px] font-medium"
                 >
                   <FolderKanban className="w-[15px] h-[15px]" />
                   <span>Browse projects</span>
@@ -89,14 +89,14 @@ export default function HomePage() {
             {/* Pinned Projects Grid */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <Pin className="w-[12px] h-[12px] text-[#787878]" />
-                <span className="text-[12px] font-medium text-[#787878] uppercase tracking-[0.6px]">
+                <Pin className="w-[12px] h-[12px] text-theme-secondary" />
+                <span className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.6px]">
                   Pinned
                 </span>
               </div>
 
               {pinnedProjects.length === 0 ? (
-                <div className="p-4 border border-white/6 rounded-[8px] bg-[#0C0C0C] text-xs text-[#787878]">
+                <div className="p-4 border border-theme-default rounded-[8px] bg-theme-surface text-xs text-theme-secondary">
                   Belum ada projek yang di-pin.
                 </div>
               ) : (
@@ -112,20 +112,20 @@ export default function HomePage() {
                       <Link
                         key={proj.id}
                         href={`/projects/${proj.id}/board`}
-                        className="p-4 bg-[#0C0C0C] border border-white/6 hover:border-white/20 rounded-[8px] flex flex-col justify-between h-[96px] transition-colors"
+                        className="p-4 bg-theme-surface border border-theme-default hover:border-theme-hover rounded-[8px] flex flex-col justify-between h-[96px] transition-colors"
                       >
                         <div className="flex items-center gap-2">
                           <span
                             className="w-2 h-2 rounded-full shrink-0"
                             style={{ backgroundColor: proj.color || "#7F9CF5" }}
                           />
-                          <span className="text-[14px] font-medium text-[#F0F0F0] truncate">
+                          <span className="text-[14px] font-medium text-theme-primary truncate">
                             {proj.name}
                           </span>
                         </div>
 
                         <div className="space-y-2">
-                          <div className="w-full h-1 bg-[#1A1A1A] rounded-full overflow-hidden">
+                          <div className="w-full h-1 bg-theme-elevated rounded-full overflow-hidden">
                             <div
                               className="h-full rounded-full transition-all duration-300"
                               style={{
@@ -135,7 +135,7 @@ export default function HomePage() {
                             />
                           </div>
 
-                          <div className="flex items-center justify-between text-[12px] text-[#787878]">
+                          <div className="flex items-center justify-between text-[12px] text-theme-secondary">
                             <span>
                               {doneCount}/{totalCount} done
                             </span>
@@ -153,14 +153,14 @@ export default function HomePage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Clock className="w-[12px] h-[12px] text-[#787878]" />
-                  <span className="text-[12px] font-medium text-[#787878] uppercase tracking-[0.6px]">
+                  <Clock className="w-[12px] h-[12px] text-theme-secondary" />
+                  <span className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.6px]">
                     Recent
                   </span>
                 </div>
                 <Link
                   href="/projects"
-                  className="text-[12px] font-medium text-[#787878] hover:text-[#F0F0F0] transition-colors"
+                  className="text-[12px] font-medium text-theme-secondary hover:text-theme-primary transition-colors"
                 >
                   View all
                 </Link>
@@ -171,18 +171,18 @@ export default function HomePage() {
                   <Link
                     key={proj.id}
                     href={`/projects/${proj.id}/board`}
-                    className="flex items-center justify-between px-2.5 py-2 rounded-[6px] hover:bg-[#141414] transition-colors group"
+                    className="flex items-center justify-between px-2.5 py-2 rounded-[6px] hover:bg-theme-elevated transition-colors group"
                   >
                     <div className="flex items-center gap-2.5">
                       <span
                         className="w-1.5 h-1.5 rounded-full shrink-0"
                         style={{ backgroundColor: proj.color || "#68D391" }}
                       />
-                      <span className="text-[14px] font-medium text-[#F0F0F0]/80 group-hover:text-[#F0F0F0]">
+                      <span className="text-[14px] font-medium text-theme-primary/80 group-hover:text-theme-primary">
                         {proj.name}
                       </span>
                     </div>
-                    <span className="text-[12px] font-mono text-[#787878]">
+                    <span className="text-[12px] font-mono text-theme-secondary">
                       recently updated
                     </span>
                   </Link>
