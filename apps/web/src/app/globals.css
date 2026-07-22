@@ -1,129 +1,78 @@
 @import "tailwindcss";
 
-/* ============================================================
-   KANBAN PROJECT — Global Styles
-   3-Theme System: Dark (OLED), Dim (default), Light
-   Brand: Lavender, Pastel Blue, Pastel Pink
-   ============================================================ */
+@layer base {
+  /* DIM THEME (default) */
+  :root,
+  [data-theme="dim"] {
+    --bg-main: #0b0b0d;
+    --bg-surface: #0c0c0c;
+    --bg-elevated: #141414;
+    --bg-hover: #1c1c1c;
+    --border-subtle: rgba(255, 255, 255, 0.05);
+    --border-default: rgba(255, 255, 255, 0.08);
+    --text-primary: #f0f0f0;
+    --text-secondary: #787878;
+    --text-tertiary: #525252;
+    --brand-accent: #7f9cf5;
+    --brand-accent-text: #000000;
+  }
 
-@theme inline {
-  --color-brand-lavender: #B4A0E5;
-  --color-brand-lavender-muted: #8B7EC1;
-  --color-brand-blue: #A0C4E8;
-  --color-brand-blue-muted: #7FACD4;
-  --color-brand-pink: #E8B4C8;
-  --color-brand-pink-muted: #D495AF;
-  --color-semantic-info: #3B82F6;
-  --color-semantic-success: #22C55E;
-  --color-semantic-warning: #F59E0B;
-  --color-semantic-error: #EF4444;
+  /* DARK THEME (True OLED Black) */
+  [data-theme="dark"] {
+    --bg-main: #000000;
+    --bg-surface: #050505;
+    --bg-elevated: #0d0d0d;
+    --bg-hover: #141414;
+    --border-subtle: rgba(255, 255, 255, 0.05);
+    --border-default: rgba(255, 255, 255, 0.08);
+    --text-primary: #f0f0f0;
+    --text-secondary: #787878;
+    --text-tertiary: #4a4a4a;
+    --brand-accent: #7f9cf5;
+    --brand-accent-text: #000000;
+  }
+
+  /* LIGHT THEME */
+  [data-theme="light"] {
+    --bg-main: #f8f8fa;
+    --bg-surface: #ffffff;
+    --bg-elevated: #f0f1f4;
+    --bg-hover: #e5e7eb;
+    --border-subtle: rgba(0, 0, 0, 0.06);
+    --border-default: rgba(0, 0, 0, 0.12);
+    --text-primary: #171717;
+    --text-secondary: #6b7280;
+    --text-tertiary: #9ca3af;
+    --brand-accent: #6366f1;
+    --brand-accent-text: #ffffff;
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: var(--font-inter-tight), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 }
 
-/* --- DIM THEME (default) --- */
-:root, [data-theme="dim"] {
-  --color-bg: #0B0B0D;
-  --color-surface: #121316;
-  --color-surface-hover: #16171A;
-  --color-surface-active: #1A1B1E;
-  --color-border: #1E1F23;
-  --color-border-hover: #2A2B30;
-  --color-text: #EDEEF0;
-  --color-text-secondary: #A1A1A6;
-  --color-text-tertiary: #6B6B70;
-  --color-brand-lavender: #B4A0E5;
-  --color-brand-lavender-muted: #8B7EC1;
-  --color-brand-blue: #A0C4E8;
-  --color-brand-blue-muted: #7FACD4;
-  --color-brand-pink: #E8B4C8;
-  --color-brand-pink-muted: #D495AF;
-  color-scheme: dark;
-}
-
-/* --- DARK THEME (OLED true black) --- */
-[data-theme="dark"] {
-  --color-bg: #000000;
-  --color-surface: #0A0A0B;
-  --color-surface-hover: #0F0F11;
-  --color-surface-active: #141416;
-  --color-border: #161618;
-  --color-border-hover: #222224;
-  --color-text: #E8E9EB;
-  --color-text-secondary: #9A9BA0;
-  --color-text-tertiary: #5C5C62;
-  --color-brand-lavender: #B4A0E5;
-  --color-brand-lavender-muted: #8B7EC1;
-  --color-brand-blue: #A0C4E8;
-  --color-brand-blue-muted: #7FACD4;
-  --color-brand-pink: #E8B4C8;
-  --color-brand-pink-muted: #D495AF;
-  color-scheme: dark;
-}
-
-/* --- LIGHT THEME --- */
-[data-theme="light"] {
-  --color-bg: #F8F8FA;
-  --color-surface: #FFFFFF;
-  --color-surface-hover: #F2F2F5;
-  --color-surface-active: #ECECF0;
-  --color-border: #E4E4E8;
-  --color-border-hover: #D0D0D5;
-  --color-text: #1A1B20;
-  --color-text-secondary: #6B6B75;
-  --color-text-tertiary: #A0A0A8;
-  --color-brand-lavender: #8B7EC1;
-  --color-brand-lavender-muted: #B4A0E5;
-  --color-brand-blue: #7FACD4;
-  --color-brand-blue-muted: #A0C4E8;
-  --color-brand-pink: #D495AF;
-  --color-brand-pink-muted: #E8B4C8;
-  color-scheme: light;
-}
-
-/* --- Base Styles --- */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  font-family: var(--font-inter-tight), system-ui, sans-serif;
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: "cv11", "ss01";
-}
-
-/* --- Scrollbar Styling --- */
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border-hover);
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-tertiary);
-}
-
-/* --- Text Selection --- */
-::selection {
-  background-color: color-mix(in srgb, var(--color-brand-lavender) 30%, transparent);
-  color: var(--color-text);
-}
-
-/* --- Focus Ring --- */
-:focus-visible {
-  outline: 2px solid var(--color-brand-lavender);
-  outline-offset: 2px;
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.25);
 }
