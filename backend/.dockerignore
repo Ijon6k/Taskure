@@ -1,0 +1,6 @@
+tmp
+bin
+server
+.git
+.gitignore
+Dockerfile*

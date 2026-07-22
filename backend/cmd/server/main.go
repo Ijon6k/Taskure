@@ -56,8 +56,8 @@ func main() {
 		logger.Info().Str("workspace_id", ws.ID).Msg("default workspace initialized")
 	}
 
-	v1 := router.Group("/api/v1")
-	apiHandler.RegisterRoutes(v1)
+	apiGroup := router.Group("/api")
+	apiHandler.RegisterRoutes(apiGroup)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf("%s:%s", cfg.APIHost, cfg.APIPort),

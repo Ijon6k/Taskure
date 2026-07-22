@@ -19,7 +19,7 @@ func New(db *gorm.DB) *APIHandler {
 	return &APIHandler{db: db}
 }
 
-// RegisterRoutes registers all /api/v1 endpoint handlers.
+// RegisterRoutes registers all /api endpoint handlers.
 func (h *APIHandler) RegisterRoutes(r *gin.RouterGroup) {
 	workspaces := r.Group("/workspaces")
 	{

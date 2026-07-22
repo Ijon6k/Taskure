@@ -1,31 +1,38 @@
-FROM python:3.12-slim
+# Stage 1: Builder with Astral uv
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
 WORKDIR /app
 
-# Install dependencies from requirements/pip
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir \
-        fastapi==0.115.6 \
-        "uvicorn[standard]==0.34.0" \
-        openai==1.57.4 \
-        anthropic==0.38.0 \
-        "sqlalchemy[asyncio]==2.0.36" \
-        asyncpg==0.30.0 \
-        "pgvector[async]==0.3.6" \
-        "redis[hiredis]==5.2.1" \
-        pydantic==2.10.4 \
-        pydantic-settings==2.7.0 \
-        python-multipart==0.0.20 \
-        sse-starlette==2.2.1 \
-        httpx==0.28.1 \
-        numpy==2.2.2 \
-        tiktoken==0.8.0 \
-        tenacity==9.0.0 \
-        structlog==24.4.0 \
-        python-dotenv==1.0.1
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
 
-# Copy python service code
+# Copy dependency definition files
+COPY pyproject.toml uv.lock* ./
+
+# Install dependencies using uv into virtualenv
+RUN uv sync --frozen --no-install-project --no-dev || uv sync --no-install-project --no-dev
+
+# Stage 2: Development Target with Uvicorn Reload
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS dev
+WORKDIR /app
+COPY --from=builder /app/.venv /app/.venv
+COPY . .
+ENV PATH="/app/.venv/bin:$PATH" PYTHONPATH=/app
+EXPOSE 5000
+CMD ["uvicorn", "services.ai.main:app", "--host", "0.0.0.0", "--port", "5000", "--reload"]
+
+# Stage 3: Lightweight Production Runner
+FROM python:3.12-slim AS runner
+WORKDIR /app
+
+RUN addgroup --system --gid 10001 appgroup && \
+    adduser --system --uid 10001 appuser
+
+COPY --from=builder /app/.venv /app/.venv
 COPY . .
 
-ENV PYTHONPATH=/app
+ENV PATH="/app/.venv/bin:$PATH" PYTHONPATH=/app
+RUN chown -R appuser:appgroup /app
+
+USER appuser
 EXPOSE 5000
-CMD ["uvicorn", "services.ai.main:app", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["uvicorn", "services.ai.main:app", "--host", "0.0.0.0", "--port", "5000", "--workers", "4"]

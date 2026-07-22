@@ -1,6 +1,6 @@
 import axios, { AxiosError, AxiosRequestConfig } from "axios";
 
-export const API_BASE_URL = "/api/v1";
+export const API_BASE_URL = "/api";
 
 export class ApiError extends Error {
   status?: number | undefined;

@@ -1,50 +1,45 @@
 # Stage 1: Install dependencies using Bun
 FROM oven/bun:1.2-alpine AS deps
 WORKDIR /app
-
-# Copy dependency definition files
 COPY package.json bun.lock* ./
+RUN bun install --frozen-lockfile
 
-# Install dependencies
-RUN bun install
-
-# Stage 2: Build Next.js standalone application
-FROM node:20-alpine AS builder
+# Stage 2: Development Stage with Hot Reload (Bun Dev)
+FROM oven/bun:1.2-alpine AS dev
 WORKDIR /app
-
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_ENV=production
-
-# Copy dependencies and source code
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+ENV NODE_ENV=development PORT=3000 HOSTNAME="0.0.0.0"
+EXPOSE 3000
+CMD ["bun", "dev"]
 
-# Build standalone Next.js application
-RUN npx next build
-
-# Stage 3: Lightweight Production Runner
-FROM node:20-alpine AS runner
+# Stage 3: Build Next.js standalone application using Bun
+FROM oven/bun:1.2-alpine AS builder
 WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1 NODE_ENV=production
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN bun run build
 
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
+# Stage 4: Lightweight Production Runner using Bun Runtime
+FROM oven/bun:1.2-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME="0.0.0.0"
 
-# Create non-root system user
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
+# Create non-root system user for Bun
+RUN addgroup --system --gid 1001 bungroup && \
+    adduser --system --uid 1001 bunuser
 
 # Copy standalone output from builder stage
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# Set permissions for nextjs user
-RUN chown -R nextjs:nodejs /app
+# Set permissions for bunuser
+RUN chown -R bunuser:bungroup /app
 
-USER nextjs
+USER bunuser
 
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+CMD ["bun", "run", "server.js"]

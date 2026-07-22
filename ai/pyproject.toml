@@ -1,5 +1,5 @@
 [project]
-name = "@kanban/ai"
+name = "kanban-ai"
 version = "0.1.0"
 description = "AI service for Kanban — LLM Gateway + RAG"
 requires-python = ">=3.12"

@@ -1,0 +1,39 @@
+# ============================================================
+# KANBAN PROJECT — Local Development Overrides
+# Run: docker compose -f compose.yaml -f compose.dev.yaml up -d
+# Enables Hot-Reload for Next.js, Air for Go, & Uvicorn for Python
+# ============================================================
+
+services:
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./frontend:/app
+      - /app/.next
+      - /app/node_modules
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: dev
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      - APP_ENV=development
+    volumes:
+      - ./backend:/app
+
+  ai:
+    build:
+      context: ./ai
+      dockerfile: Dockerfile
+      target: dev
+    user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      - ./ai:/app
