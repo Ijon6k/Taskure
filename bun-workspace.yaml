@@ -1,8 +1,0 @@
-{
-  "$schema": "https://bun.sh/schema.json",
-  "workspaces": [
-    "apps/*",
-    "packages/*",
-    "services/*"
-  ]
-}

@@ -23,8 +23,8 @@ services:
 
   web:
     build:
-      context: .
-      dockerfile: apps/web/Dockerfile
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: kanban-web
     expose:
       - "3000"
@@ -39,8 +39,8 @@ services:
 
   api:
     build:
-      context: .
-      dockerfile: apps/api/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: kanban-api
     expose:
       - "4000"
@@ -68,8 +68,8 @@ services:
 
   ai:
     build:
-      context: .
-      dockerfile: services/ai/Dockerfile
+      context: ./ai
+      dockerfile: Dockerfile
     container_name: kanban-ai
     expose:
       - "5000"

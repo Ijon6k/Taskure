@@ -1,10 +1,7 @@
 FROM python:3.12-slim
-WORKDIR /repo
+WORKDIR /app
 
-# Copy this service
-COPY services/ai ./services/ai
-
-# Install dependencies from pyproject.toml via pip
+# Install dependencies from requirements/pip
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir \
         fastapi==0.115.6 \
@@ -26,7 +23,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
         structlog==24.4.0 \
         python-dotenv==1.0.1
 
-ENV PYTHONPATH=/repo
-WORKDIR /repo/services/ai
+# Copy python service code
+COPY . .
+
+ENV PYTHONPATH=/app
 EXPOSE 5000
 CMD ["uvicorn", "services.ai.main:app", "--host", "0.0.0.0", "--port", "5000"]

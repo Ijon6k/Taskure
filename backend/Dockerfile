@@ -1,16 +1,14 @@
 # Build stage
 FROM golang:1.24-alpine AS builder
-WORKDIR /repo
+WORKDIR /app
 
-# Copy monorepo root
-COPY package.json ./
-
-# Copy this app
-COPY apps/api ./apps/api
-
-WORKDIR /repo/apps/api
+# Copy module files and download dependencies
+COPY go.mod go.sum ./
 ENV GOTOOLCHAIN=auto
 RUN go mod download
+
+# Copy source code and build Go binary
+COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o /server ./cmd/server
 
 # Runtime stage
