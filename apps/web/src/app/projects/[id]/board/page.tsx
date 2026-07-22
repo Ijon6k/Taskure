@@ -2,12 +2,15 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, FileText, LayoutGrid, FileCode, Layers, Download, Upload } from "lucide-react";
+import { ChevronRight, FileText, LayoutGrid, FileCode, Download, Upload, Edit3 } from "lucide-react";
 import { useProject } from "@/lib/api";
 import { Sidebar } from "@/components/layout/sidebar";
 import { KanbanBoard } from "@/components/kanban/kanban-board";
 import { TaskDrawer } from "@/components/task/task-drawer";
 import { CreateProjectModal } from "@/components/project/create-project-modal";
+import { EditProjectModal } from "@/components/project/edit-project-modal";
+import { ImportJsonModal } from "@/components/project/import-json-modal";
+import { ProjectOverviewTab } from "@/components/project/project-overview-tab";
 
 export default function ProjectBoardPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -16,6 +19,8 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
   const { data: project, isLoading: loading, refetch } = useProject(projectId);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "board" | "context">("board");
 
   const handleExportJSON = () => {
@@ -29,64 +34,59 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
     downloadAnchor.remove();
   };
 
-  const handleImportJSON = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "application/json";
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-      try {
-        const text = await file.text();
-        const imported = JSON.parse(text);
-        if (imported.name) {
-          alert(`Berhasil membaca berkas ekspor "${imported.name}"!`);
-        }
-      } catch {
-        alert("Gagal membaca berkas JSON.");
-      }
-    };
-    input.click();
-  };
-
   return (
-    <div className="flex h-screen bg-black text-[#F0F0F0] font-sans select-none overflow-hidden">
+    <div className="flex h-screen bg-theme-main text-theme-primary font-sans select-none overflow-hidden">
       {/* Sidebar */}
       <Sidebar onOpenCreateProject={() => setIsCreateModalOpen(true)} />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        {/* Header Header & Sub-Nav Tabs */}
-        <header className="pt-5 px-8 border-b border-white/6 flex flex-col gap-3 shrink-0">
-          {/* Breadcrumbs */}
-          <div className="flex items-center gap-1 text-[12px] text-[#787878] font-medium">
-            <Link href="/projects" className="hover:text-[#F0F0F0] transition-colors">
+        {/* Header Navigation */}
+        <header className="pt-5 px-8 border-b border-theme-default flex flex-col gap-3 shrink-0 bg-theme-surface">
+          {/* Breadcrumbs (+1 step size) */}
+          <div className="flex items-center gap-1.5 text-[14px] text-theme-secondary font-medium">
+            <Link href="/projects" className="hover:text-theme-primary transition-colors">
               Projects
             </Link>
-            <ChevronRight className="w-3 h-3" />
+            <ChevronRight className="w-3.5 h-3.5 text-theme-tertiary" />
+            <span className="text-theme-primary font-medium">{project?.name || "..."}</span>
           </div>
 
-          {/* Project Title */}
+          {/* Project Title & Actions */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">{project?.icon || "⚡"}</span>
               <span
-                className="w-2.5 h-2.5 rounded-full shrink-0"
+                className="w-3 h-3 rounded-full shrink-0"
                 style={{ backgroundColor: project?.color || "#7F9CF5" }}
               />
-              <h1 className="text-[20px] font-normal text-[#F0F0F0] tracking-tight">
+              <h1 className="text-[20px] font-medium text-theme-primary tracking-tight">
                 {project?.name || "Loading..."}
               </h1>
+              {project?.status && (
+                <span className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-theme-elevated border border-theme-default text-theme-secondary capitalize">
+                  {project.status}
+                </span>
+              )}
             </div>
+
+            <button
+              onClick={() => setIsEditModalOpen(true)}
+              className="px-3 py-1.5 rounded-[6px] bg-theme-elevated hover:bg-theme-hover border border-theme-default text-theme-primary text-[13px] font-medium transition-colors flex items-center gap-1.5"
+            >
+              <Edit3 className="w-3.5 h-3.5 text-brand-accent" />
+              <span>Edit Project</span>
+            </button>
           </div>
 
           {/* Tabs Navigation */}
-          <div className="flex items-center gap-1 text-[14px] font-medium pt-2">
+          <div className="flex items-center gap-1 text-[14px] font-medium pt-1">
             <button
               onClick={() => setActiveTab("overview")}
               className={`px-3 py-2 border-b-2 flex items-center gap-2 transition-colors ${
                 activeTab === "overview"
-                  ? "border-[#F0F0F0] text-[#F0F0F0]"
-                  : "border-transparent text-[#787878] hover:text-[#F0F0F0]"
+                  ? "border-brand-accent text-theme-primary"
+                  : "border-transparent text-theme-secondary hover:text-theme-primary"
               }`}
             >
               <FileText className="w-[15px] h-[15px]" />
@@ -97,8 +97,8 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
               onClick={() => setActiveTab("board")}
               className={`px-3 py-2 border-b-2 flex items-center gap-2 transition-colors ${
                 activeTab === "board"
-                  ? "border-[#F0F0F0] text-[#F0F0F0]"
-                  : "border-transparent text-[#787878] hover:text-[#F0F0F0]"
+                  ? "border-brand-accent text-theme-primary"
+                  : "border-transparent text-theme-secondary hover:text-theme-primary"
               }`}
             >
               <LayoutGrid className="w-[15px] h-[15px]" />
@@ -109,8 +109,8 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
               onClick={() => setActiveTab("context")}
               className={`px-3 py-2 border-b-2 flex items-center gap-2 transition-colors ${
                 activeTab === "context"
-                  ? "border-[#F0F0F0] text-[#F0F0F0]"
-                  : "border-transparent text-[#787878] hover:text-[#F0F0F0]"
+                  ? "border-brand-accent text-theme-primary"
+                  : "border-transparent text-theme-secondary hover:text-theme-primary"
               }`}
             >
               <FileCode className="w-[15px] h-[15px]" />
@@ -119,35 +119,27 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
           </div>
         </header>
 
-        {/* Action Bar & Hint */}
-        <div className="px-8 py-3 flex items-center justify-between text-[12px] shrink-0">
-          <p className="text-[#787878]">
+        {/* Action Bar */}
+        <div className="px-8 py-2.5 flex items-center justify-between text-[12px] shrink-0 border-b border-theme-subtle bg-theme-surface/50">
+          <p className="text-theme-secondary">
             Drag tasks between columns to change status. Sync with any external tool via JSON.
           </p>
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => alert("Template feature available in Phase 2.")}
-              className="px-2.5 py-1.5 rounded-[6px] border border-white/6 text-[#787878] hover:text-[#F0F0F0] hover:bg-[#141414] transition-colors flex items-center gap-1.5 font-medium"
-            >
-              <Layers className="w-[13px] h-[13px]" />
-              <span>Template</span>
-            </button>
-
-            <button
               onClick={handleExportJSON}
-              className="px-2.5 py-1.5 rounded-[6px] border border-white/6 text-[#787878] hover:text-[#F0F0F0] hover:bg-[#141414] transition-colors flex items-center gap-1.5 font-medium"
+              className="px-2.5 py-1 rounded-[6px] border border-theme-default text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated transition-colors flex items-center gap-1.5 font-medium"
             >
               <Download className="w-[13px] h-[13px]" />
-              <span>Export</span>
+              <span>Export JSON</span>
             </button>
 
             <button
-              onClick={handleImportJSON}
-              className="px-2.5 py-1.5 rounded-[6px] bg-[#141414] border border-white/6 text-[#F0F0F0] hover:bg-[#1c1c1c] transition-colors flex items-center gap-1.5 font-medium"
+              onClick={() => setIsImportModalOpen(true)}
+              className="px-2.5 py-1 rounded-[6px] bg-theme-elevated border border-theme-default text-theme-primary hover:bg-theme-hover transition-colors flex items-center gap-1.5 font-medium"
             >
               <Upload className="w-[13px] h-[13px]" />
-              <span>Import</span>
+              <span>Import JSON</span>
             </button>
           </div>
         </div>
@@ -157,12 +149,12 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
           <div className="flex-1 overflow-hidden px-8 py-4">
             {loading ? (
               <div className="flex gap-5 animate-pulse">
-                <div className="w-[280px] h-96 bg-[#0C0C0C] rounded-[6px]" />
-                <div className="w-[280px] h-96 bg-[#0C0C0C] rounded-[6px]" />
-                <div className="w-[280px] h-96 bg-[#0C0C0C] rounded-[6px]" />
+                <div className="w-[280px] h-96 bg-theme-surface rounded-[6px]" />
+                <div className="w-[280px] h-96 bg-theme-surface rounded-[6px]" />
+                <div className="w-[280px] h-96 bg-theme-surface rounded-[6px]" />
               </div>
             ) : !project ? (
-              <div className="p-8 text-center text-[#787878]">
+              <div className="p-8 text-center text-theme-secondary">
                 Proyek tidak ditemukan.
               </div>
             ) : (
@@ -177,35 +169,46 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
         )}
 
         {activeTab === "overview" && (
-          <div className="flex-1 p-8 text-[14px] text-[#787878]">
-            <div className="max-w-2xl space-y-4">
-              <h3 className="text-[18px] text-[#F0F0F0] font-medium">Overview</h3>
-              <p>{project?.description || "Belum ada deskripsi projek."}</p>
-            </div>
-          </div>
+          <ProjectOverviewTab
+            project={project || null}
+            onEditClick={() => setIsEditModalOpen(true)}
+          />
         )}
 
         {activeTab === "context" && (
-          <div className="flex-1 p-8 text-[14px] text-[#787878]">
+          <div className="flex-1 p-8 text-[14px] text-theme-secondary">
             <div className="max-w-2xl space-y-4">
-              <h3 className="text-[18px] text-[#F0F0F0] font-medium">Project Context Documents</h3>
+              <h3 className="text-[18px] text-theme-primary font-medium">Project Context Documents</h3>
               <p>Dokumen konteks pengetahuan untuk AI RAG (dapat diunggah di Phase 2).</p>
             </div>
           </div>
         )}
       </div>
 
-      {/* Task Detail Drawer */}
+      {/* Modals & Drawer */}
       <TaskDrawer
         taskId={selectedTaskId}
         onClose={() => setSelectedTaskId(null)}
         onTaskUpdated={refetch}
       />
 
-      {/* Create Project Modal */}
       <CreateProjectModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={() => refetch()}
+      />
+
+      <EditProjectModal
+        isOpen={isEditModalOpen}
+        project={project || null}
+        onClose={() => setIsEditModalOpen(false)}
+        onSuccess={() => refetch()}
+      />
+
+      <ImportJsonModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={() => refetch()}
       />
     </div>
   );

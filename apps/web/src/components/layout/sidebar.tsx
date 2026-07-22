@@ -47,14 +47,14 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
   ];
 
   return (
-    <aside className="w-[224px] h-screen bg-[#050505] border-r border-white/5 flex flex-col shrink-0 text-[#F0F0F0] select-none z-20">
+    <aside className="w-[224px] h-screen bg-theme-surface border-r border-theme-default flex flex-col shrink-0 text-theme-primary select-none z-20">
       {/* Workspace Brand Header */}
-      <div className="h-[56px] px-3 flex items-center justify-between border-b border-white/5">
+      <div className="h-[56px] px-3 flex items-center justify-between border-b border-theme-default">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-[28px] h-[28px] bg-[#7F9CF5] rounded-[6px] flex items-center justify-center text-black font-bold text-sm">
+          <div className="w-[28px] h-[28px] bg-brand-accent rounded-[6px] flex items-center justify-center text-black font-bold text-sm">
             K
           </div>
-          <span className="text-[14px] font-medium text-[#F0F0F0] font-sans">
+          <span className="text-[14px] font-medium text-theme-primary font-sans">
             My Kanban
           </span>
         </Link>
@@ -73,13 +73,13 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
               href={item.href}
               className={`w-[207px] h-[36px] px-2.5 rounded-[6px] flex items-center gap-3 text-[14px] font-medium transition-colors ${
                 isActive
-                  ? "bg-[#141414] text-[#F0F0F0]"
-                  : "text-[#787878] hover:text-[#F0F0F0] hover:bg-[#141414]/50"
+                  ? "bg-theme-elevated text-theme-primary"
+                  : "text-theme-secondary hover:text-theme-primary hover:bg-theme-hover"
               }`}
             >
               <Icon
                 className={`w-[17px] h-[17px] ${
-                  isActive ? "text-[#F0F0F0]" : "text-[#787878]"
+                  isActive ? "text-theme-primary" : "text-theme-secondary"
                 }`}
               />
               <span>{item.label}</span>
@@ -90,7 +90,7 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
         {/* Quick Project Links Sub-Section */}
         {projects.length > 0 && (
           <div className="pt-4 px-2.5">
-            <div className="text-[11px] font-medium text-[#787878] uppercase tracking-wider mb-2">
+            <div className="text-[11px] font-medium text-theme-secondary uppercase tracking-wider mb-2">
               Projek ({projects.length})
             </div>
             <div className="space-y-0.5">
@@ -102,8 +102,8 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
                     href={`/projects/${proj.id}/board`}
                     className={`flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[13px] truncate transition-colors ${
                       isProjectActive
-                        ? "bg-[#141414] text-[#F0F0F0]"
-                        : "text-[#787878] hover:text-[#F0F0F0] hover:bg-[#141414]/50"
+                        ? "bg-theme-elevated text-theme-primary"
+                        : "text-theme-secondary hover:text-theme-primary hover:bg-theme-hover"
                     }`}
                   >
                     <span
@@ -120,13 +120,13 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
       </div>
 
       {/* Footer Demo Seed Action */}
-      <div className="p-2 border-t border-white/5">
+      <div className="p-2 border-t border-theme-default">
         <button
           onClick={handleSeed}
           disabled={seedDemoMutation.isPending}
-          className="w-[207px] h-[36px] px-2.5 rounded-[6px] flex items-center gap-2.5 text-[13px] font-medium text-[#787878] hover:text-[#F0F0F0] hover:bg-[#141414] transition-colors"
+          className="w-[207px] h-[36px] px-2.5 rounded-[6px] flex items-center gap-2.5 text-[13px] font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated transition-colors"
         >
-          <Database className="w-[17px] h-[17px] text-[#787878]" />
+          <Database className="w-[17px] h-[17px] text-theme-secondary" />
           <span>{seedDemoMutation.isPending ? "Seeding..." : "Seed Demo Data"}</span>
         </button>
       </div>
