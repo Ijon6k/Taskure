@@ -17,7 +17,7 @@ A self-hosted, open-source kanban + project management workspace with built-in A
 
 | Layer | Tech |
 |---|---|
-| Frontend | Next.js 15.5 + React 19 + TailwindCSS v4 + shadcn/ui |
+| Frontend | Next.js 15.5 + React 19 + TailwindCSS v4 + @dnd-kit + React Query v5 + Zustand |
 | Backend | Go 1.24 + Gin framework + GORM |
 | AI Service | Python 3.12 + FastAPI |
 | Database | PostgreSQL 16 + pgvector |
@@ -117,34 +117,35 @@ uvicorn services.ai.main:app --reload
 
 ```
 kanbanproject/
-├── apps/
-│   ├── web/                # Next.js 15.5 frontend
-│   │   ├── src/app/        # App Router pages
-│   │   ├── src/components/ # React components
-│   │   ├── src/hooks/      # Custom hooks
-│   │   ├── src/lib/        # API client, utils
-│   │   └── Dockerfile
-│   └── api/                # Go 1.24 backend
-│       ├── cmd/server/     # Entry point
-│       ├── internal/
-│       │   ├── config/     # Env-driven config
-│       │   ├── db/         # GORM connection + AutoMigrate
-│       │   ├── models/     # GORM domain models (13 entities)
-│       │   └── middleware/ # Gin middleware (CORS, auth, etc)
-│       ├── go.mod / go.sum
-│       └── Dockerfile
+├── frontend/                  # Next.js 15.5 frontend
+│   └── src/
+│       ├── app/             # App Router pages
+│       ├── components/      # React components
+│       │   ├── features/   # Feature modules (kanban, project, task, dashboard)
+│       │   ├── layout/     # Layout (Sidebar)
+│       │   ├── modals/    # Shared modals
+│       │   ├── providers/  # Theme, Query providers
+│       │   └── ui/        # UI primitives
+│       ├── hooks/          # Custom hooks
+│       ├── lib/            # API services, helpers, types, tags, validations
+│       └── store/          # Zustand global UI store
+├── backend/                  # Go 1.24 REST API
+│   ├── cmd/server/        # Entry point
+│   └── internal/
+│       ├── config/        # Env config
+│       ├── db/           # GORM + AutoMigrate
+│       ├── handler/       # Per-domain handlers
+│       ├── models/       # Domain models (13 entities + Task.Tags)
+│       ├── repository/   # Data access
+│       ├── response/    # Standardized JSON helpers
+│       └── service/     # Business logic
 ├── services/
-│   └── ai/                 # Python 3.12 FastAPI AI service
-│       ├── services/ai/    # routers (chat, embedding, rag, health)
-│       ├── pyproject.toml
-│       └── Dockerfile
-├── packages/
-│   └── shared/             # TypeScript: shared types, Zod schemas
+│   └── ai/               # Python 3.12 FastAPI AI service
 ├── nginx/
-│   └── default.conf        # Reverse proxy config
-├── docker-compose.yml      # Self-host stack (root-level)
-├── .env.example            # Environment template
-└── README.md
+│   └── default.conf     # Reverse proxy config
+├── compose.yaml           # 7-container orchestrator
+├── .env.example
+└── docs-internal/        # Internal docs & reports
 ```
 
 ## Roadmap

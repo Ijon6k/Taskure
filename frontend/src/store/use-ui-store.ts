@@ -40,6 +40,10 @@ interface UIStoreState {
   selectedTag: string;
   setSelectedTag: (tag: string) => void;
   resetFilters: () => void;
+
+  // Sidebar
+  isSidebarCollapsed: boolean;
+  toggleSidebar: () => void;
 }
 
 export const useUIStore = create<UIStoreState>((set) => ({
@@ -81,4 +85,8 @@ export const useUIStore = create<UIStoreState>((set) => ({
   selectedTag: "all",
   setSelectedTag: (tag) => set({ selectedTag: tag }),
   resetFilters: () => set({ searchQuery: "", selectedTag: "all" }),
+
+  // Sidebar
+  isSidebarCollapsed: false,
+  toggleSidebar: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
 }));
