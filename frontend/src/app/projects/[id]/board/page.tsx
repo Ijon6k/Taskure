@@ -1,8 +1,8 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useMemo } from "react";
 import Link from "next/link";
-import { ChevronRight, FileText, LayoutGrid, FileCode, Download, Upload, Edit3 } from "lucide-react";
+import { ChevronRight, FileText, LayoutGrid, FileCode, Download, Upload, Edit3, Filter } from "lucide-react";
 import { useProject, TaskData } from "@/lib/api";
 import { toast } from "sonner";
 import { Sidebar } from "@/components/layout/sidebar";
@@ -14,6 +14,7 @@ import { ImportJsonModal } from "@/components/features/project/import-json-modal
 import { ExportJsonModal } from "@/components/features/project/export-json-modal";
 import { ProjectOverviewTab } from "@/components/features/project/project-overview-tab";
 import { ProjectContextTab } from "@/components/features/project/project-context-tab";
+import { SearchInput } from "@/components/ui/search-input";
 
 import { useUIStore } from "@/store/use-ui-store";
 
@@ -39,7 +40,22 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
     closeExportJson,
     selectedTaskId,
     setSelectedTaskId,
+    searchQuery,
+    setSearchQuery,
+    selectedTag,
+    setSelectedTag,
   } = useUIStore();
+
+  const allTags = useMemo(() => {
+    if (!project?.columns) return [];
+    return Array.from(
+      new Set(
+        project.columns
+          .flatMap((c) => c.tasks || [])
+          .flatMap((t) => (t.labels || []).map((lbl) => (typeof lbl === "string" ? lbl : lbl.name)))
+      )
+    );
+  }, [project?.columns]);
 
   return (
     <div className="flex h-screen bg-theme-main text-theme-primary font-sans select-none overflow-hidden">
@@ -126,53 +142,93 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
           </div>
         </header>
 
-        {/* Action Bar */}
-        <div className="px-8 py-2.5 flex items-center justify-between text-[12px] shrink-0 border-b border-theme-subtle bg-theme-surface/50">
-          <p className="text-theme-secondary">
-            Drag tasks between columns to change status. Sync with any external tool via JSON.
-          </p>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => project && openExportJson(project)}
-              className="px-2.5 py-1 rounded-[6px] border border-theme-default text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated transition-colors flex items-center gap-1.5 font-medium"
-            >
-              <Download className="w-[13px] h-[13px]" />
-              <span>Export JSON</span>
-            </button>
-
-            <button
-              onClick={openImportJson}
-              className="px-2.5 py-1 rounded-[6px] bg-theme-elevated border border-theme-default text-theme-primary hover:bg-theme-hover transition-colors flex items-center gap-1.5 font-medium"
-            >
-              <Upload className="w-[13px] h-[13px]" />
-              <span>Import JSON</span>
-            </button>
-          </div>
-        </div>
-
         {/* Main View Tab Content */}
         {activeTab === "board" && (
-          <div className="flex-1 overflow-hidden px-8 py-4">
-            {loading ? (
-              <div className="flex gap-5 animate-pulse">
-                <div className="w-[280px] h-96 bg-theme-surface rounded-[6px]" />
-                <div className="w-[280px] h-96 bg-theme-surface rounded-[6px]" />
-                <div className="w-[280px] h-96 bg-theme-surface rounded-[6px]" />
+          <>
+            {/* Unified Board Toolbar: Search + Tag Filter + JSON Actions */}
+            <div className="px-8 py-2.5 flex items-center justify-between gap-4 shrink-0 border-b border-theme-subtle bg-theme-surface/50">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <SearchInput
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Filter tasks on board..."
+                  className="!h-[32px] bg-theme-elevated w-[220px]"
+                />
+
+                {/* Tag Filter Pills */}
+                <div className="flex items-center gap-1.5 text-[12px] overflow-x-auto py-0.5">
+                  <span className="text-theme-tertiary flex items-center gap-1 shrink-0 font-medium">
+                    <Filter className="w-3 h-3 text-brand-accent" />
+                    <span>Tag:</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTag("all")}
+                    className={`px-2.5 py-0.5 rounded-[4px] text-[11px] font-medium capitalize transition-colors ${
+                      selectedTag === "all"
+                        ? "bg-brand-accent text-black font-semibold"
+                        : "bg-theme-elevated text-theme-secondary hover:text-theme-primary"
+                    }`}
+                  >
+                    All
+                  </button>
+                  {allTags.map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => setSelectedTag(tag)}
+                      className={`px-2.5 py-0.5 rounded-[4px] text-[11px] font-medium capitalize transition-colors ${
+                        selectedTag === tag
+                          ? "bg-brand-accent text-black font-semibold"
+                          : "bg-theme-elevated text-theme-secondary hover:text-theme-primary"
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
               </div>
-            ) : !project ? (
-              <div className="p-8 text-center text-theme-secondary">
-                Proyek tidak ditemukan.
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => project && openExportJson(project)}
+                  className="px-2.5 py-1 rounded-[6px] border border-theme-default text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated transition-colors flex items-center gap-1.5 font-medium text-[12px]"
+                >
+                  <Download className="w-[13px] h-[13px]" />
+                  <span>Export JSON</span>
+                </button>
+
+                <button
+                  onClick={openImportJson}
+                  className="px-2.5 py-1 rounded-[6px] bg-theme-elevated border border-theme-default text-theme-primary hover:bg-theme-hover transition-colors flex items-center gap-1.5 font-medium text-[12px]"
+                >
+                  <Upload className="w-[13px] h-[13px]" />
+                  <span>Import JSON</span>
+                </button>
               </div>
-            ) : (
-              <KanbanBoard
-                projectId={project.id}
-                columns={project.columns || []}
-                onTaskClick={(task: TaskData) => setSelectedTaskId(task.id)}
-                onRefreshProject={refetch}
-              />
-            )}
-          </div>
+            </div>
+
+            <div className="flex-1 overflow-hidden pb-4">
+              {loading ? (
+                <div className="flex gap-5 animate-pulse h-full items-start p-6">
+                  <div className="w-[280px] h-96 bg-theme-surface rounded-[6px]" />
+                  <div className="w-[280px] h-96 bg-theme-surface rounded-[6px]" />
+                  <div className="w-[280px] h-96 bg-theme-surface rounded-[6px]" />
+                </div>
+              ) : !project ? (
+                <div className="p-8 text-center text-theme-secondary">
+                  Proyek tidak ditemukan.
+                </div>
+              ) : (
+                <KanbanBoard
+                  projectId={project.id}
+                  columns={project.columns || []}
+                  onTaskClick={(task: TaskData) => setSelectedTaskId(task.id)}
+                  onRefreshProject={refetch}
+                />
+              )}
+            </div>
+          </>
         )}
 
         {activeTab === "overview" && (

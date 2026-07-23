@@ -8,6 +8,7 @@ import { ProjectCard } from "@/components/features/project/project-card";
 import { SearchInput } from "@/components/ui/search-input";
 import { FilterPills } from "@/components/ui/filter-pills";
 import { CreateProjectModal } from "@/components/features/project/create-project-modal";
+import { EditProjectModal } from "@/components/features/project/edit-project-modal";
 
 type StatusFilter = "all" | "active" | "paused" | "archived";
 
@@ -23,7 +24,15 @@ import { useUIStore } from "@/store/use-ui-store";
 export default function ProjectsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const { isCreateProjectOpen, openCreateProject, closeCreateProject } = useUIStore();
+  const {
+    isCreateProjectOpen,
+    openCreateProject,
+    closeCreateProject,
+    isEditProjectOpen,
+    editingProject,
+    openEditProject,
+    closeEditProject,
+  } = useUIStore();
 
   const { data: projects = [], isLoading } = useProjects();
 
@@ -96,7 +105,7 @@ export default function ProjectsPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {pinnedProjects.map((proj) => (
-                    <ProjectCard key={proj.id} project={proj} variant="detailed" />
+                    <ProjectCard key={proj.id} project={proj} variant="detailed" onEdit={openEditProject} />
                   ))}
                 </div>
               </div>
@@ -129,7 +138,7 @@ export default function ProjectsPage() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {unpinnedProjects.map((proj) => (
-                    <ProjectCard key={proj.id} project={proj} variant="detailed" />
+                    <ProjectCard key={proj.id} project={proj} variant="detailed" onEdit={openEditProject} />
                   ))}
                 </div>
               )}
@@ -142,6 +151,13 @@ export default function ProjectsPage() {
       <CreateProjectModal
         isOpen={isCreateProjectOpen}
         onClose={closeCreateProject}
+      />
+
+      {/* Modal Edit Project */}
+      <EditProjectModal
+        isOpen={isEditProjectOpen}
+        project={editingProject}
+        onClose={closeEditProject}
       />
     </div>
   );

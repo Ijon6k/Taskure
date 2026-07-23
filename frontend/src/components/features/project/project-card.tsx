@@ -1,18 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import { Settings } from "lucide-react";
 import { ProjectData, TaskData } from "@/lib/api";
 
 interface ProjectCardProps {
   project: ProjectData;
   variant?: "grid" | "compact" | "detailed";
   className?: string;
+  onEdit?: (project: ProjectData) => void;
 }
 
 export function ProjectCard({
   project,
   variant = "grid",
   className = "",
+  onEdit,
 }: ProjectCardProps) {
   const tasks = project.tasks || [];
   const doneCount = tasks.filter((t: TaskData) => t.status === "done").length;
@@ -45,21 +48,22 @@ export function ProjectCard({
 
   if (variant === "detailed") {
     return (
-      <Link
-        href={`/projects/${project.id}/board`}
-        className={`p-4 bg-theme-surface border border-theme-default hover:border-brand-accent/40 hover:bg-theme-hover rounded-[8px] flex flex-col justify-between space-y-3 cursor-pointer transition-colors duration-150 active:scale-[0.99] group shadow-sm ${className}`}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 truncate">
-            <span
-              className="w-2 h-2 rounded-full shrink-0"
-              style={{ backgroundColor: projectColor }}
-            />
-            <span className="text-[14px] font-medium text-theme-primary group-hover:text-brand-accent transition-colors truncate">
-              {project.name}
-            </span>
+      <div className="relative group/card">
+        <Link
+          href={`/projects/${project.id}/board`}
+          className={`p-4 bg-theme-surface border border-theme-default hover:border-brand-accent/40 hover:bg-theme-hover rounded-[8px] flex flex-col justify-between space-y-3 cursor-pointer transition-colors duration-150 active:scale-[0.99] group shadow-sm ${className}`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 truncate">
+              <span
+                className="w-2 h-2 rounded-full shrink-0"
+                style={{ backgroundColor: projectColor }}
+              />
+              <span className="text-[14px] font-medium text-theme-primary group-hover:text-brand-accent transition-colors truncate">
+                {project.name}
+              </span>
+            </div>
           </div>
-        </div>
 
         {project.description && (
           <p className="text-[12px] text-theme-secondary line-clamp-2">
@@ -67,50 +71,83 @@ export function ProjectCard({
           </p>
         )}
 
-        <div className="flex items-center justify-between text-[12px] text-theme-secondary pt-1">
-          <span>
-            {doneCount}/{totalCount} tasks
-          </span>
-          <span className="capitalize">{project.status || "active"}</span>
-        </div>
-      </Link>
+          <div className="flex items-center justify-between text-[12px] text-theme-secondary pt-1">
+            <span>
+              {doneCount}/{totalCount} tasks
+            </span>
+            <span className="capitalize">{project.status || "active"}</span>
+          </div>
+        </Link>
+
+        {onEdit && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onEdit(project);
+            }}
+            className="absolute top-2 right-2 w-7 h-7 rounded-[6px] flex items-center justify-center text-theme-secondary opacity-0 group-hover/card:opacity-100 hover:bg-theme-elevated hover:text-theme-primary transition-all duration-150"
+            title="Project settings"
+          >
+            <Settings className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
     );
   }
 
   // Default "grid" variant
   return (
-    <Link
-      href={`/projects/${project.id}/board`}
-      className={`p-4 bg-theme-surface border border-theme-default hover:border-brand-accent/40 hover:bg-theme-hover rounded-[8px] flex flex-col justify-between h-[96px] cursor-pointer transition-colors duration-150 active:scale-[0.99] group ${className}`}
-    >
-      <div className="flex items-center gap-2">
-        <span
-          className="w-2 h-2 rounded-full shrink-0"
-          style={{ backgroundColor: projectColor }}
-        />
-        <span className="text-[14px] font-medium text-theme-primary group-hover:text-brand-accent transition-colors truncate">
-          {project.name}
-        </span>
-      </div>
-
-      <div className="space-y-2">
-        <div className="w-full h-1 bg-theme-elevated rounded-full overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all duration-300"
-            style={{
-              width: `${percent}%`,
-              backgroundColor: projectColor,
-            }}
+    <div className="relative group/card">
+      <Link
+        href={`/projects/${project.id}/board`}
+        className={`p-4 bg-theme-surface border border-theme-default hover:border-brand-accent/40 hover:bg-theme-hover rounded-[8px] flex flex-col justify-between h-[96px] cursor-pointer transition-colors duration-150 active:scale-[0.99] group ${className}`}
+      >
+        <div className="flex items-center gap-2">
+          <span
+            className="w-2 h-2 rounded-full shrink-0"
+            style={{ backgroundColor: projectColor }}
           />
+          <span className="text-[14px] font-medium text-theme-primary group-hover:text-brand-accent transition-colors truncate">
+            {project.name}
+          </span>
         </div>
 
-        <div className="flex items-center justify-between text-[12px] text-theme-secondary">
-          <span>
-            {doneCount}/{totalCount} done
-          </span>
-          <span className="font-mono">{percent}%</span>
+        <div className="space-y-2">
+          <div className="w-full h-1 bg-theme-elevated rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-300"
+              style={{
+                width: `${percent}%`,
+                backgroundColor: projectColor,
+              }}
+            />
+          </div>
+
+          <div className="flex items-center justify-between text-[12px] text-theme-secondary">
+            <span>
+              {doneCount}/{totalCount} done
+            </span>
+            <span className="font-mono">{percent}%</span>
+          </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+
+      {onEdit && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onEdit(project);
+          }}
+          className="absolute top-2 right-2 w-7 h-7 rounded-[6px] flex items-center justify-center text-theme-secondary opacity-0 group-hover/card:opacity-100 hover:bg-theme-elevated hover:text-theme-primary transition-all duration-150"
+          title="Project settings"
+        >
+          <Settings className="w-3.5 h-3.5" />
+        </button>
+      )}
+    </div>
   );
 }

@@ -10,13 +10,12 @@ import {
   DragEndEvent,
   DragStartEvent,
 } from "@dnd-kit/core";
-import { Plus, LayoutGrid, Sparkles, Search, Filter } from "lucide-react";
+import { Plus, LayoutGrid, Sparkles } from "lucide-react";
 import { ColumnData, TaskData, useMoveTask, api } from "@/lib/api";
 import { KanbanColumn } from "./kanban-column";
 import { KanbanCard } from "./kanban-card";
 import { TrashZone } from "./trash-zone";
 import { ConfirmModal } from "@/components/modals/confirm-modal";
-import { SearchInput } from "@/components/ui/search-input";
 
 interface KanbanBoardProps {
   projectId: string;
@@ -39,7 +38,7 @@ export function KanbanBoard({ projectId, columns, onTaskClick, onRefreshProject 
   const [isInitLoading, setIsInitLoading] = useState(false);
 
   // Search & Filter state from Zustand Store
-  const { searchQuery, setSearchQuery, selectedTag, setSelectedTag } = useUIStore();
+  const { searchQuery, selectedTag } = useUIStore();
 
   useHotkeys("esc", () => {
     if (isAddingColumn) {
@@ -59,15 +58,6 @@ export function KanbanBoard({ projectId, columns, onTaskClick, onRefreshProject 
         distance: 5,
       },
     })
-  );
-
-  // Collect all unique tags across all tasks
-  const allTags = Array.from(
-    new Set(
-      columns
-        .flatMap((c) => c.tasks || [])
-        .flatMap((t) => (t.labels || []).map((lbl) => (typeof lbl === "string" ? lbl : lbl.name)))
-    )
   );
 
   const handleInitDefaultColumns = async () => {
@@ -216,53 +206,6 @@ export function KanbanBoard({ projectId, columns, onTaskClick, onRefreshProject 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex flex-col h-full overflow-hidden">
-        {/* Board Search & Tag Filter Bar */}
-        {columns.length > 0 && (
-          <div className="px-6 py-2.5 bg-theme-surface border-b border-theme-subtle flex items-center justify-between gap-4 shrink-0">
-            <div className="flex items-center gap-3 flex-1 max-w-md">
-              <SearchInput
-                value={searchQuery}
-                onChange={setSearchQuery}
-                placeholder="Filter tasks on board..."
-                className="flex-1 !h-[32px] bg-theme-elevated"
-              />
-            </div>
-
-            {/* Tag Filter Pills */}
-            <div className="flex items-center gap-1.5 text-[12px] overflow-x-auto py-0.5">
-              <span className="text-theme-tertiary flex items-center gap-1 shrink-0 font-medium">
-                <Filter className="w-3 h-3 text-brand-accent" />
-                <span>Tag:</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => setSelectedTag("all")}
-                className={`px-2.5 py-0.5 rounded-[4px] text-[11px] font-medium capitalize transition-colors ${
-                  selectedTag === "all"
-                    ? "bg-brand-accent text-black font-semibold"
-                    : "bg-theme-elevated text-theme-secondary hover:text-theme-primary"
-                }`}
-              >
-                All
-              </button>
-              {allTags.map((tag) => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => setSelectedTag(tag)}
-                  className={`px-2.5 py-0.5 rounded-[4px] text-[11px] font-medium capitalize transition-colors ${
-                    selectedTag === tag
-                      ? "bg-brand-accent text-black font-semibold"
-                      : "bg-theme-elevated text-theme-secondary hover:text-theme-primary"
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         <div className="w-full h-full flex-1 flex gap-5 overflow-x-auto p-6 items-start select-none relative">
           {columns.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center p-12 bg-theme-surface border border-theme-default rounded-[12px] text-center space-y-4 max-w-md mx-auto my-12">
