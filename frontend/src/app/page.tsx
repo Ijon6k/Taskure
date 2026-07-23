@@ -6,14 +6,16 @@ import { FolderPlus, FolderKanban, Pin, Clock } from "lucide-react";
 import { useProjects, useFocusTask } from "@/lib/api";
 import { getTimeGreeting, getFormattedDate } from "@/lib/helpers";
 import { Sidebar } from "@/components/layout/sidebar";
-import { TodaysFocusCard } from "@/components/dashboard/todays-focus-card";
-import { ProjectCard } from "@/components/project/project-card";
-import { CreateProjectModal } from "@/components/project/create-project-modal";
+import { TodaysFocusCard } from "@/components/features/dashboard/todays-focus-card";
+import { ProjectCard } from "@/components/features/project/project-card";
+import { CreateProjectModal } from "@/components/features/project/create-project-modal";
+
+import { useUIStore } from "@/store/use-ui-store";
 
 export default function HomePage() {
   const { data: projects = [], isLoading: isProjectsLoading } = useProjects();
   const { data: focusResp, isLoading: isFocusLoading } = useFocusTask();
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const { isCreateProjectOpen, openCreateProject, closeCreateProject } = useUIStore();
 
   const focusData = focusResp?.focus || null;
   const isLoading = isProjectsLoading || isFocusLoading;
@@ -24,7 +26,7 @@ export default function HomePage() {
   return (
     <div className="flex h-screen bg-theme-main text-theme-primary font-sans select-none overflow-hidden">
       {/* Sidebar */}
-      <Sidebar onOpenCreateProject={() => setIsCreateModalOpen(true)} />
+      <Sidebar onOpenCreateProject={openCreateProject} />
 
       {/* Main View Area */}
       <main className="flex-1 overflow-y-auto">
@@ -55,7 +57,7 @@ export default function HomePage() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
-                  onClick={() => setIsCreateModalOpen(true)}
+                  onClick={openCreateProject}
                   className="h-[42px] px-3 border border-theme-default rounded-[6px] flex items-center gap-2.5 text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated transition-colors text-[14px] font-medium"
                 >
                   <FolderPlus className="w-[15px] h-[15px]" />
@@ -83,7 +85,7 @@ export default function HomePage() {
 
               {pinnedProjects.length === 0 ? (
                 <div className="p-4 border border-theme-default rounded-[8px] bg-theme-surface text-xs text-theme-secondary">
-                  Belum ada projek yang di-pin.
+                  No pinned projects yet.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -123,8 +125,8 @@ export default function HomePage() {
 
       {/* Modal */}
       <CreateProjectModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        isOpen={isCreateProjectOpen}
+        onClose={closeCreateProject}
       />
     </div>
   );

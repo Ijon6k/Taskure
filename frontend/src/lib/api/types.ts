@@ -1,3 +1,21 @@
+// ─── Project Settings (stored in JSONB column) ───────────────────────────────
+
+export interface ResourceLinkItem {
+  id: string;
+  title: string;
+  url: string;
+}
+
+export interface ProjectSettings {
+  target_goal?: string;
+  target_date?: string;
+  tags?: string[];
+  resources?: ResourceLinkItem[];
+  strategy_notes?: string;
+}
+
+// ─── Core Domain Types ────────────────────────────────────────────────────────
+
 export interface ProjectData {
   id: string;
   name: string;
@@ -9,6 +27,8 @@ export interface ProjectData {
   is_archived: boolean;
   created_at: string;
   updated_at: string;
+  // JSONB column — all flexible project metadata lives here
+  settings?: ProjectSettings;
   columns?: ColumnData[];
   tasks?: TaskData[];
   contexts?: ProjectContextData[];
@@ -61,15 +81,18 @@ export interface ProjectContextData {
 export interface TaskData {
   id: string;
   title: string;
-  description?: string | undefined;
+  description?: string;
   column_id: string;
   project_id: string;
   priority: "urgent" | "high" | "medium" | "low";
   status: "todo" | "in_progress" | "done";
   position: number;
-  due_date?: string | undefined;
+  due_date?: string;
+  // Tags stored as string array (matches backend UpdateTask JSON key)
+  tags?: string[];
+  // Legacy field from backend — kept for backwards compat
+  labels?: LabelData[];
   checklist_items?: ChecklistItemData[];
-  labels?: (LabelData | string)[];
   attachments?: AttachmentData[];
 }
 
@@ -82,6 +105,8 @@ export interface FocusResult {
   days_remaining?: number;
 }
 
+// ─── Input / Mutation Types ───────────────────────────────────────────────────
+
 export interface CreateProjectInput {
   name: string;
   description?: string;
@@ -89,6 +114,22 @@ export interface CreateProjectInput {
   icon?: string;
   status?: string;
   is_pinned?: boolean;
+}
+
+export interface UpdateProjectInput {
+  name?: string;
+  description?: string;
+  color?: string;
+  icon?: string;
+  status?: string;
+  is_pinned?: boolean;
+  is_archived?: boolean;
+  // Overview fields — merged into settings JSONB by backend service
+  target_goal?: string;
+  target_date?: string;
+  tags?: string[];
+  resources?: ResourceLinkItem[];
+  strategy_notes?: string;
 }
 
 export interface CreateColumnInput {
@@ -102,7 +143,16 @@ export interface CreateTaskInput {
   priority?: string;
   description?: string;
   due_date?: string;
-  labels?: string[];
+  tags?: string[];
+}
+
+export interface UpdateTaskInput {
+  title?: string;
+  description?: string;
+  priority?: string;
+  status?: string;
+  due_date?: string | null;
+  tags?: string[];
 }
 
 export interface MoveTaskInput {

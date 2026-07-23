@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Check, CheckCircle2 } from "lucide-react";
 import { Sidebar } from "@/components/layout/sidebar";
-import { CreateProjectModal } from "@/components/project/create-project-modal";
+import { CreateProjectModal } from "@/components/features/project/create-project-modal";
 
 import { useTheme } from "@/components/providers/theme-provider";
 

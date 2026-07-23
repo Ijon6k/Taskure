@@ -1,8 +1,7 @@
 package handler
 
 import (
-	"net/http"
-
+	"github.com/Ijon6k/kanbanproject/apps/api/internal/response"
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -22,63 +21,63 @@ func (h *ProjectHandler) ListProjects(c *gin.Context) {
 
 	projects, err := h.service.ListProjects(status, search, pinned)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.InternalServerError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, projects)
+	response.OK(c, projects)
 }
 
 func (h *ProjectHandler) CreateProject(c *gin.Context) {
 	var input service.CreateProjectInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.BadRequest(c, err)
 		return
 	}
 
 	project, err := h.service.CreateProject(input)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.InternalServerError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusCreated, project)
+	response.Created(c, project)
 }
 
 func (h *ProjectHandler) GetProject(c *gin.Context) {
 	idParam := c.Param("id")
 	project, err := h.service.GetProject(idParam)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Project not found"})
+		response.NotFound(c, "Project not found")
 		return
 	}
 
-	c.JSON(http.StatusOK, project)
+	response.OK(c, project)
 }
 
 func (h *ProjectHandler) UpdateProject(c *gin.Context) {
 	idParam := c.Param("id")
 	var updates map[string]interface{}
 	if err := c.ShouldBindJSON(&updates); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.BadRequest(c, err)
 		return
 	}
 
 	project, err := h.service.UpdateProject(idParam, updates)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Project not found"})
+		response.NotFound(c, "Project not found")
 		return
 	}
 
-	c.JSON(http.StatusOK, project)
+	response.OK(c, project)
 }
 
 func (h *ProjectHandler) DeleteProject(c *gin.Context) {
 	idParam := c.Param("id")
 	if err := h.service.DeleteProject(idParam); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Project not found"})
+		response.NotFound(c, "Project not found")
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Project deleted successfully"})
+	response.Message(c, "Project deleted successfully")
 }

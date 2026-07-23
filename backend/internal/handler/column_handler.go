@@ -1,8 +1,7 @@
 package handler
 
 import (
-	"net/http"
-
+	"github.com/Ijon6k/kanbanproject/apps/api/internal/response"
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -19,42 +18,42 @@ func (h *ColumnHandler) CreateColumn(c *gin.Context) {
 	projectIDParam := c.Param("id")
 	var input service.CreateColumnInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.BadRequest(c, err)
 		return
 	}
 
 	col, err := h.service.CreateColumn(projectIDParam, input)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.InternalServerError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusCreated, col)
+	response.Created(c, col)
 }
 
 func (h *ColumnHandler) UpdateColumn(c *gin.Context) {
 	id := c.Param("id")
 	var updates map[string]interface{}
 	if err := c.ShouldBindJSON(&updates); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.BadRequest(c, err)
 		return
 	}
 
 	col, err := h.service.UpdateColumn(id, updates)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Column not found"})
+		response.NotFound(c, "Column not found")
 		return
 	}
 
-	c.JSON(http.StatusOK, col)
+	response.OK(c, col)
 }
 
 func (h *ColumnHandler) DeleteColumn(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.DeleteColumn(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.InternalServerError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Column deleted"})
+	response.Message(c, "Column deleted")
 }

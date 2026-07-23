@@ -25,6 +25,9 @@ const STATUS_OPTIONS = [
   { label: "Archived", value: "archived" },
 ];
 
+import { toast } from "sonner";
+import { useHotkeys } from "react-hotkeys-hook";
+
 export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditProjectModalProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -33,6 +36,10 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
   const [icon, setIcon] = useState("⚡");
 
   const updateProjectMutation = useUpdateProject();
+
+  useHotkeys("esc", () => {
+    if (isOpen) onClose();
+  }, { enabled: isOpen });
 
   useEffect(() => {
     if (project) {
@@ -63,8 +70,12 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
       },
       {
         onSuccess: () => {
+          toast.success("Project updated successfully!");
           if (onSuccess) onSuccess();
           onClose();
+        },
+        onError: (err) => {
+          toast.error("Failed to update project: " + err.message);
         },
       }
     );

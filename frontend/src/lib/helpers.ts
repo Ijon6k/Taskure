@@ -8,15 +8,14 @@ export function getFormattedDate(): string {
     month: "long",
     day: "numeric",
   };
-  return new Date().toLocaleDateString("id-ID", options);
+  return new Date().toLocaleDateString("en-US", options);
 }
 
 export function getTimeGreeting(): string {
   const hour = new Date().getHours();
-  if (hour >= 4 && hour < 11) return "Selamat pagi";
-  if (hour >= 11 && hour < 15) return "Selamat siang";
-  if (hour >= 15 && hour < 18) return "Selamat sore";
-  return "Selamat malam";
+  if (hour >= 4 && hour < 12) return "Good morning";
+  if (hour >= 12 && hour < 17) return "Good afternoon";
+  return "Good evening";
 }
 
 export interface PriorityConfig {

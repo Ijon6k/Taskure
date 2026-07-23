@@ -32,10 +32,10 @@ export function FilterPills<T extends string = string>({
             key={key}
             type="button"
             onClick={() => onChange(key as T)}
-            className={`px-2.5 py-1 rounded-[4px] text-[12px] font-medium capitalize transition-colors ${
+            className={`px-2.5 py-1 rounded-[4px] text-[12px] font-medium capitalize cursor-pointer transition-all duration-150 active:scale-[0.97] ${
               isActive
-                ? "bg-theme-elevated text-theme-primary"
-                : "text-theme-secondary hover:text-theme-primary"
+                ? "bg-theme-elevated text-theme-primary shadow-xs"
+                : "text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated/60"
             }`}
           >
             {label}

@@ -149,6 +149,7 @@ type Task struct {
 	StartDate      *time.Time `json:"start_date,omitempty"`
 	EstimatedHours *float64   `json:"estimated_hours,omitempty"`
 	ActualHours    *float64   `json:"actual_hours,omitempty"`
+	Tags           datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"tags"`
 
 	Labels         []Label         `gorm:"many2many:task_labels;constraint:OnDelete:CASCADE" json:"labels,omitempty"`
 	ChecklistItems []ChecklistItem `gorm:"foreignKey:TaskID;constraint:OnDelete:CASCADE" json:"checklist_items,omitempty"`

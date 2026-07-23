@@ -9,7 +9,7 @@ import (
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/models"
 )
 
-// FocusScoreResult holds a task with its calculated score and Indonesian rationale.
+// FocusScoreResult holds a task with its calculated score and English rationale.
 type FocusScoreResult struct {
 	Task         models.Task `json:"task"`
 	ProjectName  string      `json:"project_name"`
@@ -42,16 +42,16 @@ func CalculateFocusTasks(tasks []models.Task, projectMap map[string]models.Proje
 
 			if days < 0 {
 				score += 40.0
-				reasons = append(reasons, fmt.Sprintf("Terlambat %d hari", -days))
+				reasons = append(reasons, fmt.Sprintf("%d days overdue", -days))
 			} else if days == 0 {
 				score += 38.0
-				reasons = append(reasons, "Jatuh tempo hari ini")
+				reasons = append(reasons, "Due today")
 			} else if days <= 3 {
 				score += 35.0 - float64(days*5)
-				reasons = append(reasons, fmt.Sprintf("Deadline %d hari lagi", days))
+				reasons = append(reasons, fmt.Sprintf("Due in %d days", days))
 			} else if days <= 7 {
 				score += 15.0
-				reasons = append(reasons, fmt.Sprintf("Deadline %d hari lagi", days))
+				reasons = append(reasons, fmt.Sprintf("Due in %d days", days))
 			}
 		}
 
@@ -59,10 +59,10 @@ func CalculateFocusTasks(tasks []models.Task, projectMap map[string]models.Proje
 		switch task.Priority {
 		case "urgent":
 			score += 30.0
-			reasons = append(reasons, "Prioritas Urgent")
+			reasons = append(reasons, "Urgent Priority")
 		case "high":
 			score += 20.0
-			reasons = append(reasons, "Prioritas Tinggi")
+			reasons = append(reasons, "High Priority")
 		case "medium":
 			score += 10.0
 		case "low":
@@ -72,11 +72,11 @@ func CalculateFocusTasks(tasks []models.Task, projectMap map[string]models.Proje
 		// 3. Status Bonus (In Progress tasks take priority over untouched Todo tasks)
 		if task.Status == "in_progress" {
 			score += 15.0
-			reasons = append(reasons, "Sedang dikerjakan")
+			reasons = append(reasons, "In Progress")
 		}
 
 		// Default fallback reason
-		reasonStr := "Tugas prioritas utama"
+		reasonStr := "Top priority task"
 		if len(reasons) > 0 {
 			reasonStr = reasons[0]
 			if len(reasons) > 1 {

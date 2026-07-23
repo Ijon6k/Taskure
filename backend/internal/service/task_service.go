@@ -1,10 +1,12 @@
 package service
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/models"
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/repository"
+	"gorm.io/datatypes"
 )
 
 type CreateTaskInput struct {
@@ -13,6 +15,7 @@ type CreateTaskInput struct {
 	Priority    string     `json:"priority"`
 	Description string     `json:"description"`
 	DueDate     *time.Time `json:"due_date"`
+	Tags        []string   `json:"tags"`
 }
 
 type MoveTaskInput struct {
@@ -80,6 +83,11 @@ func (s *taskService) CreateTask(projectIDOrPublicID string, input CreateTaskInp
 		DueDate:     input.DueDate,
 	}
 
+	if len(input.Tags) > 0 {
+		tagsJSON, _ := json.Marshal(input.Tags)
+		task.Tags = datatypes.JSON(tagsJSON)
+	}
+
 	if err := s.taskRepo.CreateTask(&task); err != nil {
 		return nil, err
 	}
@@ -95,6 +103,30 @@ func (s *taskService) UpdateTask(idOrPublicID string, updates map[string]interfa
 	task, err := s.taskRepo.FindTask(idOrPublicID)
 	if err != nil {
 		return nil, err
+	}
+
+	// Safely parse due_date string into time.Time struct or nil for GORM map updates
+	if dueDateRaw, ok := updates["due_date"]; ok {
+		if dueDateStr, isStr := dueDateRaw.(string); isStr && dueDateStr != "" {
+			if parsedTime, err := time.Parse(time.RFC3339, dueDateStr); err == nil {
+				updates["due_date"] = parsedTime
+			} else if parsedDate, err := time.Parse("2006-01-02", dueDateStr); err == nil {
+				updates["due_date"] = parsedDate
+			}
+		} else if dueDateRaw == nil || (isStr && dueDateStr == "") {
+			updates["due_date"] = nil
+		}
+	}
+
+	// Safely serialize tags slice into JSONB
+	if tagsRaw, ok := updates["tags"]; ok {
+		if tags, isSlice := tagsRaw.([]string); isSlice && len(tags) > 0 {
+			if tagsJSON, err := json.Marshal(tags); err == nil {
+				updates["tags"] = datatypes.JSON(tagsJSON)
+			}
+		} else {
+			updates["tags"] = datatypes.JSON([]byte("[]"))
+		}
 	}
 
 	if err := s.taskRepo.UpdateTask(task, updates); err != nil {
@@ -122,7 +154,7 @@ func (s *taskService) MoveTask(idOrPublicID string, input MoveTaskInput) (*model
 		return nil, err
 	}
 
-	return task, nil
+	return s.taskRepo.FindTask(task.ID)
 }
 
 func (s *taskService) DeleteTask(idOrPublicID string) error {

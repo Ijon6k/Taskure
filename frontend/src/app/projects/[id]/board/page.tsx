@@ -4,41 +4,47 @@ import { use, useState } from "react";
 import Link from "next/link";
 import { ChevronRight, FileText, LayoutGrid, FileCode, Download, Upload, Edit3 } from "lucide-react";
 import { useProject, TaskData } from "@/lib/api";
+import { toast } from "sonner";
 import { Sidebar } from "@/components/layout/sidebar";
-import { KanbanBoard } from "@/components/kanban/kanban-board";
-import { TaskDrawer } from "@/components/task/task-drawer";
-import { CreateProjectModal } from "@/components/project/create-project-modal";
-import { EditProjectModal } from "@/components/project/edit-project-modal";
-import { ImportJsonModal } from "@/components/project/import-json-modal";
-import { ProjectOverviewTab } from "@/components/project/project-overview-tab";
-import { ProjectContextTab } from "@/components/project/project-context-tab";
+import { KanbanBoard } from "@/components/features/kanban/kanban-board";
+import { TaskDrawer } from "@/components/features/task/task-drawer";
+import { CreateProjectModal } from "@/components/features/project/create-project-modal";
+import { EditProjectModal } from "@/components/features/project/edit-project-modal";
+import { ImportJsonModal } from "@/components/features/project/import-json-modal";
+import { ExportJsonModal } from "@/components/features/project/export-json-modal";
+import { ProjectOverviewTab } from "@/components/features/project/project-overview-tab";
+import { ProjectContextTab } from "@/components/features/project/project-context-tab";
+
+import { useUIStore } from "@/store/use-ui-store";
 
 export default function ProjectBoardPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const projectId = resolvedParams.id;
 
   const { data: project, isLoading: loading, refetch } = useProject(projectId);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "board" | "context">("board");
 
-  const handleExportJSON = () => {
-    if (!project) return;
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(project, null, 2));
-    const downloadAnchor = document.createElement("a");
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `${project.name.toLowerCase().replace(/\s+/g, "-")}-export.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
-  };
+  const {
+    isCreateProjectOpen,
+    closeCreateProject,
+    openCreateProject,
+    isEditProjectOpen,
+    openEditProject,
+    closeEditProject,
+    isImportJsonOpen,
+    openImportJson,
+    closeImportJson,
+    isExportJsonOpen,
+    openExportJson,
+    closeExportJson,
+    selectedTaskId,
+    setSelectedTaskId,
+  } = useUIStore();
 
   return (
     <div className="flex h-screen bg-theme-main text-theme-primary font-sans select-none overflow-hidden">
       {/* Sidebar */}
-      <Sidebar onOpenCreateProject={() => setIsCreateModalOpen(true)} />
+      <Sidebar onOpenCreateProject={openCreateProject} />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
@@ -72,7 +78,7 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
             </div>
 
             <button
-              onClick={() => setIsEditModalOpen(true)}
+              onClick={() => project && openEditProject(project)}
               className="px-3 py-1.5 rounded-[6px] bg-theme-elevated hover:bg-theme-hover border border-theme-default text-theme-primary text-[13px] font-medium transition-colors flex items-center gap-1.5"
             >
               <Edit3 className="w-3.5 h-3.5 text-brand-accent" />
@@ -128,7 +134,7 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
 
           <div className="flex items-center gap-2">
             <button
-              onClick={handleExportJSON}
+              onClick={() => project && openExportJson(project)}
               className="px-2.5 py-1 rounded-[6px] border border-theme-default text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated transition-colors flex items-center gap-1.5 font-medium"
             >
               <Download className="w-[13px] h-[13px]" />
@@ -136,7 +142,7 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
             </button>
 
             <button
-              onClick={() => setIsImportModalOpen(true)}
+              onClick={openImportJson}
               className="px-2.5 py-1 rounded-[6px] bg-theme-elevated border border-theme-default text-theme-primary hover:bg-theme-hover transition-colors flex items-center gap-1.5 font-medium"
             >
               <Upload className="w-[13px] h-[13px]" />
@@ -172,7 +178,8 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
         {activeTab === "overview" && (
           <ProjectOverviewTab
             project={project || null}
-            onEditClick={() => setIsEditModalOpen(true)}
+            onRefreshProject={refetch}
+            onSwitchTab={(tab) => setActiveTab(tab)}
           />
         )}
 
@@ -192,22 +199,28 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
       />
 
       <CreateProjectModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        isOpen={isCreateProjectOpen}
+        onClose={closeCreateProject}
         onSuccess={() => refetch()}
       />
 
       <EditProjectModal
-        isOpen={isEditModalOpen}
+        isOpen={isEditProjectOpen}
         project={project || null}
-        onClose={() => setIsEditModalOpen(false)}
+        onClose={closeEditProject}
         onSuccess={() => refetch()}
       />
 
       <ImportJsonModal
-        isOpen={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
+        isOpen={isImportJsonOpen}
+        onClose={closeImportJson}
         onSuccess={() => refetch()}
+      />
+
+      <ExportJsonModal
+        isOpen={isExportJsonOpen}
+        project={project || null}
+        onClose={closeExportJson}
       />
     </div>
   );

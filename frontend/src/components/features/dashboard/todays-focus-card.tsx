@@ -26,9 +26,9 @@ export function TodaysFocusCard({ focusData, loading }: TodaysFocusCardProps) {
   if (!focusData || !focusData.task) {
     return (
       <div className="w-full bg-[#0C0C0C] border border-white/6 rounded-lg p-6 text-center space-y-2">
-        <h3 className="text-base font-medium text-[#F0F0F0]">Semua Tugas Selesai! 🎉</h3>
+        <h3 className="text-base font-medium text-[#F0F0F0]">All Tasks Completed! 🎉</h3>
         <p className="text-xs text-[#787878]">
-          Tidak ada tugas mendesak hari ini. Kerja bagus!
+          No urgent tasks pending for today. Great job!
         </p>
       </div>
     );

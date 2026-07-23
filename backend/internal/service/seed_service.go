@@ -64,6 +64,11 @@ func (s *seedService) SeedDemoData() ([]string, error) {
 	_ = s.columnRepo.CreateColumn(&col3)
 	_ = s.columnRepo.CreateColumn(&col4)
 
+	lblFeature := models.Label{Name: "Feature", Color: "#7F9CF5", WorkspaceID: ws.ID}
+	lblRefactor := models.Label{Name: "Refactor", Color: "#B794F6", WorkspaceID: ws.ID}
+	lblBug := models.Label{Name: "Bug", Color: "#F6685E", WorkspaceID: ws.ID}
+	lblDocs := models.Label{Name: "Docs", Color: "#68D391", WorkspaceID: ws.ID}
+
 	t1 := models.Task{
 		Title:       "Migrate pagination to cursor-based model",
 		Description: "Refactor list endpoints to use opaque cursor tokens for improved scaling.",
@@ -73,6 +78,7 @@ func (s *seedService) SeedDemoData() ([]string, error) {
 		Status:      "in_progress",
 		Position:    0,
 		DueDate:     &dueInTwoDays,
+		Labels:      []models.Label{lblRefactor},
 	}
 	_ = s.taskRepo.CreateTask(&t1)
 	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Implement cursor encoding", IsCompleted: true, Position: 0, TaskID: t1.ID})
@@ -88,6 +94,7 @@ func (s *seedService) SeedDemoData() ([]string, error) {
 		Status:      "todo",
 		Position:    0,
 		DueDate:     &dueTomorrow,
+		Labels:      []models.Label{lblFeature},
 	}
 	_ = s.taskRepo.CreateTask(&t2)
 	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Design refresh token schema", IsCompleted: true, Position: 0, TaskID: t2.ID})
@@ -103,6 +110,7 @@ func (s *seedService) SeedDemoData() ([]string, error) {
 		Status:      "todo",
 		Position:    1,
 		DueDate:     &dueInTwoDays,
+		Labels:      []models.Label{lblBug},
 	}
 	_ = s.taskRepo.CreateTask(&t3)
 	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Redis rate limit middleware", IsCompleted: true, Position: 0, TaskID: t3.ID})
@@ -117,6 +125,7 @@ func (s *seedService) SeedDemoData() ([]string, error) {
 		Status:      "todo",
 		Position:    2,
 		DueDate:     &dueNextWeek,
+		Labels:      []models.Label{lblDocs},
 	}
 	_ = s.taskRepo.CreateTask(&t4)
 

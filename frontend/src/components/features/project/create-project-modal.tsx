@@ -1,9 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { X, Check, FolderPlus, ArrowRight, FileCode } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { X, FolderPlus, ArrowRight, FileCode } from "lucide-react";
 import { useCreateProject, ProjectData } from "@/lib/api";
+import { createProjectSchema, CreateProjectSchema } from "@/lib/validations";
 import { ImportJsonModal } from "./import-json-modal";
+import { toast } from "sonner";
+import { useHotkeys } from "react-hotkeys-hook";
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -20,32 +25,53 @@ const COLOR_OPTIONS = [
 ];
 
 export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProjectModalProps) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [color, setColor] = useState("#7F9CF5");
   const [isImportJsonOpen, setIsImportJsonOpen] = useState(false);
-
   const createProjectMutation = useCreateProject();
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm<CreateProjectSchema>({
+    resolver: zodResolver(createProjectSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      color: "#7F9CF5",
+      icon: "📌",
+      status: "active",
+    },
+  });
+
+  const selectedColor = watch("color");
+
+  useHotkeys("esc", () => {
+    if (isOpen) onClose();
+  }, { enabled: isOpen });
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) return;
-
+  const onSubmit = (data: CreateProjectSchema) => {
     createProjectMutation.mutate(
       {
-        name: name.trim(),
-        description: description.trim(),
-        color,
-        icon: "📌",
+        name: data.name,
+        description: data.description || "",
+        color: data.color,
+        icon: data.icon,
+        status: data.status,
       },
       {
         onSuccess: (created) => {
+          toast.success(`Project "${created.name}" created!`);
           if (onSuccess) onSuccess(created);
-          setName("");
-          setDescription("");
+          reset();
           onClose();
+        },
+        onError: (err) => {
+          toast.error("Failed to create project: " + err.message);
         },
       }
     );
@@ -74,20 +100,21 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-1.5">
               <label className="block text-[12px] font-medium text-[#787878] uppercase tracking-[0.5px]">
-                Project name
+                Project name *
               </label>
               <input
                 type="text"
-                required
                 autoFocus
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                {...register("name")}
                 placeholder="e.g. Mobile App Redesign"
                 className="w-full h-[38px] px-3 bg-[#18181A] border border-white/8 focus:border-[#7F9CF5] rounded-[6px] text-[14px] text-[#F0F0F0] placeholder-[#525252] outline-none transition-colors"
               />
+              {errors.name && (
+                <p className="text-[11px] text-red-400 font-medium">{errors.name.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -99,9 +126,9 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
                   <button
                     key={c.hex}
                     type="button"
-                    onClick={() => setColor(c.hex)}
+                    onClick={() => setValue("color", c.hex)}
                     className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-                      color === c.hex
+                      selectedColor === c.hex
                         ? "ring-2 ring-white ring-offset-2 ring-offset-black scale-110"
                         : "hover:scale-105 opacity-80 hover:opacity-100"
                     }`}
@@ -111,11 +138,11 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
               </div>
             </div>
 
-            {/* Template Selection Cards (Matching Screenshot 2) */}
+            {/* Template Selection Cards */}
             <div className="grid grid-cols-2 gap-3 pt-2">
               <button
                 type="submit"
-                disabled={createProjectMutation.isPending || !name.trim()}
+                disabled={createProjectMutation.isPending}
                 className="p-3.5 bg-[#18181A] hover:bg-[#202024] border border-white/8 rounded-[10px] text-left transition-all space-y-1 group disabled:opacity-40"
               >
                 <div className="flex items-center gap-2 text-[13px] font-medium text-[#F0F0F0]">

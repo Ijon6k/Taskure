@@ -1,8 +1,11 @@
 package service
 
 import (
+	"encoding/json"
+
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/models"
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/repository"
+	"gorm.io/datatypes"
 )
 
 type CreateProjectInput struct {
@@ -102,10 +105,43 @@ func (s *projectService) UpdateProject(idOrPublicID string, updates map[string]i
 		return nil, err
 	}
 
+	// Parse current settings JSON into a map
+	settingsMap := make(map[string]interface{})
+	if len(project.Settings) > 0 {
+		_ = json.Unmarshal(project.Settings, &settingsMap)
+	}
+
+	// Dynamic overview metadata keys to store in Settings JSONB
+	overviewKeys := []string{"target_goal", "target_date", "tags", "resources", "strategy_notes", "settings"}
+
+	hasSettingsUpdate := false
+	for _, key := range overviewKeys {
+		if val, exists := updates[key]; exists {
+			if key == "settings" {
+				if subMap, ok := val.(map[string]interface{}); ok {
+					for subK, subV := range subMap {
+						settingsMap[subK] = subV
+					}
+				}
+			} else {
+				settingsMap[key] = val
+			}
+			hasSettingsUpdate = true
+			delete(updates, key) // Remove from root map so GORM column match won't fail
+		}
+	}
+
+	if hasSettingsUpdate {
+		bytes, err := json.Marshal(settingsMap)
+		if err == nil {
+			updates["settings"] = datatypes.JSON(bytes)
+		}
+	}
+
 	if err := s.projectRepo.UpdateProject(project, updates); err != nil {
 		return nil, err
 	}
-	return project, nil
+	return s.projectRepo.FindProject(project.ID)
 }
 
 func (s *projectService) DeleteProject(idOrPublicID string) error {

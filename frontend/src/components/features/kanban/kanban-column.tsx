@@ -15,6 +15,9 @@ interface KanbanColumnProps {
   onRefreshProject: () => void;
 }
 
+import { toast } from "sonner";
+import { useHotkeys } from "react-hotkeys-hook";
+
 export function KanbanColumn({ column, tasks, projectId, onTaskClick, onRefreshProject }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: column.id,
@@ -25,21 +28,29 @@ export function KanbanColumn({ column, tasks, projectId, onTaskClick, onRefreshP
   const [taskTitle, setTaskTitle] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useHotkeys("esc", () => {
+    if (isAdding) {
+      setIsAdding(false);
+      setTaskTitle("");
+    }
+  }, { enabled: isAdding });
+
   const taskIds = tasks.map((t) => t.id);
 
   const handleCreateInlineTask = async () => {
     if (!taskTitle.trim() || isSubmitting) return;
     setIsSubmitting(true);
     try {
-      await api.createTask(projectId, {
+      const created = await api.createTask(projectId, {
         title: taskTitle.trim(),
         column_id: column.id,
         priority: "medium",
       });
+      toast.success(`Task "${created.title}" added to ${column.name}!`);
       setTaskTitle("");
       onRefreshProject();
-    } catch {
-      // Ignore or log
+    } catch (err) {
+      toast.error("Failed to add task: " + (err as Error).message);
     } finally {
       setIsSubmitting(false);
     }

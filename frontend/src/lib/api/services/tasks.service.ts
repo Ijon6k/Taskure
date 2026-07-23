@@ -1,5 +1,5 @@
 import { fetcher } from "../client";
-import { TaskData, ChecklistItemData, CreateTaskInput, MoveTaskInput } from "../types";
+import { TaskData, ChecklistItemData, CreateTaskInput, MoveTaskInput, UpdateTaskInput } from "../types";
 
 export const tasksService = {
   createTask: (projectId: string, data: CreateTaskInput) => {
@@ -13,7 +13,7 @@ export const tasksService = {
     return fetcher<TaskData>(`/tasks/${id}`);
   },
 
-  updateTask: (id: string, data: Partial<TaskData>) => {
+  updateTask: (id: string, data: UpdateTaskInput) => {
     return fetcher<TaskData>(`/tasks/${id}`, {
       method: "PATCH",
       data,

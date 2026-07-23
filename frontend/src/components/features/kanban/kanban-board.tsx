@@ -15,7 +15,7 @@ import { ColumnData, TaskData, useMoveTask, api } from "@/lib/api";
 import { KanbanColumn } from "./kanban-column";
 import { KanbanCard } from "./kanban-card";
 import { TrashZone } from "./trash-zone";
-import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { ConfirmModal } from "@/components/modals/confirm-modal";
 import { SearchInput } from "@/components/ui/search-input";
 
 interface KanbanBoardProps {
@@ -25,6 +25,11 @@ interface KanbanBoardProps {
   onRefreshProject?: () => void;
 }
 
+import { toast } from "sonner";
+import { useHotkeys } from "react-hotkeys-hook";
+import { groupBy, sortBy } from "es-toolkit";
+import { useUIStore } from "@/store/use-ui-store";
+
 export function KanbanBoard({ projectId, columns, onTaskClick, onRefreshProject }: KanbanBoardProps) {
   const [activeTask, setActiveTask] = useState<TaskData | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<TaskData | null>(null);
@@ -33,9 +38,18 @@ export function KanbanBoard({ projectId, columns, onTaskClick, onRefreshProject 
   const [isSubmittingCol, setIsSubmittingCol] = useState(false);
   const [isInitLoading, setIsInitLoading] = useState(false);
 
-  // Search & Filter state
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedTag, setSelectedTag] = useState<string>("all");
+  // Search & Filter state from Zustand Store
+  const { searchQuery, setSearchQuery, selectedTag, setSelectedTag } = useUIStore();
+
+  useHotkeys("esc", () => {
+    if (isAddingColumn) {
+      setIsAddingColumn(false);
+      setNewColumnName("");
+    }
+    if (taskToDelete) {
+      setTaskToDelete(null);
+    }
+  });
 
   const moveTaskMutation = useMoveTask(projectId);
 
@@ -65,7 +79,7 @@ export function KanbanBoard({ projectId, columns, onTaskClick, onRefreshProject 
       await api.createColumn(projectId, { name: "Done", color: "#68D391" });
       if (onRefreshProject) onRefreshProject();
     } catch (err) {
-      alert("Gagal membuat template kolom dasar: " + (err as Error).message);
+      alert("Failed to create default column template: " + (err as Error).message);
     } finally {
       setIsInitLoading(false);
     }
@@ -128,6 +142,7 @@ export function KanbanBoard({ projectId, columns, onTaskClick, onRefreshProject 
       },
       {
         onSuccess: async () => {
+          toast.success(`Task moved to ${targetColumn?.name || "column"}`);
           // If dropped into "Done" column, automatically mark ALL subtasks/checklist as completed!
           if (newStatus === "done") {
             try {
@@ -145,6 +160,9 @@ export function KanbanBoard({ projectId, columns, onTaskClick, onRefreshProject 
           }
           if (onRefreshProject) onRefreshProject();
         },
+        onError: (err) => {
+          toast.error("Failed to move task: " + err.message);
+        },
       }
     );
   };
@@ -153,10 +171,11 @@ export function KanbanBoard({ projectId, columns, onTaskClick, onRefreshProject 
     if (!taskToDelete) return;
     try {
       await api.deleteTask(taskToDelete.id);
+      toast.success(`Task "${taskToDelete.title}" deleted`);
       setTaskToDelete(null);
       if (onRefreshProject) onRefreshProject();
     } catch (e) {
-      alert("Gagal menghapus tugas: " + (e as Error).message);
+      toast.error("Failed to delete task: " + (e as Error).message);
     }
   };
 
@@ -164,15 +183,16 @@ export function KanbanBoard({ projectId, columns, onTaskClick, onRefreshProject 
     if (!newColumnName.trim() || isSubmittingCol) return;
     setIsSubmittingCol(true);
     try {
-      await api.createColumn(projectId, {
+      const created = await api.createColumn(projectId, {
         name: newColumnName.trim(),
         color: "#7F9CF5",
       });
+      toast.success(`Column "${created.name}" created!`);
       setNewColumnName("");
       setIsAddingColumn(false);
       if (onRefreshProject) onRefreshProject();
     } catch (err) {
-      alert("Gagal membuat kolom: " + (err as Error).message);
+      toast.error("Failed to create column: " + (err as Error).message);
     } finally {
       setIsSubmittingCol(false);
     }
@@ -248,9 +268,9 @@ export function KanbanBoard({ projectId, columns, onTaskClick, onRefreshProject 
             <div className="flex-1 flex flex-col items-center justify-center p-12 bg-theme-surface border border-theme-default rounded-[12px] text-center space-y-4 max-w-md mx-auto my-12">
               <LayoutGrid className="w-10 h-10 text-brand-accent opacity-80" />
               <div className="space-y-1">
-                <h3 className="text-[16px] font-medium text-theme-primary">Board Masih Kosong</h3>
+                <h3 className="text-[16px] font-medium text-theme-primary">Board is Empty</h3>
                 <p className="text-[13px] text-theme-secondary">
-                  Gunakan template kolom dasar untuk langsung memulai pekerjaan Anda.
+                  Use the default column template to get started with your work.
                 </p>
               </div>
               <button
@@ -259,7 +279,7 @@ export function KanbanBoard({ projectId, columns, onTaskClick, onRefreshProject 
                 className="px-4 py-2 bg-brand-accent hover:opacity-90 text-black text-[13px] font-medium rounded-[8px] flex items-center gap-2 transition-all shadow-accent-glow"
               >
                 <Sparkles className="w-4 h-4" />
-                <span>{isInitLoading ? "Membuat..." : "Pakai Template (Todo, In Progress, Done)"}</span>
+                <span>{isInitLoading ? "Creating..." : "Use Template (Todo, In Progress, Done)"}</span>
               </button>
             </div>
           ) : (

@@ -1,22 +1,22 @@
 @import "tailwindcss";
 
 @layer base {
-  /* DIM THEME (default) */
+  /* DIM THEME (Discord Slate-Gray Aesthetic) */
   :root,
   [data-theme="dim"] {
-    --bg-main: #0b0b0d;
-    --bg-surface: #0c0c0c;
-    --bg-elevated: #141414;
-    --bg-hover: #1c1c1c;
-    --border-subtle: rgba(255, 255, 255, 0.06);
-    --border-default: rgba(255, 255, 255, 0.10);
-    --text-primary: #f0f0f0;
-    --text-secondary: #787878;
-    --text-tertiary: #525252;
-    --brand-accent: #7f9cf5;
-    --brand-accent-subtle: rgba(127, 156, 245, 0.12);
-    --brand-accent-glow: rgba(127, 156, 245, 0.25);
-    --brand-accent-text: #000000;
+    --bg-main: #313338;
+    --bg-surface: #2b2d31;
+    --bg-elevated: #1e1f22;
+    --bg-hover: #35373c;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-default: rgba(255, 255, 255, 0.14);
+    --text-primary: #f2f3f5;
+    --text-secondary: #949ba4;
+    --text-tertiary: #80848e;
+    --brand-accent: #5865f2;
+    --brand-accent-subtle: rgba(88, 101, 242, 0.18);
+    --brand-accent-glow: rgba(88, 101, 242, 0.35);
+    --brand-accent-text: #ffffff;
   }
 
   /* DARK THEME (True OLED Black) */
@@ -61,6 +61,26 @@
     -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
     overflow-x: hidden;
+  }
+
+  /* Global Interactive Cursor & Hover Safety Base */
+  button,
+  [role="button"],
+  a,
+  input[type="submit"],
+  input[type="button"],
+  input[type="reset"],
+  input[type="checkbox"],
+  label[for],
+  select {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [role="button"][aria-disabled="true"],
+  input:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
   }
 }
 

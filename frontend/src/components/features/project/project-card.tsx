@@ -25,7 +25,7 @@ export function ProjectCard({
     return (
       <Link
         href={`/projects/${project.id}/board`}
-        className={`flex items-center justify-between px-2.5 py-2 rounded-[6px] hover:bg-theme-elevated transition-colors group ${className}`}
+        className={`flex items-center justify-between px-2.5 py-2 rounded-[6px] hover:bg-theme-hover cursor-pointer transition-colors duration-150 active:scale-[0.99] group ${className}`}
       >
         <div className="flex items-center gap-2.5 truncate">
           <span
@@ -47,7 +47,7 @@ export function ProjectCard({
     return (
       <Link
         href={`/projects/${project.id}/board`}
-        className={`p-4 bg-theme-surface border border-theme-default hover:border-theme-hover rounded-[8px] flex flex-col justify-between space-y-3 transition-colors group shadow-sm ${className}`}
+        className={`p-4 bg-theme-surface border border-theme-default hover:border-brand-accent/40 hover:bg-theme-hover rounded-[8px] flex flex-col justify-between space-y-3 cursor-pointer transition-colors duration-150 active:scale-[0.99] group shadow-sm ${className}`}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 truncate">
@@ -81,14 +81,14 @@ export function ProjectCard({
   return (
     <Link
       href={`/projects/${project.id}/board`}
-      className={`p-4 bg-theme-surface border border-theme-default hover:border-theme-hover rounded-[8px] flex flex-col justify-between h-[96px] transition-colors ${className}`}
+      className={`p-4 bg-theme-surface border border-theme-default hover:border-brand-accent/40 hover:bg-theme-hover rounded-[8px] flex flex-col justify-between h-[96px] cursor-pointer transition-colors duration-150 active:scale-[0.99] group ${className}`}
     >
       <div className="flex items-center gap-2">
         <span
           className="w-2 h-2 rounded-full shrink-0"
           style={{ backgroundColor: projectColor }}
         />
-        <span className="text-[14px] font-medium text-theme-primary truncate">
+        <span className="text-[14px] font-medium text-theme-primary group-hover:text-brand-accent transition-colors truncate">
           {project.name}
         </span>
       </div>

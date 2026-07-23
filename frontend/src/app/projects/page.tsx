@@ -4,10 +4,10 @@ import { useState } from "react";
 import { Plus, Pin, FolderKanban } from "lucide-react";
 import { useProjects } from "@/lib/api";
 import { Sidebar } from "@/components/layout/sidebar";
-import { ProjectCard } from "@/components/project/project-card";
+import { ProjectCard } from "@/components/features/project/project-card";
 import { SearchInput } from "@/components/ui/search-input";
 import { FilterPills } from "@/components/ui/filter-pills";
-import { CreateProjectModal } from "@/components/project/create-project-modal";
+import { CreateProjectModal } from "@/components/features/project/create-project-modal";
 
 type StatusFilter = "all" | "active" | "paused" | "archived";
 
@@ -18,10 +18,12 @@ const STATUS_FILTER_OPTIONS: { key: StatusFilter; label: string }[] = [
   { key: "archived", label: "Archived" },
 ];
 
+import { useUIStore } from "@/store/use-ui-store";
+
 export default function ProjectsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const { isCreateProjectOpen, openCreateProject, closeCreateProject } = useUIStore();
 
   const { data: projects = [], isLoading } = useProjects();
 
@@ -47,7 +49,7 @@ export default function ProjectsPage() {
   return (
     <div className="flex h-screen bg-theme-main text-theme-primary font-sans select-none overflow-hidden">
       {/* Sidebar */}
-      <Sidebar onOpenCreateProject={() => setIsCreateModalOpen(true)} />
+      <Sidebar onOpenCreateProject={openCreateProject} />
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto">
@@ -59,7 +61,7 @@ export default function ProjectsPage() {
                 Projects
               </h1>
               <button
-                onClick={() => setIsCreateModalOpen(true)}
+                onClick={openCreateProject}
                 className="h-[36px] px-3.5 bg-brand-accent hover:bg-[#6b89e3] text-black text-[14px] font-medium rounded-[6px] flex items-center gap-2 transition-colors"
               >
                 <Plus className="w-[15px] h-[15px]" />
@@ -119,9 +121,9 @@ export default function ProjectsPage() {
               ) : unpinnedProjects.length === 0 ? (
                 <div className="p-8 border border-theme-default rounded-[8px] bg-theme-surface text-center space-y-2">
                   <FolderKanban className="w-8 h-8 text-theme-secondary mx-auto" />
-                  <p className="text-[14px] text-theme-primary">Tidak ada proyek ditemukan</p>
+                  <p className="text-[14px] text-theme-primary">No projects found</p>
                   <p className="text-[12px] text-theme-secondary">
-                    Coba sesuaikan kata kunci pencarian atau filter status.
+                    Try adjusting your search query or status filter.
                   </p>
                 </div>
               ) : (
@@ -138,8 +140,8 @@ export default function ProjectsPage() {
 
       {/* Modal Create Project */}
       <CreateProjectModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        isOpen={isCreateProjectOpen}
+        onClose={closeCreateProject}
       />
     </div>
   );

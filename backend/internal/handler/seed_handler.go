@@ -1,8 +1,7 @@
 package handler
 
 import (
-	"net/http"
-
+	"github.com/Ijon6k/kanbanproject/apps/api/internal/response"
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -18,11 +17,11 @@ func NewSeedHandler(service service.SeedService) *SeedHandler {
 func (h *SeedHandler) SeedDemoData(c *gin.Context) {
 	projects, err := h.service.SeedDemoData()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.InternalServerError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	response.OK(c, gin.H{
 		"message":  "Demo data seeded successfully",
 		"projects": projects,
 	})

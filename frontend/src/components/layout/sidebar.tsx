@@ -1,26 +1,50 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, FolderKanban, Settings as SettingsIcon, Database } from "lucide-react";
+import { Home, FolderKanban, Settings as SettingsIcon, Database, Keyboard } from "lucide-react";
 import { useProjects, useSeedDemo } from "@/lib/api";
+import { toast } from "sonner";
+import { useHotkeys } from "react-hotkeys-hook";
+import { ShortcutsModal } from "@/components/modals/shortcuts-modal";
 
 interface SidebarProps {
   onOpenCreateProject?: () => void;
 }
+
+import { useUIStore } from "@/store/use-ui-store";
 
 export function Sidebar({ onOpenCreateProject }: SidebarProps) {
   const pathname = usePathname();
   const { data: projects = [] } = useProjects();
   const seedDemoMutation = useSeedDemo();
 
+  const {
+    openCreateProject,
+    isShortcutsOpen,
+    openShortcuts,
+    closeShortcuts,
+    toggleShortcuts,
+  } = useUIStore();
+
+  // Global hotkey listeners
+  useHotkeys("n", () => {
+    if (onOpenCreateProject) onOpenCreateProject();
+    else openCreateProject();
+  });
+  useHotkeys("shift+?", toggleShortcuts);
+  useHotkeys("esc", closeShortcuts);
+
   const handleSeed = () => {
+    toast.info("Seeding demo data...");
     seedDemoMutation.mutate(undefined, {
       onSuccess: () => {
-        window.location.reload();
+        toast.success("Demo data seeded successfully!");
+        setTimeout(() => window.location.reload(), 600);
       },
       onError: (e) => {
-        alert("Gagal melakukan seed demo data: " + (e as Error).message);
+        toast.error("Failed to seed demo data: " + (e as Error).message);
       },
     });
   };
@@ -47,89 +71,109 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
   ];
 
   return (
-    <aside className="w-[224px] h-screen bg-theme-surface border-r border-theme-default flex flex-col shrink-0 text-theme-primary select-none z-20">
-      {/* Workspace Brand Header */}
-      <div className="h-[56px] px-3 flex items-center justify-between border-b border-theme-default">
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-[28px] h-[28px] bg-brand-accent rounded-[6px] flex items-center justify-center text-black font-bold text-sm">
-            K
-          </div>
-          <span className="text-[14px] font-medium text-theme-primary font-sans">
-            My Kanban
-          </span>
-        </Link>
-      </div>
+    <>
+      <aside className="w-[224px] h-screen bg-theme-surface border-r border-theme-default flex flex-col shrink-0 text-theme-primary select-none z-20">
+        {/* Workspace Brand Header */}
+        <div className="h-[56px] px-3 flex items-center justify-between border-b border-theme-default">
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-[28px] h-[28px] bg-brand-accent rounded-[6px] flex items-center justify-center text-black font-bold text-sm">
+              K
+            </div>
+            <span className="text-[14px] font-medium text-theme-primary font-sans">
+              My Kanban
+            </span>
+          </Link>
+        </div>
 
-      {/* Main Navigation Links */}
-      <div className="flex-1 p-2 space-y-0.5 overflow-y-auto">
-        {navItems.map((item) => {
-          const isActive = item.exact
-            ? pathname === item.href
-            : pathname.startsWith(item.href);
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`w-[207px] h-[36px] px-2.5 rounded-[6px] flex items-center gap-3 text-[14px] font-medium transition-colors ${
-                isActive
-                  ? "bg-theme-elevated text-theme-primary"
-                  : "text-theme-secondary hover:text-theme-primary hover:bg-theme-hover"
-              }`}
-            >
-              <Icon
-                className={`w-[17px] h-[17px] ${
-                  isActive ? "text-theme-primary" : "text-theme-secondary"
+        {/* Main Navigation Links */}
+        <div className="flex-1 p-2 space-y-0.5 overflow-y-auto">
+          {navItems.map((item) => {
+            const isActive = item.exact
+              ? pathname === item.href
+              : pathname.startsWith(item.href);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`w-[207px] h-[36px] px-2.5 rounded-[6px] flex items-center gap-3 text-[14px] font-medium transition-colors ${
+                  isActive
+                    ? "bg-theme-elevated text-theme-primary"
+                    : "text-theme-secondary hover:text-theme-primary hover:bg-theme-hover"
                 }`}
-              />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
+              >
+                <Icon
+                  className={`w-[17px] h-[17px] ${
+                    isActive ? "text-theme-primary" : "text-theme-secondary"
+                  }`}
+                />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
 
-        {/* Quick Project Links Sub-Section */}
-        {projects.length > 0 && (
-          <div className="pt-4 px-2.5">
-            <div className="text-[11px] font-medium text-theme-secondary uppercase tracking-wider mb-2">
-              Projek ({projects.length})
+          {/* Quick Project Links Sub-Section */}
+          {projects.length > 0 && (
+            <div className="pt-4 px-2.5">
+              <div className="text-[11px] font-medium text-theme-secondary uppercase tracking-wider mb-2">
+                Projects ({projects.length})
+              </div>
+              <div className="space-y-0.5">
+                {projects.slice(0, 5).map((proj) => {
+                  const isProjectActive = pathname.includes(`/projects/${proj.id}`);
+                  return (
+                    <Link
+                      key={proj.id}
+                      href={`/projects/${proj.id}/board`}
+                      className={`flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[13px] truncate transition-colors ${
+                        isProjectActive
+                          ? "bg-theme-elevated text-theme-primary"
+                          : "text-theme-secondary hover:text-theme-primary hover:bg-theme-hover"
+                      }`}
+                    >
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: proj.color || "#7F9CF5" }}
+                      />
+                      <span className="truncate">{proj.name}</span>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
-            <div className="space-y-0.5">
-              {projects.slice(0, 5).map((proj) => {
-                const isProjectActive = pathname.includes(`/projects/${proj.id}`);
-                return (
-                  <Link
-                    key={proj.id}
-                    href={`/projects/${proj.id}/board`}
-                    className={`flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[13px] truncate transition-colors ${
-                      isProjectActive
-                        ? "bg-theme-elevated text-theme-primary"
-                        : "text-theme-secondary hover:text-theme-primary hover:bg-theme-hover"
-                    }`}
-                  >
-                    <span
-                      className="w-2 h-2 rounded-full shrink-0"
-                      style={{ backgroundColor: proj.color || "#7F9CF5" }}
-                    />
-                    <span className="truncate">{proj.name}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
 
-      {/* Footer Demo Seed Action */}
-      <div className="p-2 border-t border-theme-default">
-        <button
-          onClick={handleSeed}
-          disabled={seedDemoMutation.isPending}
-          className="w-[207px] h-[36px] px-2.5 rounded-[6px] flex items-center gap-2.5 text-[13px] font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated transition-colors"
-        >
-          <Database className="w-[17px] h-[17px] text-theme-secondary" />
-          <span>{seedDemoMutation.isPending ? "Seeding..." : "Seed Demo Data"}</span>
-        </button>
-      </div>
-    </aside>
+        {/* Footer Actions: Seed & Shortcuts Button */}
+        <div className="p-2 border-t border-theme-default space-y-1">
+          <button
+            onClick={openShortcuts}
+            className="w-[207px] h-[32px] px-2.5 rounded-[6px] flex items-center justify-between text-[12px] font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Keyboard className="w-4 h-4 text-theme-secondary" />
+              <span>Shortcuts</span>
+            </div>
+            <kbd className="px-1.5 py-0.5 bg-theme-elevated border border-white/10 rounded text-[10px] font-mono text-brand-accent font-semibold">
+              ?
+            </kbd>
+          </button>
+
+          <button
+            onClick={handleSeed}
+            disabled={seedDemoMutation.isPending}
+            className="w-[207px] h-[34px] px-2.5 rounded-[6px] flex items-center gap-2.5 text-[12px] font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated transition-colors"
+          >
+            <Database className="w-4 h-4 text-theme-secondary" />
+            <span>{seedDemoMutation.isPending ? "Seeding..." : "Seed Demo Data"}</span>
+          </button>
+        </div>
+      </aside>
+
+      <ShortcutsModal
+        isOpen={isShortcutsOpen}
+        onClose={closeShortcuts}
+      />
+    </>
   );
 }

@@ -21,6 +21,7 @@ export const metadata: Metadata = {
 };
 
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { Toaster } from "sonner";
 
 export default function RootLayout({
   children,
@@ -36,7 +37,25 @@ export default function RootLayout({
     >
       <body className="antialiased font-sans">
         <ThemeProvider>
-          <QueryProvider>{children}</QueryProvider>
+          <QueryProvider>
+            {children}
+            <Toaster
+              position="bottom-right"
+              theme="dark"
+              richColors
+              closeButton
+              toastOptions={{
+                style: {
+                  background: "#141416",
+                  border: "1px solid rgba(255, 255, 255, 0.12)",
+                  color: "#F0F0F0",
+                  fontSize: "13px",
+                  borderRadius: "8px",
+                  boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+                },
+              }}
+            />
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>
