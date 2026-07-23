@@ -3,27 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { FolderPlus, FolderKanban, Pin, Clock } from "lucide-react";
-import { useProjects, useFocusTask, TaskData } from "@/lib/api";
+import { useProjects, useFocusTask } from "@/lib/api";
+import { getTimeGreeting, getFormattedDate } from "@/lib/helpers";
 import { Sidebar } from "@/components/layout/sidebar";
 import { TodaysFocusCard } from "@/components/dashboard/todays-focus-card";
+import { ProjectCard } from "@/components/project/project-card";
 import { CreateProjectModal } from "@/components/project/create-project-modal";
-
-function getFormattedDate(): string {
-  const options: Intl.DateTimeFormatOptions = {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  };
-  return new Date().toLocaleDateString("id-ID", options);
-}
-
-function getTimeGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour >= 4 && hour < 11) return "Selamat pagi";
-  if (hour >= 11 && hour < 15) return "Selamat siang";
-  if (hour >= 15 && hour < 18) return "Selamat sore";
-  return "Selamat malam";
-}
 
 export default function HomePage() {
   const { data: projects = [], isLoading: isProjectsLoading } = useProjects();
@@ -102,50 +87,9 @@ export default function HomePage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {pinnedProjects.map((proj) => {
-                    const tasks = proj.tasks || [];
-                    const doneCount = tasks.filter((t: TaskData) => t.status === "done").length;
-                    const totalCount = tasks.length;
-                    const percent =
-                      totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
-
-                    return (
-                      <Link
-                        key={proj.id}
-                        href={`/projects/${proj.id}/board`}
-                        className="p-4 bg-theme-surface border border-theme-default hover:border-theme-hover rounded-[8px] flex flex-col justify-between h-[96px] transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="w-2 h-2 rounded-full shrink-0"
-                            style={{ backgroundColor: proj.color || "#7F9CF5" }}
-                          />
-                          <span className="text-[14px] font-medium text-theme-primary truncate">
-                            {proj.name}
-                          </span>
-                        </div>
-
-                        <div className="space-y-2">
-                          <div className="w-full h-1 bg-theme-elevated rounded-full overflow-hidden">
-                            <div
-                              className="h-full rounded-full transition-all duration-300"
-                              style={{
-                                width: `${percent}%`,
-                                backgroundColor: proj.color || "#7F9CF5",
-                              }}
-                            />
-                          </div>
-
-                          <div className="flex items-center justify-between text-[12px] text-theme-secondary">
-                            <span>
-                              {doneCount}/{totalCount} done
-                            </span>
-                            <span className="font-mono">{percent}%</span>
-                          </div>
-                        </div>
-                      </Link>
-                    );
-                  })}
+                  {pinnedProjects.map((proj) => (
+                    <ProjectCard key={proj.id} project={proj} variant="grid" />
+                  ))}
                 </div>
               )}
             </div>
@@ -169,24 +113,7 @@ export default function HomePage() {
 
               <div className="space-y-1">
                 {recentProjects.map((proj) => (
-                  <Link
-                    key={proj.id}
-                    href={`/projects/${proj.id}/board`}
-                    className="flex items-center justify-between px-2.5 py-2 rounded-[6px] hover:bg-theme-elevated transition-colors group"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <span
-                        className="w-1.5 h-1.5 rounded-full shrink-0"
-                        style={{ backgroundColor: proj.color || "#68D391" }}
-                      />
-                      <span className="text-[14px] font-medium text-theme-primary/80 group-hover:text-theme-primary">
-                        {proj.name}
-                      </span>
-                    </div>
-                    <span className="text-[12px] font-mono text-theme-secondary">
-                      recently updated
-                    </span>
-                  </Link>
+                  <ProjectCard key={proj.id} project={proj} variant="compact" />
                 ))}
               </div>
             </div>

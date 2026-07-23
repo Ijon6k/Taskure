@@ -1,0 +1,117 @@
+package service
+
+import (
+	"github.com/Ijon6k/kanbanproject/apps/api/internal/models"
+	"github.com/Ijon6k/kanbanproject/apps/api/internal/repository"
+)
+
+type CreateProjectInput struct {
+	Name        string `json:"name" binding:"required"`
+	Description string `json:"description"`
+	Color       string `json:"color"`
+	Icon        string `json:"icon"`
+	Status      string `json:"status"`
+	IsPinned    bool   `json:"is_pinned"`
+}
+
+type ProjectService interface {
+	ListProjects(status string, search string, pinned bool) ([]models.Project, error)
+	CreateProject(input CreateProjectInput) (*models.Project, error)
+	GetProject(idOrPublicID string) (*models.Project, error)
+	UpdateProject(idOrPublicID string, updates map[string]interface{}) (*models.Project, error)
+	DeleteProject(idOrPublicID string) error
+}
+
+type projectService struct {
+	projectRepo   repository.ProjectRepository
+	workspaceRepo repository.WorkspaceRepository
+	columnRepo    repository.ColumnRepository
+}
+
+func NewProjectService(
+	projectRepo repository.ProjectRepository,
+	workspaceRepo repository.WorkspaceRepository,
+	columnRepo repository.ColumnRepository,
+) ProjectService {
+	return &projectService{
+		projectRepo:   projectRepo,
+		workspaceRepo: workspaceRepo,
+		columnRepo:    columnRepo,
+	}
+}
+
+func (s *projectService) ListProjects(status string, search string, pinned bool) ([]models.Project, error) {
+	ws, err := s.workspaceRepo.EnsureUserAndWorkspace()
+	if err != nil {
+		return nil, err
+	}
+	return s.projectRepo.ListProjects(ws.ID, status, search, pinned)
+}
+
+func (s *projectService) CreateProject(input CreateProjectInput) (*models.Project, error) {
+	ws, err := s.workspaceRepo.EnsureUserAndWorkspace()
+	if err != nil {
+		return nil, err
+	}
+
+	color := input.Color
+	if color == "" {
+		color = "#B4A0E5"
+	}
+	status := input.Status
+	if status == "" {
+		status = "active"
+	}
+
+	project := models.Project{
+		Name:        input.Name,
+		Description: input.Description,
+		Color:       color,
+		Icon:        input.Icon,
+		Status:      status,
+		IsPinned:    input.IsPinned,
+		WorkspaceID: ws.ID,
+		OwnerID:     ws.OwnerID,
+	}
+
+	if err := s.projectRepo.CreateProject(&project); err != nil {
+		return nil, err
+	}
+
+	// Create 3 default columns ("Todo", "In Progress", "Done")
+	defaultColumns := []models.Column{
+		{Name: "Todo", Position: 0, ProjectID: project.ID, Color: "#6B7280"},
+		{Name: "In Progress", Position: 1, ProjectID: project.ID, Color: "#3B82F6"},
+		{Name: "Done", Position: 2, ProjectID: project.ID, Color: "#22C55E"},
+	}
+
+	for _, col := range defaultColumns {
+		_ = s.columnRepo.CreateColumn(&col)
+	}
+
+	return s.projectRepo.FindProject(project.PublicID)
+}
+
+func (s *projectService) GetProject(idOrPublicID string) (*models.Project, error) {
+	return s.projectRepo.FindProject(idOrPublicID)
+}
+
+func (s *projectService) UpdateProject(idOrPublicID string, updates map[string]interface{}) (*models.Project, error) {
+	project, err := s.projectRepo.FindProject(idOrPublicID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.projectRepo.UpdateProject(project, updates); err != nil {
+		return nil, err
+	}
+	return project, nil
+}
+
+func (s *projectService) DeleteProject(idOrPublicID string) error {
+	project, err := s.projectRepo.FindProject(idOrPublicID)
+	if err != nil {
+		return err
+	}
+	return s.projectRepo.DeleteProject(project)
+}

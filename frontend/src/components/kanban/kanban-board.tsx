@@ -16,6 +16,7 @@ import { KanbanColumn } from "./kanban-column";
 import { KanbanCard } from "./kanban-card";
 import { TrashZone } from "./trash-zone";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { SearchInput } from "@/components/ui/search-input";
 
 interface KanbanBoardProps {
   projectId: string;
@@ -199,16 +200,12 @@ export function KanbanBoard({ projectId, columns, onTaskClick, onRefreshProject 
         {columns.length > 0 && (
           <div className="px-6 py-2.5 bg-theme-surface border-b border-theme-subtle flex items-center justify-between gap-4 shrink-0">
             <div className="flex items-center gap-3 flex-1 max-w-md">
-              <div className="flex-1 h-[32px] px-2.5 bg-theme-elevated border border-theme-default rounded-[6px] flex items-center gap-2">
-                <Search className="w-3.5 h-3.5 text-theme-secondary shrink-0" />
-                <input
-                  type="text"
-                  placeholder="Filter tasks on board..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-transparent text-[13px] text-theme-primary placeholder-theme-tertiary outline-none"
-                />
-              </div>
+              <SearchInput
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Filter tasks on board..."
+                className="flex-1 !h-[32px] bg-theme-elevated"
+              />
             </div>
 
             {/* Tag Filter Pills */}

@@ -15,6 +15,8 @@ import (
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/db"
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/handler"
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/middleware"
+	"github.com/Ijon6k/kanbanproject/apps/api/internal/repository"
+	"github.com/Ijon6k/kanbanproject/apps/api/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
@@ -34,6 +36,29 @@ func main() {
 		logger.Fatal().Err(err).Msg("failed to connect to database")
 	}
 
+	// Instantiating Clean Architecture Layers
+	workspaceRepo := repository.NewWorkspaceRepository(conn)
+	projectRepo := repository.NewProjectRepository(conn)
+	columnRepo := repository.NewColumnRepository(conn)
+	taskRepo := repository.NewTaskRepository(conn)
+
+	workspaceService := service.NewWorkspaceService(workspaceRepo)
+	projectService := service.NewProjectService(projectRepo, workspaceRepo, columnRepo)
+	columnService := service.NewColumnService(columnRepo, projectRepo)
+	taskService := service.NewTaskService(taskRepo, projectRepo)
+	seedService := service.NewSeedService(workspaceRepo, projectRepo, columnRepo, taskRepo)
+
+	// Backfill missing NanoIDs on startup
+	_ = workspaceService.BackfillNanoIDs()
+
+	// Ensure default workspace & seed initial data if database is fresh
+	if ws, err := workspaceService.EnsureDefaultWorkspace(); err == nil {
+		logger.Info().Str("workspace_id", ws.ID).Str("public_id", ws.PublicID).Msg("default workspace initialized")
+	}
+
+	// HTTP Handler Container
+	container := handler.NewContainer(workspaceService, projectService, columnService, taskService, seedService)
+
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 
@@ -48,16 +73,8 @@ func main() {
 		})
 	})
 
-	// API Handler registration
-	apiHandler := handler.New(conn)
-	
-	// Ensure default workspace & seed initial data if database is fresh
-	if ws, err := apiHandler.EnsureDefaultWorkspace(); err == nil {
-		logger.Info().Str("workspace_id", ws.ID).Msg("default workspace initialized")
-	}
-
 	apiGroup := router.Group("/api")
-	apiHandler.RegisterRoutes(apiGroup)
+	container.RegisterRoutes(apiGroup)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf("%s:%s", cfg.APIHost, cfg.APIPort),

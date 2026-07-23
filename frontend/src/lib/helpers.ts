@@ -2,6 +2,23 @@
 
 import { ColumnData, TaskData, ChecklistItemData } from "./api";
 
+export function getFormattedDate(): string {
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  };
+  return new Date().toLocaleDateString("id-ID", options);
+}
+
+export function getTimeGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour >= 4 && hour < 11) return "Selamat pagi";
+  if (hour >= 11 && hour < 15) return "Selamat siang";
+  if (hour >= 15 && hour < 18) return "Selamat sore";
+  return "Selamat malam";
+}
+
 export interface PriorityConfig {
   id: string;
   label: string;
