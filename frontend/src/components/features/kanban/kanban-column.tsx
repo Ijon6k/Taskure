@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { useDroppable } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { Plus } from "lucide-react";
+import { useState, useMemo, memo } from "react";
+import { useDroppable, useDndContext } from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
+import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
+import { Plus, GripVertical } from "lucide-react";
 import { ColumnData, TaskData, api } from "@/lib/api";
 import { KanbanCard } from "./kanban-card";
 
@@ -17,12 +18,42 @@ interface KanbanColumnProps {
 
 import { toast } from "sonner";
 import { useHotkeys } from "react-hotkeys-hook";
+import { useUIStore } from "@/store/use-ui-store";
 
-export function KanbanColumn({ column, tasks, projectId, onTaskClick, onRefreshProject }: KanbanColumnProps) {
-  const { setNodeRef, isOver } = useDroppable({
+function KanbanColumnInner({ column, tasks, projectId, onTaskClick, onRefreshProject }: KanbanColumnProps) {
+  const {
+    setNodeRef: sortableRef,
+    attributes,
+    listeners,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: column.id,
+    data: { type: "column", column },
+  });
+
+  const { setNodeRef: droppableRef, isOver } = useDroppable({
     id: column.id,
     data: { column },
   });
+
+  const { active } = useDndContext();
+  const isColumnDragging = active?.data.current?.type === "column";
+
+  const searchQuery = useUIStore((s) => s.searchQuery);
+  const selectedTag = useUIStore((s) => s.selectedTag);
+
+  const mergedRef = (node: HTMLDivElement | null) => {
+    sortableRef(node);
+    droppableRef(node);
+  };
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  };
 
   const [isAdding, setIsAdding] = useState(false);
   const [taskTitle, setTaskTitle] = useState("");
@@ -35,7 +66,19 @@ export function KanbanColumn({ column, tasks, projectId, onTaskClick, onRefreshP
     }
   }, { enabled: isAdding });
 
-  const taskIds = tasks.map((t) => t.id);
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((t) => {
+      const matchesSearch =
+        !searchQuery.trim() ||
+        t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (t.description || "").toLowerCase().includes(searchQuery.toLowerCase());
+      const taskLabels = (t.labels || []).map((l) => (typeof l === "string" ? l : l.name).toLowerCase());
+      const matchesTag = selectedTag === "all" || taskLabels.includes(selectedTag.toLowerCase());
+      return matchesSearch && matchesTag;
+    });
+  }, [tasks, searchQuery, selectedTag]);
+
+  const taskIds = filteredTasks.map((t) => t.id);
 
   const handleCreateInlineTask = async () => {
     if (!taskTitle.trim() || isSubmitting) return;
@@ -66,28 +109,40 @@ export function KanbanColumn({ column, tasks, projectId, onTaskClick, onRefreshP
     }
   };
 
+  const showOver = isOver && !isColumnDragging;
+
   return (
     <div
-      ref={setNodeRef}
-      className={`w-[320px] min-w-[320px] shrink-0 flex flex-col max-h-full transition-all rounded-[10px] p-3 bg-theme-surface border border-theme-default shadow-sm ${
-        isOver ? "border-accent ring-2 ring-brand-accent/20 bg-theme-hover" : ""
+      ref={mergedRef}
+      style={style}
+      className={`w-[320px] min-w-[320px] shrink-0 flex flex-col max-h-full rounded-[10px] p-3 bg-theme-surface border border-theme-default shadow-sm group/col ${
+        showOver ? "border-accent ring-2 ring-brand-accent/20 bg-theme-hover" : ""
       }`}
     >
       {/* Column Header */}
-      <div className="h-[40px] px-1 flex items-center justify-between border-b border-theme-subtle mb-3">
-        <div className="flex items-center gap-2.5">
+      <div className="h-[40px] flex items-center justify-between border-b border-theme-subtle mb-3">
+        <div className="flex items-center gap-1 min-w-0">
+          <button
+            {...attributes}
+            {...listeners}
+            className="w-5 h-5 rounded-[4px] flex items-center justify-center text-theme-tertiary/40 opacity-100 md:opacity-0 md:group-hover/col:opacity-100 hover:text-theme-primary hover:bg-theme-elevated cursor-grab active:cursor-grabbing transition-all duration-150 touch-none shrink-0"
+            tabIndex={0}
+            aria-label="Drag to reorder column"
+          >
+            <GripVertical className="w-4 h-4" />
+          </button>
           <span
             className="w-2.5 h-2.5 rounded-full shrink-0 shadow-accent-glow"
             style={{ backgroundColor: column.color || "#7F9CF5" }}
           />
-          <h3 className="text-[15px] font-medium text-theme-primary">{column.name}</h3>
-          <span className="px-2 py-0.5 bg-theme-elevated text-theme-secondary font-mono text-[11px] rounded-[4px] border border-theme-subtle">
-            {tasks.length}
+          <h3 className="text-[15px] font-medium text-theme-primary truncate">{column.name}</h3>
+          <span className="px-2 py-0.5 bg-theme-elevated text-theme-secondary font-mono text-[11px] rounded-[4px] border border-theme-subtle shrink-0">
+            {filteredTasks.length}
           </span>
         </div>
         <button
           onClick={() => setIsAdding(true)}
-          className="w-6 h-6 rounded-[6px] text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated flex items-center justify-center transition-colors"
+          className="w-6 h-6 rounded-[6px] text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated flex items-center justify-center transition-colors shrink-0"
           title="Add task"
         >
           <Plus className="w-4 h-4" />
@@ -97,7 +152,7 @@ export function KanbanColumn({ column, tasks, projectId, onTaskClick, onRefreshP
       {/* Task Stack Container */}
       <div className="flex-1 overflow-y-auto space-y-2.5 pr-0.5 min-h-[120px]">
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-          {tasks.map((task) => (
+          {filteredTasks.map((task) => (
             <KanbanCard key={task.id} task={task} onClick={() => onTaskClick(task)} />
           ))}
         </SortableContext>
@@ -151,3 +206,5 @@ export function KanbanColumn({ column, tasks, projectId, onTaskClick, onRefreshP
     </div>
   );
 }
+
+export const KanbanColumn = memo(KanbanColumnInner);

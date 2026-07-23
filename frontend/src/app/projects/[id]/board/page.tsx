@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useMemo } from "react";
+import { use, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { ChevronRight, FileText, LayoutGrid, FileCode, Download, Upload, Edit3, Filter } from "lucide-react";
 import { useProject, TaskData } from "@/lib/api";
@@ -25,26 +25,28 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
   const { data: project, isLoading: loading, refetch } = useProject(projectId);
   const [activeTab, setActiveTab] = useState<"overview" | "board" | "context">("board");
 
-  const {
-    isCreateProjectOpen,
-    closeCreateProject,
-    openCreateProject,
-    isEditProjectOpen,
-    openEditProject,
-    closeEditProject,
-    isImportJsonOpen,
-    openImportJson,
-    closeImportJson,
-    isExportJsonOpen,
-    openExportJson,
-    closeExportJson,
-    selectedTaskId,
-    setSelectedTaskId,
-    searchQuery,
-    setSearchQuery,
-    selectedTag,
-    setSelectedTag,
-  } = useUIStore();
+  const isCreateProjectOpen = useUIStore((s) => s.isCreateProjectOpen);
+  const closeCreateProject = useUIStore((s) => s.closeCreateProject);
+  const openCreateProject = useUIStore((s) => s.openCreateProject);
+  const isEditProjectOpen = useUIStore((s) => s.isEditProjectOpen);
+  const openEditProject = useUIStore((s) => s.openEditProject);
+  const closeEditProject = useUIStore((s) => s.closeEditProject);
+  const isImportJsonOpen = useUIStore((s) => s.isImportJsonOpen);
+  const openImportJson = useUIStore((s) => s.openImportJson);
+  const closeImportJson = useUIStore((s) => s.closeImportJson);
+  const isExportJsonOpen = useUIStore((s) => s.isExportJsonOpen);
+  const openExportJson = useUIStore((s) => s.openExportJson);
+  const closeExportJson = useUIStore((s) => s.closeExportJson);
+  const selectedTaskId = useUIStore((s) => s.selectedTaskId);
+  const setSelectedTaskId = useUIStore((s) => s.setSelectedTaskId);
+  const searchQuery = useUIStore((s) => s.searchQuery);
+  const setSearchQuery = useUIStore((s) => s.setSearchQuery);
+  const selectedTag = useUIStore((s) => s.selectedTag);
+  const setSelectedTag = useUIStore((s) => s.setSelectedTag);
+
+  const handleTaskClick = useCallback((task: TaskData) => {
+    setSelectedTaskId(task.id);
+  }, [setSelectedTaskId]);
 
   const allTags = useMemo(() => {
     if (!project?.columns) return [];
@@ -223,7 +225,7 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
                 <KanbanBoard
                   projectId={project.id}
                   columns={project.columns || []}
-                  onTaskClick={(task: TaskData) => setSelectedTaskId(task.id)}
+                  onTaskClick={handleTaskClick}
                   onRefreshProject={refetch}
                 />
               )}

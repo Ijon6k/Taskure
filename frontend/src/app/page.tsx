@@ -15,7 +15,9 @@ import { useUIStore } from "@/store/use-ui-store";
 export default function HomePage() {
   const { data: projects = [], isLoading: isProjectsLoading } = useProjects();
   const { data: focusResp, isLoading: isFocusLoading } = useFocusTask();
-  const { isCreateProjectOpen, openCreateProject, closeCreateProject } = useUIStore();
+  const isCreateProjectOpen = useUIStore((s) => s.isCreateProjectOpen);
+  const openCreateProject = useUIStore((s) => s.openCreateProject);
+  const closeCreateProject = useUIStore((s) => s.closeCreateProject);
 
   const focusData = focusResp?.focus || null;
   const isLoading = isProjectsLoading || isFocusLoading;

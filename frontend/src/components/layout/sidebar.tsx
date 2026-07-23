@@ -29,15 +29,13 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
   const seedDemoMutation = useSeedDemo();
   const [isLogoHovered, setIsLogoHovered] = useState(false);
 
-  const {
-    openCreateProject,
-    isShortcutsOpen,
-    openShortcuts,
-    closeShortcuts,
-    toggleShortcuts,
-    isSidebarCollapsed,
-    toggleSidebar,
-  } = useUIStore();
+  const openCreateProject = useUIStore((s) => s.openCreateProject);
+  const isShortcutsOpen = useUIStore((s) => s.isShortcutsOpen);
+  const openShortcuts = useUIStore((s) => s.openShortcuts);
+  const closeShortcuts = useUIStore((s) => s.closeShortcuts);
+  const toggleShortcuts = useUIStore((s) => s.toggleShortcuts);
+  const isSidebarCollapsed = useUIStore((s) => s.isSidebarCollapsed);
+  const toggleSidebar = useUIStore((s) => s.toggleSidebar);
 
   useHotkeys("n", () => {
     if (onOpenCreateProject) onOpenCreateProject();

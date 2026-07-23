@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { TaskData, ChecklistItemData, LabelData } from "@/lib/api";
@@ -12,7 +13,7 @@ interface KanbanCardProps {
   onClick: () => void;
 }
 
-export function KanbanCard({ task, onClick }: KanbanCardProps) {
+export const KanbanCard = memo(function KanbanCard({ task, onClick }: KanbanCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
     data: { task },
@@ -106,4 +107,4 @@ export function KanbanCard({ task, onClick }: KanbanCardProps) {
       </div>
     </div>
   );
-}
+});

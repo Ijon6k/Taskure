@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -10,8 +10,14 @@ import {
   DragEndEvent,
   DragStartEvent,
 } from "@dnd-kit/core";
-import { Plus, LayoutGrid, Sparkles } from "lucide-react";
-import { ColumnData, TaskData, useMoveTask, api } from "@/lib/api";
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { Plus, LayoutGrid, Sparkles, GripVertical } from "lucide-react";
+import { ColumnData, ProjectData, TaskData, useMoveTask, columnsService, api, PROJECT_KEYS } from "@/lib/api";
+import { useQueryClient } from "@tanstack/react-query";
 import { KanbanColumn } from "./kanban-column";
 import { KanbanCard } from "./kanban-card";
 import { TrashZone } from "./trash-zone";
@@ -26,19 +32,18 @@ interface KanbanBoardProps {
 
 import { toast } from "sonner";
 import { useHotkeys } from "react-hotkeys-hook";
-import { groupBy, sortBy } from "es-toolkit";
-import { useUIStore } from "@/store/use-ui-store";
 
 export function KanbanBoard({ projectId, columns, onTaskClick, onRefreshProject }: KanbanBoardProps) {
   const [activeTask, setActiveTask] = useState<TaskData | null>(null);
+  const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<TaskData | null>(null);
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
   const [isSubmittingCol, setIsSubmittingCol] = useState(false);
   const [isInitLoading, setIsInitLoading] = useState(false);
 
-  // Search & Filter state from Zustand Store
-  const { searchQuery, selectedTag } = useUIStore();
+  const queryClient = useQueryClient();
+  const noop = useCallback(() => {}, []);
 
   useHotkeys("esc", () => {
     if (isAddingColumn) {
@@ -76,6 +81,11 @@ export function KanbanBoard({ projectId, columns, onTaskClick, onRefreshProject 
   };
 
   const handleDragStart = (event: DragStartEvent) => {
+    const type = event.active.data.current?.type;
+    if (type === "column") {
+      setActiveColumnId(event.active.id as string);
+      return;
+    }
     const task = event.active.data.current?.task as TaskData;
     if (task) {
       setActiveTask(task);
@@ -83,20 +93,56 @@ export function KanbanBoard({ projectId, columns, onTaskClick, onRefreshProject 
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
-    const draggedTask = activeTask;
-    setActiveTask(null);
     const { active, over } = event;
-    if (!over || !draggedTask) return;
+    setActiveTask(null);
+    setActiveColumnId(null);
+    if (!over) return;
 
-    // Check if dropped onto Trash Drop Zone
+    // ─── Column reorder (optimistic with snapshot rollback) ──────────
+    if (active.data.current?.type === "column") {
+      const activeId = active.id as string;
+      const overId = over.id as string;
+      if (activeId === overId) return;
+
+      const oldIdx = columns.findIndex((c) => c.id === activeId);
+      const newIdx = columns.findIndex((c) => c.id === overId);
+      if (oldIdx === -1 || newIdx === -1) return;
+
+      const reordered = arrayMove(columns, oldIdx, newIdx);
+      const queryKey = PROJECT_KEYS.detail(projectId);
+      const snapshot = queryClient.getQueryData<ProjectData>(queryKey);
+
+      if (snapshot) {
+        queryClient.setQueryData(queryKey, { ...snapshot, columns: reordered });
+      }
+
+      try {
+        await Promise.all(
+          reordered.map((col, i) =>
+            columnsService.updateColumn(col.id, { position: i })
+          )
+        );
+        toast.success("Columns reordered");
+        queryClient.invalidateQueries({ queryKey });
+      } catch {
+        if (snapshot) {
+          queryClient.setQueryData(queryKey, snapshot);
+        }
+        toast.error("Failed to reorder columns");
+      }
+      return;
+    }
+
+    // ─── Task move ───────────────────────────────────────────────────
+    const draggedTask = activeTask;
+    if (!draggedTask) return;
+
     if (over.id === "trash-drop-zone") {
       setTaskToDelete(draggedTask);
       return;
     }
 
     const taskId = active.id as string;
-
-    // Find target column
     let targetColumnId = "";
     let targetColumn: ColumnData | undefined;
 
@@ -111,7 +157,6 @@ export function KanbanBoard({ projectId, columns, onTaskClick, onRefreshProject 
 
     if (!targetColumnId || !targetColumn) return;
 
-    // Determine target status
     const colNameLower = targetColumn.name.toLowerCase();
     let newStatus = "todo";
     if (colNameLower.includes("done") || colNameLower.includes("selesai")) {
@@ -120,7 +165,6 @@ export function KanbanBoard({ projectId, columns, onTaskClick, onRefreshProject 
       newStatus = "in_progress";
     }
 
-    // Perform move task API call
     moveTaskMutation.mutate(
       {
         id: taskId,
@@ -133,7 +177,6 @@ export function KanbanBoard({ projectId, columns, onTaskClick, onRefreshProject 
       {
         onSuccess: async () => {
           toast.success(`Task moved to ${targetColumn?.name || "column"}`);
-          // If dropped into "Done" column, automatically mark ALL subtasks/checklist as completed!
           if (newStatus === "done") {
             try {
               const fullTask = await api.getTask(taskId);
@@ -188,21 +231,6 @@ export function KanbanBoard({ projectId, columns, onTaskClick, onRefreshProject 
     }
   };
 
-  // Filter tasks per column based on search & active tag
-  const filterTasks = (tasks: TaskData[]) => {
-    return tasks.filter((t) => {
-      const matchesSearch =
-        !searchQuery.trim() ||
-        t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (t.description && t.description.toLowerCase().includes(searchQuery.toLowerCase()));
-
-      const taskLabels = (t.labels || []).map((l) => (typeof l === "string" ? l : l.name).toLowerCase());
-      const matchesTag = selectedTag === "all" || taskLabels.includes(selectedTag.toLowerCase());
-
-      return matchesSearch && matchesTag;
-    });
-  };
-
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex flex-col h-full overflow-hidden">
@@ -226,16 +254,21 @@ export function KanbanBoard({ projectId, columns, onTaskClick, onRefreshProject 
               </button>
             </div>
           ) : (
-            columns.map((col) => (
-              <KanbanColumn
-                key={col.id}
-                column={col}
-                tasks={filterTasks(col.tasks || [])}
-                projectId={projectId}
-                onTaskClick={onTaskClick}
-                onRefreshProject={onRefreshProject || (() => {})}
-              />
-            ))
+            <SortableContext
+              items={columns.map((c) => c.id)}
+              strategy={horizontalListSortingStrategy}
+            >
+              {columns.map((col) => (
+                <KanbanColumn
+                  key={col.id}
+                  column={col}
+                  tasks={col.tasks || []}
+                  projectId={projectId}
+                  onTaskClick={onTaskClick}
+                  onRefreshProject={onRefreshProject || noop}
+                />
+              ))}
+            </SortableContext>
           )}
 
           {/* Inline New Column Creation Box */}
@@ -287,7 +320,18 @@ export function KanbanBoard({ projectId, columns, onTaskClick, onRefreshProject 
         <TrashZone isDragging={activeTask !== null} />
 
         <DragOverlay>
-          {activeTask ? <KanbanCard task={activeTask} onClick={() => {}} /> : null}
+          {activeTask ? (
+            <KanbanCard task={activeTask} onClick={() => {}} />
+          ) : activeColumnId ? (
+            <div className="w-[320px] p-3 bg-theme-elevated border border-brand-accent rounded-[10px] shadow-xl">
+              <div className="h-[40px] px-1 flex items-center gap-2.5">
+                <GripVertical className="w-4 h-4 text-theme-tertiary" />
+                <h3 className="text-[15px] font-medium text-theme-primary">
+                  {columns.find((c) => c.id === activeColumnId)?.name}
+                </h3>
+              </div>
+            </div>
+          ) : null}
         </DragOverlay>
 
         <ConfirmModal
