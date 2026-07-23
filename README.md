@@ -1,182 +1,79 @@
-# Kanban — AI-powered Personal Project Workspace
+# Kanban — Personal Project Workspace
 
-A self-hosted, open-source kanban + project management workspace with built-in AI assistant, RAG knowledge base, and dual LLM provider support (OpenAI + Anthropic).
-
-## Features
-
-- **Workspace / Project / Board hierarchy** — multiple workspaces, each with multiple kanban projects
-- **Tasks with rich metadata** — priority, status, due dates, checklists, labels, attachments
-- **AI assistant** — OpenAI + Anthropic dual provider with streaming chat responses
-- **RAG knowledge base** — pgvector semantic search across project context
-- **Capture inbox** — quick notes that AI can triage into structured tasks
-- **3-theme system** — Dark (OLED), Dim (default), Light
-- **S3-compatible storage** — MinIO for attachments
-- **Self-hosted** — single `docker compose up -d` to run everything
-
-## Tech Stack
-
-| Layer | Tech |
-|---|---|
-| Frontend | Next.js 15.5 + React 19 + TailwindCSS v4 + @dnd-kit + React Query v5 + Zustand |
-| Backend | Go 1.24 + Gin framework + GORM |
-| AI Service | Python 3.12 + FastAPI |
-| Database | PostgreSQL 16 + pgvector |
-| Cache | Redis 7 |
-| Object Storage | MinIO (S3-compatible) |
-| Reverse Proxy | nginx |
-| Package Manager | Bun |
-
-## Quick Start (Self-Hosted)
-
-### Prerequisites
-- Docker + Docker Compose
-- 4GB+ RAM, 10GB+ disk
-
-### Run it
+A self-hosted kanban board for managing projects. Still in active development.
 
 ```bash
-# 1. Clone
-git clone https://github.com/Ijon6k/kanbanproject.git
-cd kanbanproject
-
-# 2. (Optional) Configure environment
-cp .env.example .env
-# edit .env with your AI keys and secrets
-
-# 3. Start everything
+git clone https://github.com/Ijon6k/kanbanproject.git && cd kanban
 docker compose up -d
-
-# 4. Open in browser
-open http://localhost:9080
+# → http://localhost:9080
 ```
 
-That's it. All 7 services (nginx, web, api, ai, postgres, redis, minio) start automatically.
+## What Works
 
-### What runs where
+- **Kanban board** — drag-and-drop columns & tasks, search/filter, inline create
+- **Column management** — rename, reorder, color accent, duplicate, delete
+- **Task management** — priority, labels, due dates, checklists
+- **3 themes** — Dark (OLED), Dim (Discord-like), Light, with 5 accent colors
+- **Self-hosted** — everything runs in Docker, no cloud dependency
 
-| Service | Internal Port | Exposed Port | URL |
-|---|---|---|---|
-| nginx (entry) | 80 | 9080 | http://localhost:9080 |
-| web (Next.js) | 3000 | (internal) | via nginx |
-| api (Go) | 4000 | (internal) | via nginx `/api/*` |
-| ai (FastAPI) | 5000 | (internal) | via nginx `/ai/*` |
-| postgres | 5432 | (internal) | internal network only |
-| redis | 6379 | (internal) | internal network only |
-| minio | 9000/9001 | (internal) | internal network only |
+## WIP / Planned
 
-### AI Configuration (Optional)
+- **AI assistant** — streaming chat with project context (backend scaffolding exists, not wired)
+- **RAG knowledge base** — upload docs for AI context (pgvector ready, pipeline not connected)
+- **File attachments** — UI exists, MinIO backend not wired
+- **Auth** — middleware exists but no real user accounts (single-user only)
+- **Capture panel** — quick idea capture from board
+- **Pomodoro timer**, JSON export/import, empty/error/loading states
 
-To enable AI features, add to `.env`:
+## Quick Start
 
 ```bash
-OPENAI_API_KEY=sk-your-openai-key-here
-ANTHROPIC_API_KEY=sk-ant-your-anthropic-key-here
+git clone https://github.com/Ijon6k/kanbanproject.git
+cd kanban
+docker compose up -d
 ```
 
-The AI service supports both providers and falls back automatically. Embeddings use OpenAI's `text-embedding-3-small` by default.
+Open **http://localhost:9080**. All 7 services start automatically.
 
-### Stop / Reset
+To prepare for AI features (once wired), create `.env` with your API keys:
 
 ```bash
-# Stop all services (keeps data)
-docker compose down
-
-# Stop and DELETE all data (fresh start)
-docker compose down -v
+cp .env.example .env
+# edit .env — add OPENAI_API_KEY and/or ANTHROPIC_API_KEY
 ```
+
+### What's Included
+
+| Service | Port | URL |
+|---------|------|-----|
+| Web (Next.js 15) | 9080 | http://localhost:9080 |
+| API (Go + Gin) | internal | via nginx `/api/*` |
+| AI (Python + FastAPI) | internal | via nginx `/ai/*` |
+| PostgreSQL 16 + pgvector | internal | — |
+| Redis 7 | internal | — |
+| MinIO (S3 storage) | internal | — |
+| nginx reverse proxy | 9080 | entry point |
 
 ## Development
 
-### Local Development with Hot Reload
-
-For active development with code reloading:
-
 ```bash
-# Coming soon: docker-compose.dev.yml with hot-reload for all services
-# In the meantime, you can run services individually:
-
-# Run only the infra (postgres, redis, minio)
+# Run dependencies only
 docker compose up -d postgres redis minio
 
-# Run API locally (requires Go 1.24)
-cd apps/api
-go run ./cmd/server
+# Frontend (requires Bun)
+cd frontend && bun install && bun dev
 
-# Run Web locally (requires Bun)
-cd apps/web
-bun install
-bun dev
-
-# Run AI locally (requires Python 3.12)
-cd services/ai
-pip install -r requirements.txt  # if you create one
-uvicorn services.ai.main:app --reload
+# Backend (requires Go 1.24)
+cd backend && go run ./cmd/server
 ```
 
-### Project Structure
+## Tech Stack
 
-```
-kanbanproject/
-├── frontend/                  # Next.js 15.5 frontend
-│   └── src/
-│       ├── app/             # App Router pages
-│       ├── components/      # React components
-│       │   ├── features/   # Feature modules (kanban, project, task, dashboard)
-│       │   ├── layout/     # Layout (Sidebar)
-│       │   ├── modals/    # Shared modals
-│       │   ├── providers/  # Theme, Query providers
-│       │   └── ui/        # UI primitives
-│       ├── hooks/          # Custom hooks
-│       ├── lib/            # API services, helpers, types, tags, validations
-│       └── store/          # Zustand global UI store
-├── backend/                  # Go 1.24 REST API
-│   ├── cmd/server/        # Entry point
-│   └── internal/
-│       ├── config/        # Env config
-│       ├── db/           # GORM + AutoMigrate
-│       ├── handler/       # Per-domain handlers
-│       ├── models/       # Domain models (13 entities + Task.Tags)
-│       ├── repository/   # Data access
-│       ├── response/    # Standardized JSON helpers
-│       └── service/     # Business logic
-├── services/
-│   └── ai/               # Python 3.12 FastAPI AI service
-├── nginx/
-│   └── default.conf     # Reverse proxy config
-├── compose.yaml           # 7-container orchestrator
-├── .env.example
-└── docs-internal/        # Internal docs & reports
-```
-
-## Roadmap
-
-This is **Phase 0: Infrastructure** complete. The architecture is in place; subsequent phases build out features:
-
-- **Phase 1**: Core workspace (auth, workspace/project CRUD, kanban board)
-- **Phase 2**: Capture + context (inbox, attachments, RAG ingestion)
-- **Phase 3**: AI integration (chat assistant, project RAG, smart capture)
-- **Phase 4**: Productivity (time tracking, templates, automation)
-- **Phase 5**: Polish (custom themes, export/import, mobile)
-
-## Contributing
-
-PRs welcome. Before opening a PR, please:
-
-1. Fork the repo and create a feature branch from `dev`
-2. Follow existing code style and conventions
-3. Update internal docs (`docs-internal/`) — see `.agents/skills/kanban-project/SKILL.md`
-4. Test locally before pushing
-5. Open a PR against the `dev` branch
+**Frontend:** Next.js 15.5 + React 19 + Tailwind CSS v4 + @dnd-kit + React Query v5 + Zustand  
+**Backend:** Go 1.24 + Gin + GORM (PostgreSQL)  
+**AI (WIP):** Python 3.12 + FastAPI + OpenAI + Anthropic SDKs  
+**Infra:** Docker Compose, nginx, MinIO, Redis
 
 ## License
 
-MIT — see [LICENSE](./LICENSE)
-
-## Acknowledgements
-
-Built with [Next.js](https://nextjs.org), [Gin](https://gin-gonic.com), [GORM](https://gorm.io), [FastAPI](https://fastapi.tiangolo.com), and [PostgreSQL](https://postgresql.org).
-
----
-
-**Status:** MVP infrastructure complete (Phase 0)
-**Version:** 0.1.0
+MIT
