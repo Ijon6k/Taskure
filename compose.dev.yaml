@@ -1,11 +1,21 @@
 # ============================================================
 # KANBAN PROJECT — Local Development Overrides
-# Run: docker compose -f compose.yaml -f compose.dev.yaml up -d
-# Enables Hot-Reload for Next.js, Air for Go, & Uvicorn for Python
+# Run via CLI: ./scripts/dev.ts
+# Or Docker: docker compose -f compose.yaml -f compose.dev.yaml up -d
 # ============================================================
 
 services:
+  nginx:
+    container_name: kanban-nginx-dev
+    ports:
+      - "${PORT_NGINX:-1106}:80"
+    depends_on: []
+    profiles:
+      - full
+      - nginx
+
   web:
+    container_name: kanban-web-dev
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -13,12 +23,19 @@ services:
     user: "${UID:-1000}:${GID:-1000}"
     environment:
       - NODE_ENV=development
+      - PORT=3000
+    ports:
+      - "${PORT_WEB:-3000}:3000"
     volumes:
       - ./frontend:/app
-      - /app/.next
-      - /app/node_modules
+    command: bun run dev
+    depends_on: []
+    profiles:
+      - full
+      - web
 
   api:
+    container_name: kanban-api-dev
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -26,14 +43,59 @@ services:
     user: "${UID:-1000}:${GID:-1000}"
     environment:
       - APP_ENV=development
+      - GOCACHE=/tmp/.go-build
+      - GOPATH=/tmp/go
+    ports:
+      - "${PORT_API:-4000}:4000"
     volumes:
       - ./backend:/app
+    profiles:
+      - full
+      - services
+      - api
 
   ai:
+    container_name: kanban-ai-dev
     build:
       context: ./ai
       dockerfile: Dockerfile
       target: dev
     user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      - UV_CACHE_DIR=/tmp/.uv-cache
+    ports:
+      - "${PORT_AI:-5000}:5000"
     volumes:
       - ./ai:/app
+    profiles:
+      - full
+      - services
+      - ai
+
+  postgres:
+    container_name: kanban-postgres-dev
+    ports:
+      - "${PORT_POSTGRES:-5432}:5432"
+    profiles:
+      - full
+      - services
+      - db
+
+  redis:
+    container_name: kanban-redis-dev
+    ports:
+      - "${PORT_REDIS:-6379}:6379"
+    profiles:
+      - full
+      - services
+      - db
+
+  minio:
+    container_name: kanban-minio-dev
+    ports:
+      - "${PORT_MINIO:-9000}:9000"
+      - "${PORT_MINIO_CONSOLE:-9001}:9001"
+    profiles:
+      - full
+      - services
+      - db

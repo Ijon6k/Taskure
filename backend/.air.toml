@@ -1,10 +1,10 @@
 root = "."
-tmp_dir = "tmp"
+tmp_dir = "/tmp/air"
 testdata_dir = "testdata"
 
 [build]
-  bin = "./tmp/server"
-  cmd = "go build -o ./tmp/server ./cmd/server"
+  bin = "/tmp/air/server"
+  cmd = "go build -o /tmp/air/server ./cmd/server"
   delay = 1000
   exclude_dir = ["assets", "tmp", "testdata", "vendor", "docs", "node_modules", ".git"]
   exclude_regex = ["_test.go", "_mock.go"]

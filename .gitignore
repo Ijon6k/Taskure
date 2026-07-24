@@ -31,12 +31,13 @@ docker-compose.override.yml
 
 # Skills
 .agents/skills/
-skills-lock.json
 
 # Internal docs (private, not for OSS)
 docs-internal/
 
 # Go
+backend/server
+backend/tmp/
 apps/api/tmp/
 apps/api/bin/
 

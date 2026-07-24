@@ -35,6 +35,14 @@ func NewContainer(
 
 // RegisterRoutes registers all /api endpoints onto the Gin RouterGroup.
 func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
+	r.GET("/hello", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "Hello World! Kanban Go API Backend is running smoothly.",
+			"status":  "ok",
+			"service": "kanban-api",
+		})
+	})
+
 	workspaces := r.Group("/workspaces")
 	{
 		workspaces.GET("/default", c.WorkspaceHandler.GetDefaultWorkspace)

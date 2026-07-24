@@ -9,9 +9,9 @@ FROM oven/bun:1.2-alpine AS dev
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-ENV NODE_ENV=development PORT=3000 HOSTNAME="0.0.0.0"
+ENV NODE_ENV=development PORT=3000 HOSTNAME="0.0.0.0" PATH="/app/node_modules/.bin:$PATH"
 EXPOSE 3000
-CMD ["bun", "dev"]
+CMD ["bun", "run", "dev"]
 
 # Stage 3: Build Next.js standalone application using Bun
 FROM oven/bun:1.2-alpine AS builder

@@ -17,6 +17,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /server ./cmd/server
 # Stage 2: Development Target with Air Hot Reload
 FROM builder AS dev
 WORKDIR /app
+ENV GOCACHE=/tmp/.go-build GOPATH=/tmp/go
 EXPOSE 4000
 CMD ["air", "-c", ".air.toml"]
 

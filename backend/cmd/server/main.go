@@ -66,6 +66,22 @@ func main() {
 	router.Use(middleware.Logger(logger))
 	router.Use(middleware.CORS(cfg.CORSOrigins))
 
+	router.GET("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Hello World! Kanban Go API Backend is running smoothly.",
+			"status":  "ok",
+			"service": "kanban-api",
+		})
+	})
+
+	router.GET("/hello", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Hello World! Kanban Go API Backend is running smoothly.",
+			"status":  "ok",
+			"service": "kanban-api",
+		})
+	})
+
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "ok",
