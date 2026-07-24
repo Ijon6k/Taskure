@@ -4,8 +4,8 @@ import { use, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { ChevronRight, FileText, LayoutGrid, FileCode, Download, Upload, Edit3, Filter } from "lucide-react";
 import { useProject, TaskData } from "@/lib/api";
-import { toast } from "sonner";
 import { Sidebar } from "@/components/layout/sidebar";
+import { MobileHeader } from "@/components/layout/mobile-header";
 import { KanbanBoard } from "@/components/features/kanban/kanban-board";
 import { TaskDrawer } from "@/components/features/task/task-drawer";
 import { CreateProjectModal } from "@/components/features/project/create-project-modal";
@@ -15,7 +15,6 @@ import { ExportJsonModal } from "@/components/features/project/export-json-modal
 import { ProjectOverviewTab } from "@/components/features/project/project-overview-tab";
 import { ProjectContextTab } from "@/components/features/project/project-context-tab";
 import { SearchInput } from "@/components/ui/search-input";
-
 import { useUIStore } from "@/store/use-ui-store";
 
 export default function ProjectBoardPage({ params }: { params: Promise<{ id: string }> }) {
@@ -24,6 +23,7 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
 
   const { data: project, isLoading: loading, refetch } = useProject(projectId);
   const [activeTab, setActiveTab] = useState<"overview" | "board" | "context">("board");
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
 
   const isCreateProjectOpen = useUIStore((s) => s.isCreateProjectOpen);
   const closeCreateProject = useUIStore((s) => s.closeCreateProject);
@@ -60,32 +60,35 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
   }, [project?.columns]);
 
   return (
-    <div className="flex h-screen bg-theme-main text-theme-primary font-sans select-none overflow-hidden">
-      {/* Sidebar */}
+    <div className="flex flex-col md:flex-row h-screen bg-theme-main text-theme-primary font-sans select-none overflow-hidden">
+      {/* Mobile Top Header */}
+      <MobileHeader title={project?.name || "Project Board"} onOpenCreateProject={openCreateProject} />
+
+      {/* Sidebar Navigation */}
       <Sidebar onOpenCreateProject={openCreateProject} />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Header Navigation */}
-        <header className="pt-5 px-8 border-b border-theme-default flex flex-col gap-3 shrink-0 bg-theme-surface">
-          {/* Breadcrumbs (+1 step size) */}
-          <div className="flex items-center gap-1.5 text-[14px] text-theme-secondary font-medium">
+        <header className="pt-2 md:pt-5 px-3 md:px-8 border-b border-theme-default flex flex-col gap-2 shrink-0 bg-theme-surface">
+          {/* Breadcrumbs (Desktop only) */}
+          <div className="hidden md:flex items-center gap-1.5 text-[14px] text-theme-secondary font-medium truncate">
             <Link href="/projects" className="hover:text-theme-primary transition-colors">
               Projects
             </Link>
-            <ChevronRight className="w-3.5 h-3.5 text-theme-tertiary" />
-            <span className="text-theme-primary font-medium">{project?.name || "..."}</span>
+            <ChevronRight className="w-3.5 h-3.5 text-theme-tertiary shrink-0" />
+            <span className="text-theme-primary font-medium truncate">{project?.name || "..."}</span>
           </div>
 
-          {/* Project Title & Actions */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-xl">{project?.icon || "⚡"}</span>
+          {/* Project Title & Actions (Desktop view) */}
+          <div className="hidden md:flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="text-xl shrink-0">{project?.icon || "⚡"}</span>
               <span
                 className="w-3 h-3 rounded-full shrink-0"
                 style={{ backgroundColor: project?.color || "#7F9CF5" }}
               />
-              <h1 className="text-[20px] font-medium text-theme-primary tracking-tight">
+              <h1 className="text-[20px] font-medium text-theme-primary tracking-tight truncate">
                 {project?.name || "Loading..."}
               </h1>
               {project?.status && (
@@ -97,7 +100,7 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
 
             <button
               onClick={() => project && openEditProject(project)}
-              className="px-3 py-1.5 rounded-[6px] bg-theme-elevated hover:bg-theme-hover border border-theme-default text-theme-primary text-[13px] font-medium transition-colors flex items-center gap-1.5"
+              className="px-3 py-1.5 rounded-[6px] bg-theme-elevated hover:bg-theme-hover border border-theme-default text-theme-primary text-[13px] font-medium transition-colors flex items-center gap-1.5 shrink-0"
             >
               <Edit3 className="w-3.5 h-3.5 text-brand-accent" />
               <span>Edit Project</span>
@@ -105,50 +108,114 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
           </div>
 
           {/* Tabs Navigation */}
-          <div className="flex items-center gap-1 text-[14px] font-medium pt-1">
-            <button
-              onClick={() => setActiveTab("overview")}
-              className={`px-3 py-2 border-b-2 flex items-center gap-2 transition-colors ${
-                activeTab === "overview"
-                  ? "border-brand-accent text-theme-primary"
-                  : "border-transparent text-theme-secondary hover:text-theme-primary"
-              }`}
-            >
-              <FileText className="w-[15px] h-[15px]" />
-              <span>Overview</span>
-            </button>
+          <div className="flex items-center justify-between text-[13px] sm:text-[14px] font-medium pt-0.5">
+            <div className="flex items-center gap-1 overflow-x-auto">
+              <button
+                onClick={() => setActiveTab("overview")}
+                className={`px-2.5 py-1.5 md:py-2 border-b-2 flex items-center gap-1.5 transition-colors shrink-0 ${
+                  activeTab === "overview"
+                    ? "border-brand-accent text-theme-primary font-semibold"
+                    : "border-transparent text-theme-secondary hover:text-theme-primary"
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5 md:w-[15px] md:h-[15px]" />
+                <span>Overview</span>
+              </button>
 
-            <button
-              onClick={() => setActiveTab("board")}
-              className={`px-3 py-2 border-b-2 flex items-center gap-2 transition-colors ${
-                activeTab === "board"
-                  ? "border-brand-accent text-theme-primary"
-                  : "border-transparent text-theme-secondary hover:text-theme-primary"
-              }`}
-            >
-              <LayoutGrid className="w-[15px] h-[15px]" />
-              <span>Board</span>
-            </button>
+              <button
+                onClick={() => setActiveTab("board")}
+                className={`px-2.5 py-1.5 md:py-2 border-b-2 flex items-center gap-1.5 transition-colors shrink-0 ${
+                  activeTab === "board"
+                    ? "border-brand-accent text-theme-primary font-semibold"
+                    : "border-transparent text-theme-secondary hover:text-theme-primary"
+                }`}
+              >
+                <LayoutGrid className="w-3.5 h-3.5 md:w-[15px] md:h-[15px]" />
+                <span>Board</span>
+              </button>
 
-            <button
-              onClick={() => setActiveTab("context")}
-              className={`px-3 py-2 border-b-2 flex items-center gap-2 transition-colors ${
-                activeTab === "context"
-                  ? "border-brand-accent text-theme-primary"
-                  : "border-transparent text-theme-secondary hover:text-theme-primary"
-              }`}
-            >
-              <FileCode className="w-[15px] h-[15px]" />
-              <span>Context</span>
-            </button>
+              <button
+                onClick={() => setActiveTab("context")}
+                className={`px-2.5 py-1.5 md:py-2 border-b-2 flex items-center gap-1.5 transition-colors shrink-0 ${
+                  activeTab === "context"
+                    ? "border-brand-accent text-theme-primary font-semibold"
+                    : "border-transparent text-theme-secondary hover:text-theme-primary"
+                }`}
+              >
+                <FileCode className="w-3.5 h-3.5 md:w-[15px] md:h-[15px]" />
+                <span>Context</span>
+              </button>
+            </div>
+
+            <div className="md:hidden flex items-center gap-1.5">
+              <button
+                onClick={() => setShowMobileSearch(!showMobileSearch)}
+                className={`p-1.5 rounded-[6px] transition-colors ${
+                  showMobileSearch || searchQuery
+                    ? "bg-brand-accent text-black font-semibold"
+                    : "text-theme-secondary hover:text-theme-primary"
+                }`}
+                title="Search Tasks"
+              >
+                <Filter className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => project && openEditProject(project)}
+                className="p-1.5 rounded-[6px] text-theme-secondary hover:text-theme-primary"
+                title="Edit Project"
+              >
+                <Edit3 className="w-4 h-4 text-brand-accent" />
+              </button>
+            </div>
           </div>
         </header>
 
         {/* Main View Tab Content */}
         {activeTab === "board" && (
           <>
-            {/* Unified Board Toolbar: Search + Tag Filter + JSON Actions */}
-            <div className="px-8 py-2.5 flex items-center justify-between gap-4 shrink-0 border-b border-theme-subtle bg-theme-surface/50">
+            {/* Unified Board Toolbar (Desktop & Mobile Collapsible Filter Bar) */}
+            {(showMobileSearch || searchQuery || selectedTag !== "all") && (
+              <div className="md:hidden px-3 py-2 border-b border-theme-subtle bg-theme-surface/70 space-y-2 animate-in fade-in duration-150 shrink-0">
+                <SearchInput
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Filter tasks..."
+                  className="!h-[32px] bg-theme-elevated w-full"
+                />
+                {allTags.length > 0 && (
+                  <div className="flex items-center gap-1 text-[11px] overflow-x-auto scrollbar-none py-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTag("all")}
+                      className={`px-2.5 py-0.5 rounded-[4px] font-medium capitalize transition-colors shrink-0 ${
+                        selectedTag === "all"
+                          ? "bg-brand-accent text-black font-semibold"
+                          : "bg-theme-elevated text-theme-secondary"
+                      }`}
+                    >
+                      All
+                    </button>
+                    {allTags.map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => setSelectedTag(tag)}
+                        className={`px-2.5 py-0.5 rounded-[4px] font-medium capitalize transition-colors shrink-0 ${
+                          selectedTag === tag
+                            ? "bg-brand-accent text-black font-semibold"
+                            : "bg-theme-elevated text-theme-secondary"
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Desktop Board Toolbar */}
+            <div className="hidden md:flex px-8 py-2.5 items-center justify-between gap-4 shrink-0 border-b border-theme-subtle bg-theme-surface/50">
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <SearchInput
                   value={searchQuery}
@@ -157,7 +224,6 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
                   className="!h-[32px] bg-theme-elevated w-[220px]"
                 />
 
-                {/* Tag Filter Pills */}
                 <div className="flex items-center gap-1.5 text-[12px] overflow-x-auto py-0.5">
                   <span className="text-theme-tertiary flex items-center gap-1 shrink-0 font-medium">
                     <Filter className="w-3 h-3 text-brand-accent" />
@@ -210,12 +276,12 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
               </div>
             </div>
 
-            <div className="flex-1 overflow-hidden pb-4">
+            <div className="flex-1 overflow-hidden">
               {loading ? (
-                <div className="flex gap-5 animate-pulse h-full items-start p-6">
-                  <div className="w-[280px] h-96 bg-theme-surface rounded-[6px]" />
-                  <div className="w-[280px] h-96 bg-theme-surface rounded-[6px]" />
-                  <div className="w-[280px] h-96 bg-theme-surface rounded-[6px]" />
+                <div className="flex gap-4 animate-pulse h-full items-start p-4 md:p-6">
+                  <div className="w-[280px] h-96 bg-theme-surface rounded-[8px]" />
+                  <div className="w-[280px] h-96 bg-theme-surface rounded-[8px]" />
+                  <div className="w-[280px] h-96 bg-theme-surface rounded-[8px]" />
                 </div>
               ) : !project ? (
                 <div className="p-8 text-center text-theme-secondary">

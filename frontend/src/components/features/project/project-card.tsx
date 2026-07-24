@@ -87,10 +87,10 @@ export function ProjectCard({
               e.stopPropagation();
               onEdit(project);
             }}
-            className="absolute top-2 right-2 w-7 h-7 rounded-[6px] flex items-center justify-center text-theme-secondary opacity-0 group-hover/card:opacity-100 hover:bg-theme-elevated hover:text-theme-primary transition-all duration-150"
+            className="absolute top-2 right-2 w-8 h-8 md:w-7 md:h-7 rounded-[6px] flex items-center justify-center text-theme-secondary opacity-100 md:opacity-0 md:group-hover/card:opacity-100 hover:bg-theme-elevated hover:text-theme-primary transition-all duration-150"
             title="Project settings"
           >
-            <Settings className="w-3.5 h-3.5" />
+            <Settings className="w-4 h-4 md:w-3.5 md:h-3.5" />
           </button>
         )}
       </div>
@@ -102,14 +102,14 @@ export function ProjectCard({
     <div className="relative group/card">
       <Link
         href={`/projects/${project.id}/board`}
-        className={`p-4 bg-theme-surface border border-theme-default hover:border-brand-accent/40 hover:bg-theme-hover rounded-[8px] flex flex-col justify-between h-[96px] cursor-pointer transition-colors duration-150 active:scale-[0.99] group ${className}`}
+        className={`p-4 bg-theme-surface border border-theme-default hover:border-brand-accent/40 hover:bg-theme-hover rounded-[8px] flex flex-col justify-between min-h-[102px] h-auto space-y-3 cursor-pointer transition-colors duration-150 active:scale-[0.99] group ${className}`}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pr-6">
           <span
             className="w-2 h-2 rounded-full shrink-0"
             style={{ backgroundColor: projectColor }}
           />
-          <span className="text-[14px] font-medium text-theme-primary group-hover:text-brand-accent transition-colors truncate">
+          <span className="text-[14px] font-medium text-theme-primary group-hover:text-brand-accent transition-colors line-clamp-2">
             {project.name}
           </span>
         </div>
@@ -142,10 +142,10 @@ export function ProjectCard({
             e.stopPropagation();
             onEdit(project);
           }}
-          className="absolute top-2 right-2 w-7 h-7 rounded-[6px] flex items-center justify-center text-theme-secondary opacity-0 group-hover/card:opacity-100 hover:bg-theme-elevated hover:text-theme-primary transition-all duration-150"
+          className="absolute top-2 right-2 w-8 h-8 md:w-7 md:h-7 rounded-[6px] flex items-center justify-center text-theme-secondary opacity-100 md:opacity-0 md:group-hover/card:opacity-100 hover:bg-theme-elevated hover:text-theme-primary transition-all duration-150"
           title="Project settings"
         >
-          <Settings className="w-3.5 h-3.5" />
+          <Settings className="w-4 h-4 md:w-3.5 md:h-3.5" />
         </button>
       )}
     </div>

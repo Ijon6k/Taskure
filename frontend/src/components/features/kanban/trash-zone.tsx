@@ -13,7 +13,7 @@ export function TrashZone({ isDragging }: { isDragging: boolean }) {
   return (
     <div
       ref={setNodeRef}
-      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 px-8 py-3.5 rounded-[12px] border-2 border-dashed flex items-center gap-3 transition-all duration-200 shadow-2xl backdrop-blur-md select-none ${
+      className={`hidden md:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-40 px-8 py-3.5 rounded-[12px] border-2 border-dashed items-center gap-3 transition-all duration-200 shadow-2xl backdrop-blur-md select-none ${
         isOver
           ? "bg-red-600 border-red-300 text-white scale-110 shadow-red-500/40"
           : "bg-red-950/60 border-red-500/50 text-red-400 hover:border-red-400"

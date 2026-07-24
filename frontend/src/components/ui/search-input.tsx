@@ -17,15 +17,15 @@ export function SearchInput({
 }: SearchInputProps) {
   return (
     <div
-      className={`h-[36px] px-3 bg-theme-surface border border-theme-default rounded-[6px] flex items-center gap-2.5 ${className}`}
+      className={`h-9 px-3 bg-theme-surface border border-theme-default rounded-md flex items-center gap-2.5 ${className}`}
     >
-      <Search className="w-[15px] h-[15px] text-theme-secondary shrink-0" />
+      <Search className="w-4 h-4 text-theme-secondary shrink-0" />
       <input
         type="text"
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-transparent text-[14px] text-theme-primary placeholder-theme-secondary outline-none"
+        className="w-full bg-transparent text-sm text-theme-primary placeholder-theme-secondary outline-none"
       />
     </div>
   );

@@ -11,6 +11,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Settings as SettingsIcon,
+  X,
 } from "lucide-react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
@@ -36,13 +37,18 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
   const toggleShortcuts = useUIStore((s) => s.toggleShortcuts);
   const isSidebarCollapsed = useUIStore((s) => s.isSidebarCollapsed);
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
+  const isMobileMenuOpen = useUIStore((s) => s.isMobileMenuOpen);
+  const closeMobileMenu = useUIStore((s) => s.closeMobileMenu);
 
   useHotkeys("n", () => {
     if (onOpenCreateProject) onOpenCreateProject();
     else openCreateProject();
   });
   useHotkeys("shift+?", toggleShortcuts);
-  useHotkeys("esc", closeShortcuts);
+  useHotkeys("esc", () => {
+    closeShortcuts();
+    closeMobileMenu();
+  });
 
   const handleSeed = () => {
     toast.info("Seeding demo data...");
@@ -63,47 +69,53 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
     { label: "Settings", href: "/settings", icon: SettingsIcon, exact: true },
   ];
 
-  return (
-    <>
-      <aside
-        className={`h-screen bg-theme-surface border-r border-theme-default flex flex-col shrink-0 text-theme-primary select-none z-20 overflow-hidden transition-[width] duration-200 ease-out ${
-          isSidebarCollapsed ? "w-[56px]" : "w-[224px]"
+  const sidebarContent = (isMobileView: boolean) => (
+    <div className="flex flex-col h-full bg-theme-surface text-theme-primary select-none">
+      {/* Sidebar Header */}
+      <div
+        className={`h-[56px] border-b border-theme-default flex items-center shrink-0 ${
+          !isMobileView && isSidebarCollapsed ? "justify-center" : "justify-between px-4"
         }`}
       >
-        <div
-          className={`h-[56px] border-b border-theme-default flex items-center shrink-0 ${
-            isSidebarCollapsed ? "justify-center" : "justify-between px-3"
-          }`}
-        >
-          {isSidebarCollapsed ? (
-            <button
-              type="button"
-              onClick={toggleSidebar}
-              onMouseEnter={() => setIsLogoHovered(true)}
-              onMouseLeave={() => setIsLogoHovered(false)}
-              className="w-[32px] h-[32px] rounded-[7px] flex items-center justify-center hover:bg-theme-hover transition-colors"
-              aria-label="Expand sidebar"
-              title="Expand sidebar"
-            >
-              {isLogoHovered ? (
-                <PanelLeftOpen className="w-[18px] h-[18px] text-theme-primary" />
-              ) : (
-                <span className="w-[28px] h-[28px] bg-brand-accent rounded-[6px] flex items-center justify-center text-black font-bold text-sm">
-                  K
-                </span>
-              )}
-            </button>
-          ) : (
-            <>
-              <Link href="/" className="flex items-center gap-2.5 min-w-0">
-                <span className="w-[28px] h-[28px] bg-brand-accent rounded-[6px] flex items-center justify-center text-black font-bold text-sm shrink-0">
-                  K
-                </span>
-                <span className="text-[14px] font-medium text-theme-primary whitespace-nowrap">
-                  My Kanban
-                </span>
-              </Link>
+        {!isMobileView && isSidebarCollapsed ? (
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            onMouseEnter={() => setIsLogoHovered(true)}
+            onMouseLeave={() => setIsLogoHovered(false)}
+            className="w-[32px] h-[32px] rounded-[7px] flex items-center justify-center hover:bg-theme-hover transition-colors"
+            aria-label="Expand sidebar"
+            title="Expand sidebar"
+          >
+            {isLogoHovered ? (
+              <PanelLeftOpen className="w-[18px] h-[18px] text-theme-primary" />
+            ) : (
+              <span className="w-[28px] h-[28px] bg-brand-accent rounded-[6px] flex items-center justify-center text-black font-bold text-sm">
+                K
+              </span>
+            )}
+          </button>
+        ) : (
+          <>
+            <Link href="/" onClick={() => isMobileView && closeMobileMenu()} className="flex items-center gap-2.5 min-w-0">
+              <span className="w-[28px] h-[28px] bg-brand-accent rounded-[6px] flex items-center justify-center text-black font-bold text-sm shrink-0">
+                K
+              </span>
+              <span className="text-[15px] font-medium text-theme-primary whitespace-nowrap">
+                My Kanban
+              </span>
+            </Link>
 
+            {isMobileView ? (
+              <button
+                type="button"
+                onClick={closeMobileMenu}
+                className="w-[32px] h-[32px] rounded-[6px] flex items-center justify-center text-theme-secondary hover:text-theme-primary hover:bg-theme-hover transition-colors shrink-0"
+                aria-label="Close Mobile Navigation"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            ) : (
               <button
                 type="button"
                 onClick={toggleSidebar}
@@ -113,111 +125,147 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
               >
                 <PanelLeftClose className="w-[17px] h-[17px]" />
               </button>
-            </>
-          )}
-        </div>
+            )}
+          </>
+        )}
+      </div>
 
-        <div className="flex-1 p-2 space-y-0.5 overflow-y-auto overflow-x-hidden">
-          {navItems.map((item) => {
-            const isActive = item.exact
-              ? pathname === item.href
-              : pathname.startsWith(item.href);
-            const Icon = item.icon;
+      {/* Nav Items */}
+      <div className="flex-1 p-2 space-y-0.5 overflow-y-auto overflow-x-hidden">
+        {navItems.map((item) => {
+          const isActive = item.exact
+            ? pathname === item.href
+            : pathname.startsWith(item.href);
+          const Icon = item.icon;
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                title={isSidebarCollapsed ? item.label : undefined}
-                aria-label={isSidebarCollapsed ? item.label : undefined}
-                className={`h-[36px] rounded-[6px] flex items-center text-[14px] font-medium transition-colors ${
-                  isSidebarCollapsed ? "w-[40px] justify-center" : "w-full px-2.5 gap-3"
-                } ${
-                  isActive
-                    ? "bg-theme-elevated text-theme-primary"
-                    : "text-theme-secondary hover:text-theme-primary hover:bg-theme-hover"
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => isMobileView && closeMobileMenu()}
+              title={!isMobileView && isSidebarCollapsed ? item.label : undefined}
+              aria-label={!isMobileView && isSidebarCollapsed ? item.label : undefined}
+              className={`h-[40px] rounded-[7px] flex items-center text-[14px] font-medium transition-colors ${
+                !isMobileView && isSidebarCollapsed ? "w-[40px] justify-center" : "w-full px-3 gap-3"
+              } ${
+                isActive
+                  ? "bg-theme-elevated text-theme-primary font-semibold"
+                  : "text-theme-secondary hover:text-theme-primary hover:bg-theme-hover"
+              }`}
+            >
+              <Icon
+                className={`w-[18px] h-[18px] shrink-0 ${
+                  isActive ? "text-brand-accent" : "text-theme-secondary"
                 }`}
-              >
-                <Icon
-                  className={`w-[17px] h-[17px] shrink-0 ${
-                    isActive ? "text-theme-primary" : "text-theme-secondary"
-                  }`}
-                />
-                {!isSidebarCollapsed && <span>{item.label}</span>}
-              </Link>
-            );
-          })}
+              />
+              {(isMobileView || !isSidebarCollapsed) && <span>{item.label}</span>}
+            </Link>
+          );
+        })}
 
-          {!isSidebarCollapsed && projects.length > 0 && (
-            <div className="pt-4 px-2.5">
-              <div className="text-[11px] font-medium text-theme-secondary uppercase tracking-wider mb-2">
-                Projects ({projects.length})
-              </div>
-              <div className="space-y-0.5">
-                {projects.slice(0, 5).map((project) => {
-                  const isProjectActive = pathname.includes(`/projects/${project.id}`);
-
-                  return (
-                    <Link
-                      key={project.id}
-                      href={`/projects/${project.id}/board`}
-                      className={`flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[13px] truncate transition-colors ${
-                        isProjectActive
-                          ? "bg-theme-elevated text-theme-primary"
-                          : "text-theme-secondary hover:text-theme-primary hover:bg-theme-hover"
-                      }`}
-                    >
-                      <span
-                        className="w-2 h-2 rounded-full shrink-0"
-                        style={{ backgroundColor: project.color || "#7F9CF5" }}
-                      />
-                      <span className="truncate">{project.name}</span>
-                    </Link>
-                  );
-                })}
-              </div>
+        {(isMobileView || !isSidebarCollapsed) && projects.length > 0 && (
+          <div className="pt-5 px-3">
+            <div className="text-[11px] font-medium text-theme-secondary uppercase tracking-wider mb-2.5">
+              Projects ({projects.length})
             </div>
+            <div className="space-y-1">
+              {projects.slice(0, 8).map((project) => {
+                const isProjectActive = pathname.includes(`/projects/${project.id}`);
+
+                return (
+                  <Link
+                    key={project.id}
+                    href={`/projects/${project.id}/board`}
+                    onClick={() => isMobileView && closeMobileMenu()}
+                    className={`flex items-center gap-2.5 px-2.5 py-2 rounded-[6px] text-[13px] truncate transition-colors ${
+                      isProjectActive
+                        ? "bg-theme-elevated text-theme-primary font-medium"
+                        : "text-theme-secondary hover:text-theme-primary hover:bg-theme-hover"
+                    }`}
+                  >
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: project.color || "#7F9CF5" }}
+                    />
+                    <span className="truncate">{project.name}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer Utilities */}
+      <div className="p-3 border-t border-theme-default space-y-1 shrink-0">
+        <button
+          type="button"
+          onClick={() => {
+            if (isMobileView) closeMobileMenu();
+            openShortcuts();
+          }}
+          title={!isMobileView && isSidebarCollapsed ? "Shortcuts" : undefined}
+          aria-label={!isMobileView && isSidebarCollapsed ? "Shortcuts" : undefined}
+          className={`h-[36px] rounded-[6px] flex items-center text-[13px] font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated transition-colors ${
+            !isMobileView && isSidebarCollapsed ? "w-[40px] justify-center" : "w-full px-3 justify-between"
+          }`}
+        >
+          <span className={`flex items-center ${!isMobileView && isSidebarCollapsed ? "" : "gap-2.5"}`}>
+            <Keyboard className="w-4 h-4 text-theme-secondary shrink-0" />
+            {(isMobileView || !isSidebarCollapsed) && <span>Shortcuts</span>}
+          </span>
+          {(isMobileView || !isSidebarCollapsed) && (
+            <kbd className="px-1.5 py-0.5 bg-theme-elevated border border-white/10 rounded text-[10px] font-mono text-brand-accent font-semibold">
+              ?
+            </kbd>
           )}
-        </div>
+        </button>
 
-        <div className="p-2 border-t border-theme-default space-y-1 shrink-0">
-          <button
-            type="button"
-            onClick={openShortcuts}
-            title={isSidebarCollapsed ? "Shortcuts" : undefined}
-            aria-label={isSidebarCollapsed ? "Shortcuts" : undefined}
-            className={`h-[32px] rounded-[6px] flex items-center text-[12px] font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated transition-colors ${
-              isSidebarCollapsed ? "w-[40px] justify-center" : "w-full px-2.5 justify-between"
-            }`}
-          >
-            <span className={`flex items-center ${isSidebarCollapsed ? "" : "gap-2"}`}>
-              <Keyboard className="w-4 h-4 text-theme-secondary shrink-0" />
-              {!isSidebarCollapsed && <span>Shortcuts</span>}
-            </span>
-            {!isSidebarCollapsed && (
-              <kbd className="px-1.5 py-0.5 bg-theme-elevated border border-white/10 rounded text-[10px] font-mono text-brand-accent font-semibold">
-                ?
-              </kbd>
-            )}
-          </button>
+        <button
+          type="button"
+          onClick={handleSeed}
+          disabled={seedDemoMutation.isPending}
+          title={!isMobileView && isSidebarCollapsed ? "Seed Demo Data" : undefined}
+          aria-label={!isMobileView && isSidebarCollapsed ? "Seed Demo Data" : undefined}
+          className={`h-[36px] rounded-[6px] flex items-center text-[13px] font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated transition-colors disabled:opacity-50 ${
+            !isMobileView && isSidebarCollapsed ? "w-[40px] justify-center" : "w-full px-3 gap-2.5"
+          }`}
+        >
+          <Database className="w-4 h-4 text-theme-secondary shrink-0" />
+          {(isMobileView || !isSidebarCollapsed) && (
+            <span>{seedDemoMutation.isPending ? "Seeding..." : "Seed Demo Data"}</span>
+          )}
+        </button>
+      </div>
+    </div>
+  );
 
-          <button
-            type="button"
-            onClick={handleSeed}
-            disabled={seedDemoMutation.isPending}
-            title={isSidebarCollapsed ? "Seed Demo Data" : undefined}
-            aria-label={isSidebarCollapsed ? "Seed Demo Data" : undefined}
-            className={`h-[34px] rounded-[6px] flex items-center text-[12px] font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated transition-colors disabled:opacity-50 ${
-              isSidebarCollapsed ? "w-[40px] justify-center" : "w-full px-2.5 gap-2.5"
-            }`}
-          >
-            <Database className="w-4 h-4 text-theme-secondary shrink-0" />
-            {!isSidebarCollapsed && (
-              <span>{seedDemoMutation.isPending ? "Seeding..." : "Seed Demo Data"}</span>
-            )}
-          </button>
-        </div>
+  return (
+    <>
+      {/* Desktop Sidebar (hidden on mobile md:flex) */}
+      <aside
+        className={`hidden md:flex h-screen border-r border-theme-default flex-col shrink-0 z-20 overflow-hidden transition-[width] duration-200 ease-out ${
+          isSidebarCollapsed ? "w-[56px]" : "w-[224px]"
+        }`}
+      >
+        {sidebarContent(false)}
       </aside>
+
+      {/* Mobile Off-Canvas Drawer Overlay (md:hidden) */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex select-none">
+          {/* Backdrop */}
+          <div
+            onClick={closeMobileMenu}
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+          />
+
+          {/* Slide-out Drawer Panel */}
+          <div className="relative w-[280px] max-w-[80vw] h-full shadow-2xl z-10 animate-in slide-in-from-left duration-200">
+            {sidebarContent(true)}
+          </div>
+        </div>
+      )}
 
       <ShortcutsModal isOpen={isShortcutsOpen} onClose={closeShortcuts} />
     </>

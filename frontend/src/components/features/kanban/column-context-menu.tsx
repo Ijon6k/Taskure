@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { MoreHorizontal, Pencil, Copy, Trash2, Palette, ChevronRight } from "lucide-react";
+import { MoreHorizontal, Pencil, Copy, Trash2, Palette, ChevronRight, ArrowLeft, ArrowRight } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as Dialog from "@radix-ui/react-dialog";
 import { api } from "@/lib/api";
@@ -17,6 +17,10 @@ interface ColumnContextMenuProps {
   projectId: string;
   onRefreshProject: () => void;
   onRenameTrigger: () => void;
+  canMoveLeft?: boolean;
+  canMoveRight?: boolean;
+  onMoveLeft?: () => void;
+  onMoveRight?: () => void;
 }
 
 export function ColumnContextMenu({
@@ -26,6 +30,10 @@ export function ColumnContextMenu({
   projectId,
   onRefreshProject,
   onRenameTrigger,
+  canMoveLeft = false,
+  canMoveRight = false,
+  onMoveLeft,
+  onMoveRight,
 }: ColumnContextMenuProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileColorOpen, setMobileColorOpen] = useState(false);
@@ -76,7 +84,7 @@ export function ColumnContextMenu({
 
   const trigger = (
     <button
-      className="w-6 h-6 rounded-[6px] text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated flex items-center justify-center transition-colors shrink-0"
+      className="w-6 h-6 rounded-md text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated flex items-center justify-center transition-colors shrink-0"
       title="Column menu"
     >
       <MoreHorizontal className="w-3.5 h-3.5" />
@@ -88,7 +96,7 @@ export function ColumnContextMenu({
       <>
         <button
           onClick={() => setMenuOpen(true)}
-          className="w-6 h-6 rounded-[6px] text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated flex items-center justify-center transition-colors shrink-0"
+          className="w-6 h-6 rounded-md text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated flex items-center justify-center transition-colors shrink-0"
           title="Column menu"
         >
           <MoreHorizontal className="w-3.5 h-3.5" />
@@ -101,7 +109,7 @@ export function ColumnContextMenu({
                 <div className="p-4 space-y-3">
                   <button
                     onClick={() => setMobileColorOpen(false)}
-                    className="text-[13px] text-theme-secondary hover:text-theme-primary transition-colors"
+                    className="text-xs text-theme-secondary hover:text-theme-primary transition-colors"
                   >
                     ← Back
                   </button>
@@ -113,17 +121,35 @@ export function ColumnContextMenu({
                   />
                 </div>
               ) : (
-                <div className="p-2">
+                <div className="p-2 space-y-0.5">
+                  {canMoveLeft && (
+                    <button
+                      onClick={() => { onMoveLeft?.(); setMenuOpen(false); }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-theme-primary hover:bg-theme-hover rounded-md transition-colors"
+                    >
+                      <ArrowLeft className="w-4 h-4 text-brand-accent" />
+                      Move Left
+                    </button>
+                  )}
+                  {canMoveRight && (
+                    <button
+                      onClick={() => { onMoveRight?.(); setMenuOpen(false); }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-theme-primary hover:bg-theme-hover rounded-md transition-colors"
+                    >
+                      <ArrowRight className="w-4 h-4 text-brand-accent" />
+                      Move Right
+                    </button>
+                  )}
                   <button
                     onClick={() => { onRenameTrigger(); setMenuOpen(false); }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 text-[14px] text-theme-primary hover:bg-theme-hover rounded-[6px] transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-theme-primary hover:bg-theme-hover rounded-md transition-colors"
                   >
                     <Pencil className="w-4 h-4 text-theme-secondary" />
                     Rename
                   </button>
                   <button
                     onClick={() => setMobileColorOpen(true)}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 text-[14px] text-theme-primary hover:bg-theme-hover rounded-[6px] transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-theme-primary hover:bg-theme-hover rounded-md transition-colors"
                   >
                     <Palette className="w-4 h-4 text-theme-secondary" />
                     Color
@@ -131,7 +157,7 @@ export function ColumnContextMenu({
                   </button>
                   <button
                     onClick={() => { handleDuplicate(); setMenuOpen(false); }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 text-[14px] text-theme-primary hover:bg-theme-hover rounded-[6px] transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-theme-primary hover:bg-theme-hover rounded-md transition-colors"
                   >
                     <Copy className="w-4 h-4 text-theme-secondary" />
                     Duplicate Column
@@ -139,7 +165,7 @@ export function ColumnContextMenu({
                   <div className="mx-3 my-1 h-px bg-theme-default" />
                   <button
                     onClick={() => { setColumnToDelete(columnId); setMenuOpen(false); }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 text-[14px] text-red-400 hover:bg-red-500/10 rounded-[6px] transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10 rounded-md transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                     Delete Column
@@ -169,27 +195,49 @@ export function ColumnContextMenu({
         <DropdownMenu.Trigger asChild>{trigger}</DropdownMenu.Trigger>
         <DropdownMenu.Portal>
           <DropdownMenu.Content
-            className="z-50 min-w-[180px] rounded-[8px] bg-theme-elevated border border-theme-default p-1 shadow-xl animate-in fade-in duration-100"
+            className="z-50 min-w-[180px] rounded-lg bg-theme-elevated border border-theme-default p-1 shadow-xl animate-in fade-in duration-100"
             sideOffset={4}
             align="end"
           >
+            {canMoveLeft && (
+              <DropdownMenu.Item
+                onSelect={() => onMoveLeft?.()}
+                className="flex items-center gap-2.5 px-2.5 py-2 text-xs text-theme-primary hover:bg-theme-hover rounded-sm outline-none cursor-pointer transition-colors"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 text-brand-accent" />
+                Move Left
+              </DropdownMenu.Item>
+            )}
+            {canMoveRight && (
+              <DropdownMenu.Item
+                onSelect={() => onMoveRight?.()}
+                className="flex items-center gap-2.5 px-2.5 py-2 text-xs text-theme-primary hover:bg-theme-hover rounded-sm outline-none cursor-pointer transition-colors"
+              >
+                <ArrowRight className="w-3.5 h-3.5 text-brand-accent" />
+                Move Right
+              </DropdownMenu.Item>
+            )}
+            {(canMoveLeft || canMoveRight) && (
+              <DropdownMenu.Separator className="mx-2 my-1 h-px bg-theme-default" />
+            )}
+
             <DropdownMenu.Item
               onSelect={() => onRenameTrigger()}
-              className="flex items-center gap-2.5 px-2.5 py-2 text-[13px] text-theme-primary hover:bg-theme-hover rounded-[4px] outline-none cursor-pointer transition-colors"
+              className="flex items-center gap-2.5 px-2.5 py-2 text-xs text-theme-primary hover:bg-theme-hover rounded-sm outline-none cursor-pointer transition-colors"
             >
               <Pencil className="w-3.5 h-3.5 text-theme-secondary" />
               Rename
             </DropdownMenu.Item>
 
             <DropdownMenu.Sub>
-              <DropdownMenu.SubTrigger className="flex items-center gap-2.5 px-2.5 py-2 text-[13px] text-theme-primary hover:bg-theme-hover rounded-[4px] outline-none cursor-pointer transition-colors data-[state=open]:bg-theme-hover">
+              <DropdownMenu.SubTrigger className="flex items-center gap-2.5 px-2.5 py-2 text-xs text-theme-primary hover:bg-theme-hover rounded-sm outline-none cursor-pointer transition-colors data-[state=open]:bg-theme-hover">
                 <Palette className="w-3.5 h-3.5 text-theme-secondary" />
                 Color
                 <ChevronRight className="w-3.5 h-3.5 ml-auto text-theme-tertiary" />
               </DropdownMenu.SubTrigger>
               <DropdownMenu.Portal>
                 <DropdownMenu.SubContent
-                  className="z-50 rounded-[8px] bg-theme-elevated border border-theme-default p-2 shadow-xl animate-in fade-in duration-100"
+                  className="z-50 rounded-lg bg-theme-elevated border border-theme-default p-2 shadow-xl animate-in fade-in duration-100"
                   sideOffset={8}
                 >
                   <ColorSwatchPicker
@@ -204,7 +252,7 @@ export function ColumnContextMenu({
 
             <DropdownMenu.Item
               onSelect={() => { handleDuplicate(); }}
-              className="flex items-center gap-2.5 px-2.5 py-2 text-[13px] text-theme-primary hover:bg-theme-hover rounded-[4px] outline-none cursor-pointer transition-colors"
+              className="flex items-center gap-2.5 px-2.5 py-2 text-xs text-theme-primary hover:bg-theme-hover rounded-sm outline-none cursor-pointer transition-colors"
             >
               <Copy className="w-3.5 h-3.5 text-theme-secondary" />
               Duplicate Column
@@ -214,7 +262,7 @@ export function ColumnContextMenu({
 
             <DropdownMenu.Item
               onSelect={() => setColumnToDelete(columnId)}
-              className="flex items-center gap-2.5 px-2.5 py-2 text-[13px] text-red-400 hover:bg-red-500/10 rounded-[4px] outline-none cursor-pointer transition-colors"
+              className="flex items-center gap-2.5 px-2.5 py-2 text-xs text-red-400 hover:bg-red-500/10 rounded-sm outline-none cursor-pointer transition-colors"
             >
               <Trash2 className="w-3.5 h-3.5" />
               Delete Column

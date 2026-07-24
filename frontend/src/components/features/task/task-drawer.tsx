@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { X, Trash2, Edit3, Check } from "lucide-react";
-import { api, TaskData, ChecklistItemData } from "@/lib/api";
+import { X, Trash2, Edit3, Check, ArrowRightLeft } from "lucide-react";
+import { api, TaskData, ChecklistItemData, ColumnData, useProject } from "@/lib/api";
 import { ConfirmModal } from "@/components/modals/confirm-modal";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import { IconButton } from "@/components/ui/icon-button";
@@ -33,9 +33,13 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
   const [editPriority, setEditPriority] = useState("medium");
   const [editDueDate, setEditDueDate] = useState<string | null>(null);
 
-  // Tags state — synced from task.tags on fetch, saved to API on change
+  // Tags & Attachments state
   const [taskTags, setTaskTags] = useState<string[]>([]);
   const [taskAttachments, setTaskAttachments] = useState<AttachmentItem[]>([]);
+
+  // Project details for column switching
+  const { data: project } = useProject(task?.project_id ?? "");
+  const columns: ColumnData[] = project?.columns || [];
 
   useHotkeys("esc", () => {
     if (taskId) onClose();
@@ -50,11 +54,8 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
       setEditDescription(data.description ?? "");
       setEditPriority(data.priority ?? "medium");
 
-      // Parse due_date — strip time component for the picker
       const rawDue = data.due_date;
       setEditDueDate(rawDue ? (rawDue.split("T")[0] ?? null) : null);
-
-      // BUG FIX: Initialize tags from fetched task data
       setTaskTags(data.tags ?? []);
     } catch {
       toast.error("Failed to load task details.");
@@ -94,32 +95,57 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
     }
   };
 
+  const handleColumnChange = async (newColumnId: string) => {
+    if (!task || task.column_id === newColumnId) return;
+    const targetCol = columns.find((c) => c.id === newColumnId);
+    const colNameLower = targetCol?.name.toLowerCase() || "";
+    let newStatus = "todo";
+    if (colNameLower.includes("done") || colNameLower.includes("selesai")) {
+      newStatus = "done";
+    } else if (colNameLower.includes("progress") || colNameLower.includes("doing")) {
+      newStatus = "in_progress";
+    }
+
+    try {
+      await api.moveTask(task.id, {
+        column_id: newColumnId,
+        position: 0,
+        status: newStatus,
+      });
+      await fetchTaskDetails(task.id);
+      toast.success(`Task moved to ${targetCol?.name || "new column"}`);
+      onTaskUpdated?.();
+    } catch (e) {
+      toast.error("Failed to move column: " + (e as Error).message);
+    }
+  };
+
   const handleDueDateChange = async (iso: string | null) => {
     setEditDueDate(iso);
     if (!task) return;
-    // Instantly save when not in edit mode (direct date picker click)
     if (!isEditing) {
       try {
-        await api.updateTask(task.id, {
+        const updated = await api.updateTask(task.id, {
           due_date: iso ? new Date(iso + "T00:00:00").toISOString() : null,
         });
-        toast.success(iso ? "Due date updated" : "Due date cleared");
+        setTask(updated);
+        toast.success("Due date updated");
         onTaskUpdated?.();
-      } catch {
-        toast.error("Failed to update due date");
+      } catch (e) {
+        toast.error("Failed to update due date: " + (e as Error).message);
       }
     }
   };
 
-  // BUG FIX: Tags now sync to API immediately on change
   const handleTagsChange = async (newTags: string[]) => {
     setTaskTags(newTags);
     if (!task) return;
     try {
-      await api.updateTask(task.id, { tags: newTags });
+      const updated = await api.updateTask(task.id, { tags: newTags });
+      setTask(updated);
       onTaskUpdated?.();
-    } catch {
-      toast.error("Failed to save tags");
+    } catch (e) {
+      toast.error("Failed to update tags: " + (e as Error).message);
     }
   };
 
@@ -178,16 +204,21 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
         {/* Backdrop */}
         <div
           onClick={onClose}
-          className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+          className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-150"
         />
 
-        <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
-          {/* Drawer panel */}
-          <div className="w-screen max-w-[540px] bg-theme-surface border-l border-theme-default text-theme-primary shadow-2xl flex flex-col h-full animate-in slide-in-from-right duration-200">
+        <div className="absolute inset-x-0 bottom-0 md:inset-y-0 md:right-0 md:left-auto max-w-full flex md:pl-10">
+          {/* Drawer / Bottom Sheet Container */}
+          <div className="w-full md:w-[540px] max-h-[88vh] md:max-h-full bg-theme-surface border-t md:border-t-0 md:border-l border-theme-default text-theme-primary shadow-2xl flex flex-col h-full rounded-t-2xl md:rounded-none animate-in slide-in-from-bottom md:slide-in-from-right duration-200">
+
+            {/* Mobile Drag Indicator Bar */}
+            <div className="md:hidden pt-2 pb-1 flex justify-center shrink-0">
+              <div className="w-12 h-1.5 bg-theme-secondary/40 rounded-full" />
+            </div>
 
             {/* ── Header ── */}
-            <div className="px-6 py-4 border-b border-theme-default flex items-center justify-between bg-theme-elevated">
-              <span className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.6px]">
+            <div className="px-4 md:px-6 py-3 md:py-4 border-b border-theme-default flex items-center justify-between bg-theme-elevated shrink-0">
+              <span className="text-xs font-medium text-theme-secondary uppercase tracking-wider">
                 Task Details
               </span>
               <div className="flex items-center gap-2">
@@ -213,7 +244,7 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
                   icon={X}
                   variant="ghost"
                   size="sm"
-                  title="Close Drawer (Esc)"
+                  title="Close (Esc)"
                   onClick={onClose}
                 />
               </div>
@@ -222,12 +253,33 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
             {/* ── Body ── */}
             {loading || !task ? (
               <div className="p-6 space-y-4 animate-pulse">
-                <div className="w-3/4 h-6 bg-theme-elevated rounded-[6px]" />
-                <div className="w-full h-24 bg-theme-elevated rounded-[6px]" />
-                <div className="w-1/2 h-4 bg-theme-elevated rounded-[6px]" />
+                <div className="w-3/4 h-6 bg-theme-elevated rounded-md" />
+                <div className="w-full h-24 bg-theme-elevated rounded-md" />
+                <div className="w-1/2 h-4 bg-theme-elevated rounded-md" />
               </div>
             ) : (
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 md:space-y-6">
+
+                {/* Column Location & Move Selector */}
+                {columns.length > 0 && (
+                  <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-theme-elevated border border-theme-default text-sm">
+                    <span className="text-theme-secondary font-medium flex items-center gap-1.5">
+                      <ArrowRightLeft className="w-4 h-4 text-brand-accent" />
+                      <span>Column:</span>
+                    </span>
+                    <select
+                      value={task.column_id}
+                      onChange={(e) => handleColumnChange(e.target.value)}
+                      className="bg-theme-surface border border-theme-default rounded-md px-3 py-1.5 text-theme-primary font-medium focus:outline-none focus:border-brand-accent cursor-pointer"
+                    >
+                      {columns.map((col) => (
+                        <option key={col.id} value={col.id}>
+                          {col.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 {/* Title */}
                 <div>
@@ -236,10 +288,10 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
                       type="text"
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
-                      className="w-full text-[18px] font-medium bg-theme-elevated text-theme-primary border border-theme-default rounded-[6px] p-2.5 focus:border-brand-accent focus:outline-none transition-colors"
+                      className="w-full text-base md:text-lg font-medium bg-theme-elevated text-theme-primary border border-theme-default rounded-md p-2.5 focus:border-brand-accent focus:outline-none transition-colors"
                     />
                   ) : (
-                    <h1 className="text-[18px] font-medium text-theme-primary leading-snug">
+                    <h1 className="text-base md:text-lg font-medium text-theme-primary leading-snug">
                       {task.title}
                     </h1>
                   )}
@@ -254,7 +306,7 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
 
                 {/* Due Date Row — DatePickerPopover */}
                 <div className="pt-1 space-y-1.5">
-                  <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.6px]">
+                  <div className="text-xs font-medium text-theme-secondary uppercase tracking-wider">
                     Due Date
                   </div>
                   <DatePickerPopover
@@ -266,7 +318,7 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
 
                 {/* Description */}
                 <div className="space-y-1.5 pt-1">
-                  <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.6px]">
+                  <div className="text-xs font-medium text-theme-secondary uppercase tracking-wider">
                     Description
                   </div>
                   {isEditing ? (
@@ -275,16 +327,16 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
                       value={editDescription}
                       onChange={(e) => setEditDescription(e.target.value)}
                       placeholder="What needs to happen?"
-                      className="w-full bg-theme-elevated border border-theme-default rounded-[6px] p-3 text-[14px] text-theme-primary placeholder-theme-tertiary focus:outline-none focus:border-brand-accent transition-colors resize-none"
+                      className="w-full bg-theme-elevated border border-theme-default rounded-md p-3 text-sm text-theme-primary placeholder-theme-tertiary focus:outline-none focus:border-brand-accent transition-colors resize-none"
                     />
                   ) : (
-                    <div className="p-3 bg-theme-elevated border border-theme-default rounded-[6px] text-[14px] text-theme-secondary min-h-[80px] whitespace-pre-wrap leading-relaxed">
+                    <div className="p-3 bg-theme-elevated border border-theme-default rounded-md text-sm text-theme-secondary min-h-[80px] whitespace-pre-wrap leading-relaxed">
                       {task.description || "No description provided."}
                     </div>
                   )}
                 </div>
 
-                {/* Tags & Categories — BUG FIX: synced to API */}
+                {/* Tags & Categories */}
                 <CollapsibleSection title="Tags & Categories" defaultOpen={true}>
                   <TaskLabelsSection
                     labels={taskTags}

@@ -41,9 +41,13 @@ interface UIStoreState {
   setSelectedTag: (tag: string) => void;
   resetFilters: () => void;
 
-  // Sidebar
+  // Sidebar & Mobile Menu
   isSidebarCollapsed: boolean;
   toggleSidebar: () => void;
+  isMobileMenuOpen: boolean;
+  openMobileMenu: () => void;
+  closeMobileMenu: () => void;
+  toggleMobileMenu: () => void;
 }
 
 export const useUIStore = create<UIStoreState>((set) => ({
@@ -86,7 +90,12 @@ export const useUIStore = create<UIStoreState>((set) => ({
   setSelectedTag: (tag) => set({ selectedTag: tag }),
   resetFilters: () => set({ searchQuery: "", selectedTag: "all" }),
 
-  // Sidebar
+  // Sidebar & Mobile Menu
   isSidebarCollapsed: false,
   toggleSidebar: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
+  isMobileMenuOpen: false,
+  openMobileMenu: () => set({ isMobileMenuOpen: true }),
+  closeMobileMenu: () => set({ isMobileMenuOpen: false }),
+  toggleMobileMenu: () => set((state) => ({ isMobileMenuOpen: !state.isMobileMenuOpen })),
 }));
+

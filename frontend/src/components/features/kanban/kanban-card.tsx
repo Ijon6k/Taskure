@@ -39,11 +39,11 @@ export const KanbanCard = memo(function KanbanCard({ task, onClick }: KanbanCard
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className="w-full p-3.5 bg-theme-elevated border border-theme-default hover:border-accent/40 hover:bg-theme-hover rounded-[8px] cursor-grab active:cursor-grabbing transition-colors duration-150 active:scale-[0.99] space-y-2.5 select-none group shadow-xs"
+      className="w-full p-3.5 bg-theme-elevated border border-theme-default hover:border-accent/40 hover:bg-theme-hover rounded-lg cursor-grab active:cursor-grabbing transition-colors duration-150 active:scale-[0.99] space-y-2.5 select-none group shadow-xs"
     >
       {/* Top Header: Tag Chips & Priority Indicator */}
       <div className="flex items-center justify-between gap-2">
-        <div className="flex flex-wrap gap-1 items-center min-h-[20px]">
+        <div className="flex flex-wrap gap-1 items-center min-h-5">
           {labels.length > 0 ? (
             labels.slice(0, 3).map((lbl: LabelData | string) => {
               const name = typeof lbl === "string" ? lbl : lbl.name;
@@ -53,7 +53,7 @@ export const KanbanCard = memo(function KanbanCard({ task, onClick }: KanbanCard
               return (
                 <span
                   key={name}
-                  className="px-2 py-0.5 rounded-[4px] text-[11px] font-medium tracking-tight border"
+                  className="px-2 py-0.5 rounded text-xs font-medium tracking-tight border"
                   style={{
                     backgroundColor: tagCfg.bgSubtle,
                     color: tagCfg.color,
@@ -66,7 +66,7 @@ export const KanbanCard = memo(function KanbanCard({ task, onClick }: KanbanCard
             })
           ) : (
             <span
-              className="px-2 py-0.5 rounded-[4px] text-[11px] font-medium border"
+              className="px-2 py-0.5 rounded text-xs font-medium border"
               style={{
                 backgroundColor: priorityConfig.bgSubtle,
                 color: priorityConfig.color,
@@ -86,7 +86,7 @@ export const KanbanCard = memo(function KanbanCard({ task, onClick }: KanbanCard
       </div>
 
       {/* Task Title */}
-      <h4 className="text-[14px] font-medium text-theme-primary group-hover:text-brand-accent transition-colors leading-snug line-clamp-2">
+      <h4 className="text-sm font-medium text-theme-primary group-hover:text-brand-accent transition-colors leading-snug line-clamp-2">
         {task.title}
       </h4>
 
@@ -96,7 +96,7 @@ export const KanbanCard = memo(function KanbanCard({ task, onClick }: KanbanCard
       )}
 
       {/* Footer Details: Checklist ratio & Due date */}
-      <div className="flex items-center justify-between text-[11px] font-mono text-theme-secondary pt-0.5">
+      <div className="flex items-center justify-between text-xs font-mono text-theme-secondary pt-0.5">
         <span>
           {checklistItems.length > 0
             ? `${completedChecklist}/${checklistItems.length} subtasks`
