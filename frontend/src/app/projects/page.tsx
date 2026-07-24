@@ -56,7 +56,7 @@ export default function ProjectsPage() {
   const unpinnedProjects = filteredProjects.filter((p) => !p.is_pinned);
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-theme-main text-theme-primary font-sans select-none overflow-hidden">
+    <div className="flex flex-col md:flex-row h-screen bg-surface-l0 text-theme-primary font-sans select-none overflow-hidden">
       {/* Mobile Top Header */}
       <MobileHeader title="Projects" onOpenCreateProject={openCreateProject} />
 

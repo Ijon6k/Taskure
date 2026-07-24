@@ -60,7 +60,7 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
   }, [project?.columns]);
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-theme-main text-theme-primary font-sans select-none overflow-hidden">
+    <div className="flex flex-col md:flex-row h-screen bg-surface-l0 text-theme-primary font-sans select-none overflow-hidden">
       {/* Mobile Top Header */}
       <MobileHeader title={project?.name || "Project Board"} onOpenCreateProject={openCreateProject} />
 
@@ -70,7 +70,7 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Header Navigation */}
-        <header className="pt-2 md:pt-5 px-3 md:px-8 border-b border-theme-default flex flex-col gap-2 shrink-0 bg-theme-surface">
+        <header className="pt-2 md:pt-5 px-3 md:px-8 border-b border-theme-subtle flex flex-col gap-2 shrink-0 bg-surface-l1">
           {/* Breadcrumbs (Desktop only) */}
           <div className="hidden md:flex items-center gap-1.5 text-[14px] text-theme-secondary font-medium truncate">
             <Link href="/projects" className="hover:text-theme-primary transition-colors">
@@ -215,7 +215,7 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
             )}
 
             {/* Desktop Board Toolbar */}
-            <div className="hidden md:flex px-8 py-2.5 items-center justify-between gap-4 shrink-0 border-b border-theme-subtle bg-theme-surface/50">
+            <div className="hidden md:flex px-8 py-2.5 items-center justify-between gap-4 shrink-0 border-b border-theme-subtle bg-surface-l1/80">
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <SearchInput
                   value={searchQuery}

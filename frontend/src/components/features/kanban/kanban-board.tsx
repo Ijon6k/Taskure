@@ -290,7 +290,7 @@ export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, o
                       style={{ backgroundColor: col.color || "#7F9CF5" }}
                     />
                     <span>{col.name}</span>
-                    <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-black/10 font-mono">
+                    <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-brand-accent-subtle font-mono">
                       {taskCount}
                     </span>
                   </button>

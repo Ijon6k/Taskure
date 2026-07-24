@@ -100,7 +100,7 @@ export function DatePickerPopover({
             <span
               role="button"
               onClick={handleClear}
-              className="text-theme-tertiary hover:text-red-400 transition-colors"
+              className="text-theme-tertiary hover:text-semantic-danger transition-colors"
               title="Clear date"
             >
               <X className="w-3.5 h-3.5" />
@@ -116,8 +116,8 @@ export function DatePickerPopover({
           sideOffset={6}
           className="
             z-[200] w-[280px] rounded-[10px]
-            bg-[#1E2024] border border-white/10
-            shadow-[0_20px_60px_rgba(0,0,0,0.6)]
+            bg-surface-l4 border border-theme-default
+            shadow-elevation-l4
             animate-in fade-in-0 zoom-in-95 duration-150
             data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95
           "
@@ -127,19 +127,19 @@ export function DatePickerPopover({
             <button
               type="button"
               onClick={() => setViewMonth(subMonths(viewMonth, 1))}
-              className="w-7 h-7 flex items-center justify-center rounded-[6px] text-[#787878] hover:bg-white/8 hover:text-white transition-colors cursor-pointer"
+              className="w-7 h-7 flex items-center justify-center rounded-[6px] text-theme-secondary hover:bg-theme-default/10 hover:text-theme-primary transition-colors cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
 
-            <span className="text-[13px] font-semibold text-white tracking-tight">
+            <span className="text-[13px] font-semibold text-theme-primary tracking-tight">
               {format(viewMonth, "MMMM yyyy")}
             </span>
 
             <button
               type="button"
               onClick={() => setViewMonth(addMonths(viewMonth, 1))}
-              className="w-7 h-7 flex items-center justify-center rounded-[6px] text-[#787878] hover:bg-white/8 hover:text-white transition-colors cursor-pointer"
+              className="w-7 h-7 flex items-center justify-center rounded-[6px] text-theme-secondary hover:bg-theme-default/10 hover:text-theme-primary transition-colors cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -148,7 +148,7 @@ export function DatePickerPopover({
           {/* Day-of-week labels */}
           <div className="grid grid-cols-7 px-3 mb-1.5">
             {DAY_LABELS.map((d) => (
-              <div key={d} className="text-center text-[10px] font-medium text-[#555] uppercase tracking-[0.5px] py-1">
+              <div key={d} className="text-center text-[10px] font-medium text-theme-tertiary uppercase tracking-[0.5px] py-1">
                 {d}
               </div>
             ))}
@@ -170,12 +170,12 @@ export function DatePickerPopover({
                     relative w-full aspect-square flex items-center justify-center
                     rounded-[6px] text-[12px] font-medium transition-all cursor-pointer
                     ${selected
-                      ? "bg-brand-accent text-white shadow-md shadow-brand-accent/30"
+                      ? "bg-brand-accent text-on-accent shadow-md shadow-brand-accent/30"
                       : today
-                        ? "text-brand-accent ring-1 ring-brand-accent/50 hover:bg-white/8"
+                        ? "text-brand-accent ring-1 ring-brand-accent/50 hover:bg-theme-default/10"
                         : inMonth
-                          ? "text-[#ccc] hover:bg-white/8 hover:text-white"
-                          : "text-[#444] hover:bg-white/5"
+                          ? "text-theme-primary hover:bg-theme-default/10 hover:text-theme-primary"
+                          : "text-theme-tertiary hover:bg-theme-default/5"
                     }
                   `}
                 >
@@ -186,7 +186,7 @@ export function DatePickerPopover({
           </div>
 
           {/* Footer: Today shortcut */}
-          <div className="border-t border-white/8 px-4 py-2.5 flex justify-between items-center">
+          <div className="border-t border-theme-subtle px-4 py-2.5 flex justify-between items-center">
             <button
               type="button"
               onClick={() => {
@@ -194,21 +194,21 @@ export function DatePickerPopover({
                 setViewMonth(today);
                 handleSelectDay(today);
               }}
-              className="text-[12px] text-[#787878] hover:text-white transition-colors cursor-pointer font-medium"
+              className="text-[12px] text-theme-secondary hover:text-theme-primary transition-colors cursor-pointer font-medium"
             >
               Today
             </button>
             <Popover.Close asChild>
               <button
                 type="button"
-                className="text-[12px] text-[#787878] hover:text-white transition-colors cursor-pointer"
+                className="text-[12px] text-theme-secondary hover:text-theme-primary transition-colors cursor-pointer"
               >
                 Cancel
               </button>
             </Popover.Close>
           </div>
 
-          <Popover.Arrow className="fill-white/10" />
+          <Popover.Arrow className="fill-theme-subtle" />
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>

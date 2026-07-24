@@ -46,12 +46,12 @@ export default function RootLayout({
               closeButton
               toastOptions={{
                 style: {
-                  background: "#141416",
-                  border: "1px solid rgba(255, 255, 255, 0.12)",
-                  color: "#F0F0F0",
+                  background: "var(--surface-l5, #2b2f3d)",
+                  border: "1px solid var(--border-default, rgba(255, 255, 255, 0.09))",
+                  color: "var(--text-primary, #ededed)",
                   fontSize: "13px",
-                  borderRadius: "8px",
-                  boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+                  borderRadius: "var(--radius-md, 8px)",
+                  boxShadow: "0 10px 30px rgba(0,0,0,0.4)",
                 },
               }}
             />

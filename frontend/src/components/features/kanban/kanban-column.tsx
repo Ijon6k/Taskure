@@ -155,12 +155,24 @@ function KanbanColumnInner({
   const showOver = isOver && !isColumnDragging;
   const columnColor = column.color || "#7F9CF5";
 
+  const hexToRgba = (hex: string, alpha: number) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (!result || !result[1] || !result[2] || !result[3]) return hex;
+    const r = parseInt(result[1], 16);
+    const g = parseInt(result[2], 16);
+    const b = parseInt(result[3], 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className={`relative w-full md:w-80 md:min-w-80 shrink-0 flex flex-col max-h-full rounded-xl bg-theme-surface border border-theme-default shadow-sm group/col ${
-        showOver ? "border-accent ring-2 ring-brand-accent/20 bg-theme-hover" : ""
+      style={{
+        ...style,
+        borderColor: showOver ? "var(--brand-accent)" : hexToRgba(columnColor, 0.15),
+      }}
+      className={`relative w-full md:w-80 md:min-w-80 shrink-0 flex flex-col max-h-full rounded-xl bg-surface-l2 border border-theme-subtle shadow-xs group/col ${
+        showOver ? "ring-2 ring-brand-accent/20 bg-surface-hover" : ""
       }`}
     >
       {/* Top border accent */}

@@ -30,8 +30,8 @@ export const DEFAULT_PRIORITY: PriorityConfig = {
   id: "medium",
   label: "Medium",
   color: "#7F9CF5",
-  bgSubtle: "rgba(127, 156, 245, 0.10)",
-  textClass: "text-[#7F9CF5]",
+  bgSubtle: "bg-brand-accent-subtle",
+  textClass: "text-brand-accent",
 };
 
 export const PRIORITIES: Record<string, PriorityConfig> = {
@@ -40,7 +40,7 @@ export const PRIORITIES: Record<string, PriorityConfig> = {
     label: "Urgent",
     color: "#F6685E",
     bgSubtle: "rgba(246, 104, 94, 0.10)",
-    textClass: "text-[#F6685E]",
+    textClass: "text-semantic-danger",
   },
   high: {
     id: "high",
@@ -55,7 +55,7 @@ export const PRIORITIES: Record<string, PriorityConfig> = {
     label: "Low",
     color: "#8A8F98",
     bgSubtle: "rgba(138, 143, 152, 0.10)",
-    textClass: "text-[#8A8F98]",
+    textClass: "text-theme-tertiary",
   },
 };
 

@@ -80,20 +80,20 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
   return (
     <>
       <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 select-none">
-        <div className="w-full max-w-[460px] bg-[#121214] border border-white/10 rounded-[14px] p-6 space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150 text-left">
+        <div className="w-full max-w-[460px] bg-surface-l5 border border-theme-default rounded-[14px] p-6 space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150 text-left">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-white/6 pb-4">
+          <div className="flex items-center justify-between border-b border-theme-subtle pb-4">
             <div className="space-y-0.5">
-              <h2 className="text-[18px] font-medium text-[#F0F0F0] tracking-tight">
+              <h2 className="text-[18px] font-medium text-theme-primary tracking-tight">
                 New project
               </h2>
-              <p className="text-[12px] text-[#787878]">
+              <p className="text-[12px] text-theme-secondary">
                 Start fresh or bring in a board from JSON.
               </p>
             </div>
             <button
               onClick={onClose}
-              className="w-7 h-7 rounded-[6px] text-[#787878] hover:text-[#F0F0F0] hover:bg-[#1C1C1E] flex items-center justify-center transition-colors"
+              className="w-7 h-7 rounded-[6px] text-theme-secondary hover:text-theme-primary hover:bg-surface-l3 flex items-center justify-center transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -102,7 +102,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
           {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="block text-[12px] font-medium text-[#787878] uppercase tracking-[0.5px]">
+              <label className="block text-[12px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
                 Project name *
               </label>
               <input
@@ -110,15 +110,15 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
                 autoFocus
                 {...register("name")}
                 placeholder="e.g. Mobile App Redesign"
-                className="w-full h-[38px] px-3 bg-[#18181A] border border-white/8 focus:border-[#7F9CF5] rounded-[6px] text-[14px] text-[#F0F0F0] placeholder-[#525252] outline-none transition-colors"
+                className="w-full h-[38px] px-3 bg-surface-l4 border border-theme-subtle focus:border-brand-accent rounded-[6px] text-[14px] text-theme-primary placeholder:text-theme-tertiary outline-none transition-colors"
               />
               {errors.name && (
-                <p className="text-[11px] text-red-400 font-medium">{errors.name.message}</p>
+                <p className="text-[11px] text-semantic-danger font-medium">{errors.name.message}</p>
               )}
             </div>
 
             <div className="space-y-2">
-              <label className="block text-[12px] font-medium text-[#787878] uppercase tracking-[0.5px]">
+              <label className="block text-[12px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
                 Accent
               </label>
               <div className="flex items-center gap-3">
@@ -143,13 +143,13 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
               <button
                 type="submit"
                 disabled={createProjectMutation.isPending}
-                className="p-3.5 bg-[#18181A] hover:bg-[#202024] border border-white/8 rounded-[10px] text-left transition-all space-y-1 group disabled:opacity-40"
+                className="p-3.5 bg-surface-l4 hover:bg-surface-l5 border border-theme-subtle rounded-[10px] text-left transition-all space-y-1 group disabled:opacity-40"
               >
-                <div className="flex items-center gap-2 text-[13px] font-medium text-[#F0F0F0]">
-                  <FolderPlus className="w-4 h-4 text-[#7F9CF5]" />
+                <div className="flex items-center gap-2 text-[13px] font-medium text-theme-primary">
+                  <FolderPlus className="w-4 h-4 text-brand-accent" />
                   <span>Blank project</span>
                 </div>
-                <p className="text-[11px] text-[#787878] leading-normal">
+                <p className="text-[11px] text-theme-secondary leading-normal">
                   Empty board with default columns.
                 </p>
               </button>
@@ -157,16 +157,16 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
               <button
                 type="button"
                 onClick={() => setIsImportJsonOpen(true)}
-                className="p-3.5 bg-[#18181A] hover:bg-[#202024] border border-white/8 rounded-[10px] text-left transition-all space-y-1 group"
+                className="p-3.5 bg-surface-l4 hover:bg-surface-l5 border border-theme-subtle rounded-[10px] text-left transition-all space-y-1 group"
               >
-                <div className="flex items-center justify-between text-[13px] font-medium text-[#F0F0F0]">
+                <div className="flex items-center justify-between text-[13px] font-medium text-theme-primary">
                   <div className="flex items-center gap-2">
-                    <FileCode className="w-4 h-4 text-[#B794F6]" />
+                    <FileCode className="w-4 h-4 text-accent" />
                     <span>From JSON</span>
                   </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-[#787878] group-hover:translate-x-0.5 transition-transform" />
+                  <ArrowRight className="w-3.5 h-3.5 text-theme-secondary group-hover:translate-x-0.5 transition-transform" />
                 </div>
-                <p className="text-[11px] text-[#787878] leading-normal">
+                <p className="text-[11px] text-theme-secondary leading-normal">
                   Paste or upload a board.
                 </p>
               </button>

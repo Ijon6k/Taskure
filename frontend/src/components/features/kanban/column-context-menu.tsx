@@ -165,7 +165,7 @@ export function ColumnContextMenu({
                   <div className="mx-3 my-1 h-px bg-theme-default" />
                   <button
                     onClick={() => { setColumnToDelete(columnId); setMenuOpen(false); }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10 rounded-md transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-semantic-danger hover:bg-semantic-danger-subtle rounded-md transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                     Delete Column
@@ -262,7 +262,7 @@ export function ColumnContextMenu({
 
             <DropdownMenu.Item
               onSelect={() => setColumnToDelete(columnId)}
-              className="flex items-center gap-2.5 px-2.5 py-2 text-xs text-red-400 hover:bg-red-500/10 rounded-sm outline-none cursor-pointer transition-colors"
+              className="flex items-center gap-2.5 px-2.5 py-2 text-xs text-semantic-danger hover:bg-semantic-danger-subtle rounded-sm outline-none cursor-pointer transition-colors"
             >
               <Trash2 className="w-3.5 h-3.5" />
               Delete Column

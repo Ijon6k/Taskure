@@ -33,20 +33,20 @@ export function ConfirmModal({
           <div
             className={`w-9 h-9 rounded-[8px] flex items-center justify-center ${
               isDanger
-                ? "bg-red-500/10 text-red-400 border border-red-500/20"
-                : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                ? "bg-semantic-danger-subtle text-semantic-danger border border-semantic-danger/20"
+                : "bg-semantic-info-subtle text-semantic-info border border-semantic-info/20"
             }`}
           >
             <AlertTriangle className="w-5 h-5" />
           </div>
-          <h2 className="text-[16px] font-medium text-[#F0F0F0] tracking-tight">
+          <h2 className="text-[16px] font-medium text-theme-primary tracking-tight">
             {title}
           </h2>
         </div>
         <IconButton icon={X} variant="ghost" size="sm" onClick={onClose} />
       </div>
 
-      <p className="text-[13px] text-[#A0A0A5] leading-relaxed">
+      <p className="text-[13px] text-theme-tertiary leading-relaxed">
         {description}
       </p>
 

@@ -118,25 +118,25 @@ export function ImportJsonModal({ isOpen, onClose, onSuccess }: ImportJsonModalP
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 select-none">
-      <div className="w-full max-w-[560px] bg-[#121214] border border-white/10 rounded-[14px] p-6 space-y-5 shadow-2xl animate-in fade-in zoom-in-95 duration-150 text-left">
+      <div className="w-full max-w-[560px] bg-surface-l5 border border-theme-default rounded-[14px] p-6 space-y-5 shadow-2xl animate-in fade-in zoom-in-95 duration-150 text-left">
         {/* Header */}
-        <div className="flex items-start justify-between border-b border-white/6 pb-4">
+        <div className="flex items-start justify-between border-b border-theme-subtle pb-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-[8px] bg-[#B794F6]/10 flex items-center justify-center text-[#B794F6]">
+            <div className="w-8 h-8 rounded-[8px] bg-brand-accent-subtle flex items-center justify-center text-accent">
               <FileCode className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-[18px] font-medium text-[#F0F0F0] tracking-tight">
+              <h2 className="text-[18px] font-medium text-theme-primary tracking-tight">
                 Import JSON
               </h2>
-              <p className="text-[12px] text-[#787878]">
+              <p className="text-[12px] text-theme-secondary">
                 Import full project spec or board layout from external JSON.
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-7 h-7 rounded-[6px] text-[#787878] hover:text-[#F0F0F0] hover:bg-[#1C1C1E] flex items-center justify-center transition-colors"
+            className="w-7 h-7 rounded-[6px] text-theme-secondary hover:text-theme-primary hover:bg-surface-l3 flex items-center justify-center transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -144,7 +144,7 @@ export function ImportJsonModal({ isOpen, onClose, onSuccess }: ImportJsonModalP
 
         {/* Import Scope Selector */}
         <div className="space-y-1.5">
-          <label className="block text-[11px] font-medium text-[#787878] uppercase tracking-[0.5px]">
+          <label className="block text-[11px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
             Target Scope
           </label>
           <div className="grid grid-cols-2 gap-2">
@@ -153,14 +153,14 @@ export function ImportJsonModal({ isOpen, onClose, onSuccess }: ImportJsonModalP
               onClick={() => setScope("project")}
               className={`p-3 rounded-[8px] border text-left flex items-center gap-2.5 transition-all ${
                 scope === "project"
-                  ? "bg-[#18181A] border-[#7F9CF5] text-[#F0F0F0]"
-                  : "bg-[#141416] border-white/6 text-[#787878] hover:text-[#F0F0F0]"
+                  ? "bg-surface-l4 border-brand-accent text-theme-primary"
+                  : "bg-surface-l4 border-theme-subtle text-theme-secondary hover:text-theme-primary"
               }`}
             >
-              <Layers className="w-4 h-4 text-[#7F9CF5]" />
+              <Layers className="w-4 h-4 text-brand-accent" />
               <div className="space-y-0.5">
                 <div className="text-[13px] font-medium">Full Project</div>
-                <div className="text-[10px] text-[#787878]">Name, specs & columns</div>
+                <div className="text-[10px] text-theme-secondary">Name, specs & columns</div>
               </div>
             </button>
 
@@ -169,29 +169,29 @@ export function ImportJsonModal({ isOpen, onClose, onSuccess }: ImportJsonModalP
               onClick={() => setScope("board")}
               className={`p-3 rounded-[8px] border text-left flex items-center gap-2.5 transition-all ${
                 scope === "board"
-                  ? "bg-[#18181A] border-[#7F9CF5] text-[#F0F0F0]"
-                  : "bg-[#141416] border-white/6 text-[#787878] hover:text-[#F0F0F0]"
+                  ? "bg-surface-l4 border-brand-accent text-theme-primary"
+                  : "bg-surface-l4 border-theme-subtle text-theme-secondary hover:text-theme-primary"
               }`}
             >
-              <LayoutGrid className="w-4 h-4 text-[#B794F6]" />
+              <LayoutGrid className="w-4 h-4 text-accent" />
               <div className="space-y-0.5">
                 <div className="text-[13px] font-medium">Kanban Board Only</div>
-                <div className="text-[10px] text-[#787878]">Columns & tasks</div>
+                <div className="text-[10px] text-theme-secondary">Columns & tasks</div>
               </div>
             </button>
           </div>
         </div>
 
         {/* Input Mode Selector (Paste vs Upload) */}
-        <div className="flex items-center justify-between border-b border-white/6 pb-2">
+        <div className="flex items-center justify-between border-b border-theme-subtle pb-2">
           <div className="flex items-center gap-2 text-[12px] font-medium">
             <button
               type="button"
               onClick={() => setMode("paste")}
               className={`px-3 py-1 rounded-[6px] transition-colors ${
                 mode === "paste"
-                  ? "bg-[#1C1C1E] text-[#F0F0F0]"
-                  : "text-[#787878] hover:text-[#F0F0F0]"
+                  ? "bg-surface-l3 text-theme-primary"
+                  : "text-theme-secondary hover:text-theme-primary"
               }`}
             >
               Paste Code
@@ -201,8 +201,8 @@ export function ImportJsonModal({ isOpen, onClose, onSuccess }: ImportJsonModalP
               onClick={() => setMode("upload")}
               className={`px-3 py-1 rounded-[6px] transition-colors ${
                 mode === "upload"
-                  ? "bg-[#1C1C1E] text-[#F0F0F0]"
-                  : "text-[#787878] hover:text-[#F0F0F0]"
+                  ? "bg-surface-l3 text-theme-primary"
+                  : "text-theme-secondary hover:text-theme-primary"
               }`}
             >
               Upload File
@@ -215,7 +215,7 @@ export function ImportJsonModal({ isOpen, onClose, onSuccess }: ImportJsonModalP
               <button
                 type="button"
                 onClick={handlePasteClipboard}
-                className="px-2 py-1 rounded-[5px] bg-[#7F9CF5]/10 hover:bg-[#7F9CF5]/20 text-[#7F9CF5] font-medium flex items-center gap-1 transition-colors"
+                className="px-2 py-1 rounded-[5px] bg-brand-accent-subtle hover:bg-brand-accent/20 text-brand-accent font-medium flex items-center gap-1 transition-colors"
               >
                 <Clipboard className="w-3 h-3" />
                 <span>Paste Clipboard</span>
@@ -226,7 +226,7 @@ export function ImportJsonModal({ isOpen, onClose, onSuccess }: ImportJsonModalP
                   <button
                     type="button"
                     onClick={handleFormatJson}
-                    className="px-2 py-1 rounded-[5px] bg-white/5 hover:bg-white/10 text-[#787878] hover:text-[#F0F0F0] flex items-center gap-1 transition-colors"
+                    className="px-2 py-1 rounded-[5px] bg-theme-subtle/50 hover:bg-theme-subtle text-theme-secondary hover:text-theme-primary flex items-center gap-1 transition-colors"
                     title="Prettify JSON"
                   >
                     <Sparkles className="w-3 h-3" />
@@ -239,7 +239,7 @@ export function ImportJsonModal({ isOpen, onClose, onSuccess }: ImportJsonModalP
                       setJsonText("");
                       setError(null);
                     }}
-                    className="p-1 rounded text-[#787878] hover:text-red-400 transition-colors"
+                    className="p-1 rounded text-theme-secondary hover:text-semantic-danger transition-colors"
                     title="Clear text"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -262,43 +262,43 @@ export function ImportJsonModal({ isOpen, onClose, onSuccess }: ImportJsonModalP
                   setError(null);
                 }}
                 placeholder={`{\n  "name": "My Project",\n  "description": "JSON spec from ChatGPT / Claude",\n  "columns": [\n    { "name": "Todo", "tasks": [] }\n  ]\n}`}
-                className="w-full p-3 bg-[#0A0A0C] border border-white/8 focus:border-[#7F9CF5] rounded-[8px] text-[12px] font-mono text-[#F0F0F0] placeholder-[#444] outline-none transition-colors resize-none overflow-y-auto"
+                className="w-full p-3 bg-surface-l2 border border-theme-subtle focus:border-brand-accent rounded-[8px] text-[12px] font-mono text-theme-primary placeholder:text-theme-tertiary outline-none transition-colors resize-none overflow-y-auto"
               />
             </div>
             {jsonText && (
-              <div className="text-[11px] font-mono text-[#787878] text-right">
+              <div className="text-[11px] font-mono text-theme-secondary text-right">
                 {lineCount} lines • {byteSize} KB
               </div>
             )}
           </div>
         ) : (
-          <div className="border-2 border-dashed border-white/10 hover:border-white/20 rounded-[10px] p-6 text-center bg-[#0A0A0C] transition-colors cursor-pointer relative">
+          <div className="border-2 border-dashed border-theme-default hover:border-theme-strong rounded-[10px] p-6 text-center bg-surface-l2 transition-colors cursor-pointer relative">
             <input
               type="file"
               accept=".json"
               onChange={handleFileUpload}
               className="absolute inset-0 opacity-0 cursor-pointer"
             />
-            <Upload className="w-6 h-6 text-[#787878] mx-auto mb-2" />
-            <div className="text-[13px] font-medium text-[#F0F0F0]">
+            <Upload className="w-6 h-6 text-theme-secondary mx-auto mb-2" />
+            <div className="text-[13px] font-medium text-theme-primary">
               {jsonText ? "File loaded into editor" : "Click to select a .json file"}
             </div>
-            <div className="text-[11px] text-[#787878] mt-1">Supports standard JSON project or board files</div>
+            <div className="text-[11px] text-theme-secondary mt-1">Supports standard JSON project or board files</div>
           </div>
         )}
 
         {error && (
-          <div className="text-[12px] text-red-400 bg-red-500/10 p-2.5 rounded-[6px] border border-red-500/20">
+          <div className="text-[12px] text-semantic-danger bg-semantic-danger-subtle p-2.5 rounded-[6px] border border-semantic-danger/20">
             {error}
           </div>
         )}
 
         {/* Action Buttons */}
-        <div className="pt-2 flex items-center justify-end gap-2.5 border-t border-white/6">
+        <div className="pt-2 flex items-center justify-end gap-2.5 border-t border-theme-subtle">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-[8px] text-[13px] font-medium text-[#787878] hover:text-[#F0F0F0] transition-colors"
+            className="px-4 py-2 rounded-[8px] text-[13px] font-medium text-theme-secondary hover:text-theme-primary transition-colors"
           >
             Cancel
           </button>
@@ -306,7 +306,7 @@ export function ImportJsonModal({ isOpen, onClose, onSuccess }: ImportJsonModalP
             type="button"
             onClick={handleImport}
             disabled={createProjectMutation.isPending || !jsonText.trim()}
-            className="px-4 py-2 bg-[#7F9CF5] hover:bg-[#6b89e3] text-black text-[13px] font-medium rounded-[8px] transition-colors flex items-center gap-1.5 disabled:opacity-40"
+            className="px-4 py-2 bg-brand-accent hover:bg-brand-accent-hover text-black text-[13px] font-medium rounded-[8px] transition-colors flex items-center gap-1.5 disabled:opacity-40"
           >
             <span>{createProjectMutation.isPending ? "Importing..." : "Import JSON"}</span>
             <ArrowRight className="w-4 h-4" />

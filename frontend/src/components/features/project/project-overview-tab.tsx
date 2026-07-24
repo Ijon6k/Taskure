@@ -129,12 +129,12 @@ export function ProjectOverviewTab({
     .filter(Boolean);
 
   return (
-    <div className="flex-1 overflow-y-auto px-8 py-10 text-[#F0F0F0] font-sans">
+    <div className="flex-1 overflow-y-auto px-8 py-10 text-theme-primary font-sans">
       {/* Expanded Container Width: max-w-[780px] */}
       <div className="max-w-[780px] mx-auto space-y-9">
         {/* OVERVIEW Header & Edit Action Toggle */}
         <div className="flex items-center justify-between">
-          <div className="text-[12px] font-medium text-[#787878] uppercase tracking-[0.60px]">
+          <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.60px]">
             Overview
           </div>
 
@@ -143,7 +143,7 @@ export function ProjectOverviewTab({
               <button
                 type="button"
                 onClick={() => setIsEditingInline(false)}
-                className="px-2.5 py-1 bg-theme-elevated hover:bg-theme-hover border border-theme-default rounded-[6px] text-[12px] text-[#787878] hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
+                className="px-2.5 py-1 bg-surface-l3 hover:bg-surface-l4 border border-theme-default rounded-[6px] text-[12px] text-theme-secondary hover:text-theme-primary flex items-center gap-1 transition-colors cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
                 <span>Cancel</span>
@@ -152,7 +152,7 @@ export function ProjectOverviewTab({
                 type="button"
                 onClick={handleSaveInline}
                 disabled={saving}
-                className="px-3 py-1 bg-[#7F9CF5] text-black font-medium rounded-[6px] text-[12px] hover:opacity-90 flex items-center gap-1 transition-opacity cursor-pointer disabled:opacity-50"
+                className="px-3 py-1 bg-brand-accent hover:bg-brand-accent-hover text-black font-medium rounded-[6px] text-[12px] hover:opacity-90 flex items-center gap-1 transition-opacity cursor-pointer disabled:opacity-50"
               >
                 <Check className="w-3.5 h-3.5 font-bold" />
                 <span>{saving ? "Saving..." : "Save Changes"}</span>
@@ -162,9 +162,9 @@ export function ProjectOverviewTab({
             <button
               type="button"
               onClick={handleStartEdit}
-              className="px-2.5 py-1 bg-[#0C0C0C] hover:bg-[#141414] border border-white/10 rounded-[6px] text-[12px] text-[#787878] hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+              className="px-2.5 py-1 bg-surface-l3 hover:bg-surface-l4 border border-theme-default rounded-[6px] text-[12px] text-theme-secondary hover:text-theme-primary flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
             >
-              <Edit3 className="w-3.5 h-3.5 text-[#7F9CF5]" />
+              <Edit3 className="w-3.5 h-3.5 text-brand-accent" />
               <span>Edit</span>
             </button>
           )}
@@ -172,44 +172,44 @@ export function ProjectOverviewTab({
 
         {/* PROJECT META & TARGET GOAL SECTION */}
         {isEditingInline ? (
-          <div className="p-4 bg-[#0C0C0C] border border-white/10 rounded-[8px] space-y-4 animate-in fade-in duration-150">
+          <div className="p-4 bg-surface-l2 border border-theme-default rounded-[8px] space-y-4 animate-in fade-in duration-150">
             <div>
-              <label className="text-[12px] font-mono text-[#787878] block mb-1">Project Name</label>
+              <label className="text-[12px] font-mono text-theme-secondary block mb-1">Project Name</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-[#141414] border border-white/10 rounded-[6px] px-3 py-2 text-[14px] text-white focus:outline-none focus:border-[#7F9CF5]"
+                className="w-full bg-surface-l4 border border-theme-default rounded-[6px] px-3 py-2 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent"
               />
             </div>
 
             <div>
-              <label className="text-[12px] font-mono text-[#787878] block mb-1">Description</label>
+              <label className="text-[12px] font-mono text-theme-secondary block mb-1">Description</label>
               <textarea
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full bg-[#141414] border border-white/10 rounded-[6px] p-3 text-[14px] text-white focus:outline-none focus:border-[#7F9CF5] resize-none"
+                className="w-full bg-surface-l4 border border-theme-default rounded-[6px] p-3 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent resize-none"
               />
             </div>
 
             <div>
-              <label className="text-[12px] font-mono text-[#787878] block mb-1">Target Goal / Objective</label>
+              <label className="text-[12px] font-mono text-theme-secondary block mb-1">Target Goal / Objective</label>
               <textarea
                 rows={2}
                 value={targetGoal}
                 onChange={(e) => setTargetGoal(e.target.value)}
-                className="w-full bg-[#141414] border border-white/10 rounded-[6px] p-3 text-[14px] text-white focus:outline-none focus:border-[#7F9CF5] resize-none"
+                className="w-full bg-surface-l4 border border-theme-default rounded-[6px] p-3 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent resize-none"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[12px] font-mono text-[#787878] block mb-1">Status</label>
+                <label className="text-[12px] font-mono text-theme-secondary block mb-1">Status</label>
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  className="w-full bg-[#141414] border border-white/10 rounded-[6px] px-3 py-2 text-[14px] text-white focus:outline-none focus:border-[#7F9CF5]"
+                  className="w-full bg-surface-l4 border border-theme-default rounded-[6px] px-3 py-2 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent"
                 >
                   <option value="active">active</option>
                   <option value="paused">paused</option>
@@ -218,37 +218,37 @@ export function ProjectOverviewTab({
               </div>
 
               <div>
-                <label className="text-[12px] font-mono text-[#787878] block mb-1">Target Due Date</label>
+                <label className="text-[12px] font-mono text-theme-secondary block mb-1">Target Due Date</label>
                 <input
                   type="date"
                   value={targetDate}
                   onChange={(e) => setTargetDate(e.target.value)}
-                  className="w-full bg-[#141414] border border-white/10 rounded-[6px] px-3 py-2 text-[14px] text-white focus:outline-none focus:border-[#7F9CF5]"
+                  className="w-full bg-surface-l4 border border-theme-default rounded-[6px] px-3 py-2 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-[12px] font-mono text-[#787878] block mb-1">Tags (comma-separated)</label>
+              <label className="text-[12px] font-mono text-theme-secondary block mb-1">Tags (comma-separated)</label>
               <input
                 type="text"
                 value={tagsInput}
                 onChange={(e) => setTagsInput(e.target.value)}
                 placeholder="api, backend, q3..."
-                className="w-full bg-[#141414] border border-white/10 rounded-[6px] px-3 py-2 text-[14px] text-white focus:outline-none focus:border-[#7F9CF5]"
+                className="w-full bg-surface-l4 border border-theme-default rounded-[6px] px-3 py-2 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent"
               />
             </div>
           </div>
         ) : (
           <div className="space-y-3 pt-1">
-            <p className="text-[14px] text-[#F0F0F0]/80 leading-[22.75px] font-normal">
+            <p className="text-[14px] text-theme-primary/80 leading-[22.75px] font-normal">
               {project.description || "Redesign the public REST API to support the v2 schema and OAuth 2.1."}
             </p>
 
             {/* Target Goal with Target Icon */}
             <div className="flex items-start gap-2.5 pt-1">
-              <Target className="w-4 h-4 text-[#787878] shrink-0 mt-1" />
-              <p className="text-[14px] text-[#F0F0F0]/80 leading-[22.75px]">
+              <Target className="w-4 h-4 text-theme-secondary shrink-0 mt-1" />
+              <p className="text-[14px] text-theme-primary/80 leading-[22.75px]">
                 {targetGoal}
               </p>
             </div>
@@ -256,10 +256,10 @@ export function ProjectOverviewTab({
             {/* Status & Target Date Line */}
             <div className="flex items-center gap-4 text-[12px] pt-1">
               <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#7F9CF5]" />
-                <span className="text-[#787878] capitalize">{project.status || "active"}</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-accent" />
+                <span className="text-theme-secondary capitalize">{project.status || "active"}</span>
               </div>
-              <div className="flex items-center gap-1.5 text-[#787878] font-mono">
+              <div className="flex items-center gap-1.5 text-theme-secondary font-mono">
                 <Calendar className="w-3.5 h-3.5" />
                 <span>{targetDate ? formatDateShort(targetDate) : "Sep 30"}</span>
               </div>
@@ -270,9 +270,9 @@ export function ProjectOverviewTab({
               {parsedTagsList.map((tag) => (
                 <span
                   key={tag}
-                  className="px-2 py-0.5 bg-[#141414] border border-white/10 rounded-[4px] text-[11px] text-[#787878] font-medium flex items-center gap-1"
+                  className="px-2 py-0.5 bg-surface-l4 border border-theme-default rounded-[4px] text-[11px] text-theme-secondary font-medium flex items-center gap-1"
                 >
-                  <Tag className="w-2.5 h-2.5 text-[#787878]" />
+                  <Tag className="w-2.5 h-2.5 text-theme-secondary" />
                   <span>{tag}</span>
                 </span>
               ))}
@@ -282,19 +282,19 @@ export function ProjectOverviewTab({
 
         {/* PROGRESS SECTION */}
         <div className="space-y-3">
-          <div className="text-[12px] font-medium text-[#787878] uppercase tracking-[0.60px]">
+          <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.60px]">
             Progress
           </div>
 
-          <div className="p-5 bg-[#0C0C0C] border border-white/10 rounded-[8px] space-y-5 shadow-xs">
+          <div className="p-5 bg-surface-l2 border border-theme-default rounded-[8px] space-y-5 shadow-elevation-l3">
             <div className="flex items-center justify-between text-[14px]">
-              <span className="text-[#F0F0F0] font-normal">{stats.completionPercent}% complete</span>
-              <span className="text-[#787878] font-mono text-[12px]">
+              <span className="text-theme-primary font-normal">{stats.completionPercent}% complete</span>
+              <span className="text-theme-secondary font-mono text-[12px]">
                 {stats.doneCount}/{stats.allTasks.length} tasks
               </span>
             </div>
 
-            <ProgressBar percent={stats.completionPercent} color="#7F9CF5" />
+            <ProgressBar percent={stats.completionPercent} color="var(--brand-accent)" />
 
             {/* 4 Stat Cards */}
             <div className="grid grid-cols-4 gap-2.5 pt-1">
@@ -308,25 +308,25 @@ export function ProjectOverviewTab({
 
         {/* TODAY'S FOCUS SECTION */}
         <div className="space-y-3">
-          <div className="text-[12px] font-medium text-[#787878] uppercase tracking-[0.60px]">
+          <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.60px]">
             Today's focus
           </div>
 
           <div
             onClick={() => focusTask && setSelectedTaskId(focusTask.id)}
-            className="p-4 bg-[#0C0C0C] border border-white/10 rounded-[8px] flex items-center justify-between cursor-pointer hover:bg-[#141414] transition-colors shadow-xs"
+            className="p-4 bg-surface-l2 border border-theme-default rounded-[8px] flex items-center justify-between cursor-pointer hover:bg-surface-l4 transition-colors shadow-elevation-l3"
           >
             {focusTask ? (
               <>
-                <span className="text-[14px] font-medium text-[#F0F0F0] truncate pr-3">
+                <span className="text-[14px] font-medium text-theme-primary truncate pr-3">
                   {focusTask.title}
                 </span>
-                <span className="px-2 py-0.5 bg-red-500/10 text-red-400 text-[11px] font-medium rounded-[6px] shrink-0 border border-red-500/20">
+                <span className="px-2 py-0.5 bg-semantic-danger-subtle text-semantic-danger text-[11px] font-medium rounded-[6px] shrink-0 border border-semantic-danger/20">
                   {focusTask.priority || "Urgent"}
                 </span>
               </>
             ) : (
-              <span className="text-[13px] text-[#787878]">
+              <span className="text-[13px] text-theme-secondary">
                 All tasks completed or no active tasks available.
               </span>
             )}
@@ -337,12 +337,12 @@ export function ProjectOverviewTab({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* Upcoming Deadlines */}
           <div className="space-y-3">
-            <div className="text-[12px] font-medium text-[#787878] uppercase tracking-[0.60px]">
+            <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.60px]">
               Upcoming deadlines
             </div>
             <div className="space-y-1">
               {upcomingTasks.length === 0 ? (
-                <div className="text-[12px] text-[#787878] p-2">
+                <div className="text-[12px] text-theme-secondary p-2">
                   No upcoming deadlines set.
                 </div>
               ) : (
@@ -350,12 +350,12 @@ export function ProjectOverviewTab({
                   <div
                     key={item.id}
                     onClick={() => setSelectedTaskId(item.id)}
-                    className="flex items-center justify-between px-2.5 py-1.5 rounded-[6px] hover:bg-[#141414] transition-colors cursor-pointer text-[14px]"
+                    className="flex items-center justify-between px-2.5 py-1.5 rounded-[6px] hover:bg-surface-l4 transition-colors cursor-pointer text-[14px]"
                   >
-                    <span className="text-[#F0F0F0]/80 font-medium truncate pr-2">
+                    <span className="text-theme-primary/80 font-medium truncate pr-2">
                       {item.title}
                     </span>
-                    <span className="text-[11px] font-mono text-[#787878] shrink-0">
+                    <span className="text-[11px] font-mono text-theme-secondary shrink-0">
                       {formatDateShort(item.due_date)}
                     </span>
                   </div>
@@ -366,12 +366,12 @@ export function ProjectOverviewTab({
 
           {/* Recently Completed */}
           <div className="space-y-3">
-            <div className="text-[12px] font-medium text-[#787878] uppercase tracking-[0.60px]">
+            <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.60px]">
               Recently completed
             </div>
             <div className="space-y-1">
               {completedTasks.length === 0 ? (
-                <div className="text-[12px] text-[#787878] p-2">
+                <div className="text-[12px] text-theme-secondary p-2">
                   No completed tasks yet.
                 </div>
               ) : (
@@ -379,10 +379,10 @@ export function ProjectOverviewTab({
                   <div
                     key={item.id}
                     onClick={() => setSelectedTaskId(item.id)}
-                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-[6px] hover:bg-[#141414] transition-colors cursor-pointer text-[14px]"
+                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-[6px] hover:bg-surface-l4 transition-colors cursor-pointer text-[14px]"
                   >
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#68D391] shrink-0" />
-                    <span className="text-[#787878] font-normal truncate">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-semantic-success shrink-0" />
+                    <span className="text-theme-secondary font-normal truncate">
                       {item.title}
                     </span>
                   </div>
@@ -394,24 +394,24 @@ export function ProjectOverviewTab({
 
         {/* DYNAMIC RESOURCES SECTION */}
         <div className="space-y-3">
-          <div className="text-[12px] font-medium text-[#787878] uppercase tracking-[0.60px]">
+          <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.60px]">
             Resources & Links
           </div>
 
           {isEditingInline ? (
-            <div className="p-4 bg-[#0C0C0C] border border-white/10 rounded-[8px] space-y-4">
+            <div className="p-4 bg-surface-l2 border border-theme-default rounded-[8px] space-y-4">
               <div className="space-y-2">
-                <span className="text-[12px] font-mono text-[#787878]">Custom Resource Links:</span>
+                <span className="text-[12px] font-mono text-theme-secondary">Custom Resource Links:</span>
                 {resources.map((res) => (
-                  <div key={res.id} className="flex items-center justify-between p-2.5 bg-[#141414] border border-white/10 rounded-[6px] text-[13px]">
+                  <div key={res.id} className="flex items-center justify-between p-2.5 bg-surface-l4 border border-theme-default rounded-[6px] text-[13px]">
                     <div className="truncate pr-2">
-                      <span className="text-white font-medium">{res.title}: </span>
-                      <span className="text-[#787878] font-mono truncate">{res.url}</span>
+                      <span className="text-theme-primary font-medium">{res.title}: </span>
+                      <span className="text-theme-secondary font-mono truncate">{res.url}</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleRemoveResource(res.id)}
-                      className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-[4px] transition-colors"
+                      className="p-1 text-semantic-danger hover:text-red-300 hover:bg-semantic-danger-subtle rounded-[4px] transition-colors"
                       title="Remove resource"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -421,41 +421,41 @@ export function ProjectOverviewTab({
               </div>
 
               {/* Add New Custom Resource Link Form */}
-              <div className="pt-2 space-y-2 border-t border-white/6">
-                <span className="text-[11px] text-[#787878] font-mono">Add Custom Link (e.g. Video Tutorial, Figma):</span>
+              <div className="pt-2 space-y-2 border-t border-theme-subtle">
+                <span className="text-[11px] text-theme-secondary font-mono">Add Custom Link (e.g. Video Tutorial, Figma):</span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <input
                     type="text"
                     value={newResTitle}
                     onChange={(e) => setNewResTitle(e.target.value)}
                     placeholder="Title (e.g. YouTube Guide)"
-                    className="bg-[#141414] border border-white/10 rounded-[6px] px-3 py-1.5 text-[13px] text-white focus:outline-none focus:border-[#7F9CF5]"
+                    className="bg-surface-l4 border border-theme-default rounded-[6px] px-3 py-1.5 text-[13px] text-theme-primary focus:outline-none focus:border-brand-accent"
                   />
                   <input
                     type="text"
                     value={newResUrl}
                     onChange={(e) => setNewResUrl(e.target.value)}
                     placeholder="URL (e.g. https://...)"
-                    className="bg-[#141414] border border-white/10 rounded-[6px] px-3 py-1.5 text-[13px] text-white focus:outline-none focus:border-[#7F9CF5]"
+                    className="bg-surface-l4 border border-theme-default rounded-[6px] px-3 py-1.5 text-[13px] text-theme-primary focus:outline-none focus:border-brand-accent"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={handleAddResource}
                   disabled={!newResTitle.trim() || !newResUrl.trim()}
-                  className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white text-[12px] font-medium rounded-[6px] transition-colors disabled:opacity-40"
+                  className="px-3 py-1 bg-theme-default/10 hover:bg-theme-default/20 text-theme-primary text-[12px] font-medium rounded-[6px] transition-colors disabled:opacity-40"
                 >
                   + Add Link
                 </button>
               </div>
 
               <div className="pt-2">
-                <label className="text-[12px] font-mono text-[#787878] block mb-1">Strategy Notes</label>
+                <label className="text-[12px] font-mono text-theme-secondary block mb-1">Strategy Notes</label>
                 <textarea
                   rows={2}
                   value={strategyNotes}
                   onChange={(e) => setStrategyNotes(e.target.value)}
-                  className="w-full bg-[#141414] border border-white/10 rounded-[6px] p-3 text-[13px] text-white focus:outline-none focus:border-[#7F9CF5] resize-none"
+                  className="w-full bg-surface-l4 border border-theme-default rounded-[6px] p-3 text-[13px] text-theme-primary focus:outline-none focus:border-brand-accent resize-none"
                 />
               </div>
             </div>
@@ -467,28 +467,28 @@ export function ProjectOverviewTab({
                   href={res.url.startsWith("http") ? res.url : `https://${res.url}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-3 py-2.5 bg-[#141414] border border-white/10 rounded-[6px] flex items-center justify-between text-[14px] text-[#F0F0F0]/90 hover:text-white hover:border-[#7F9CF5]/40 transition-colors cursor-pointer group"
+                  className="px-3 py-2.5 bg-surface-l4 border border-theme-default rounded-[6px] flex items-center justify-between text-[14px] text-theme-primary/90 hover:text-theme-primary hover:border-brand-accent/40 transition-colors cursor-pointer group"
                 >
                   <div className="flex items-center gap-2.5 truncate">
-                    <LinkIcon className="w-3.5 h-3.5 text-[#787878] group-hover:text-[#7F9CF5] transition-colors shrink-0" />
+                    <LinkIcon className="w-3.5 h-3.5 text-theme-secondary group-hover:text-brand-accent transition-colors shrink-0" />
                     <span className="font-medium truncate">{res.title}</span>
                   </div>
-                  <ExternalLink className="w-3.5 h-3.5 text-[#787878] opacity-60 group-hover:opacity-100 shrink-0" />
+                  <ExternalLink className="w-3.5 h-3.5 text-theme-secondary opacity-60 group-hover:opacity-100 shrink-0" />
                 </a>
               ))}
 
               {/* DISABLED OWNER DISPLAY SECTION (Preserved code as requested) */}
               {/* 
-              <div className="px-3 py-2 bg-[#141414] border border-white/10 rounded-[6px] flex items-center justify-between text-[14px]">
-                <span className="text-[#787878] text-[12px]">Owner</span>
-                <div className="flex items-center gap-1.5 text-[#F0F0F0]/90">
-                  <User className="w-3.5 h-3.5 text-[#787878]" />
+              <div className="px-3 py-2 bg-surface-l4 border border-theme-default rounded-[6px] flex items-center justify-between text-[14px]">
+                <span className="text-theme-secondary text-[12px]">Owner</span>
+                <div className="flex items-center gap-1.5 text-theme-primary/90">
+                  <User className="w-3.5 h-3.5 text-theme-secondary" />
                   <span>You</span>
                 </div>
               </div> 
               */}
 
-              <div className="p-3 bg-[#0C0C0C] border border-white/10 rounded-[6px] text-[14px] text-[#F0F0F0]/80 leading-[22.75px]">
+              <div className="p-3 bg-surface-l2 border border-theme-default rounded-[6px] text-[14px] text-theme-primary/80 leading-[22.75px]">
                 {strategyNotes}
               </div>
             </div>
@@ -497,7 +497,7 @@ export function ProjectOverviewTab({
 
         {/* QUICK ACTIONS SECTION */}
         <div className="space-y-3">
-          <div className="text-[12px] font-medium text-[#787878] uppercase tracking-[0.60px]">
+          <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.60px]">
             Quick actions
           </div>
 
@@ -505,27 +505,27 @@ export function ProjectOverviewTab({
             <button
               type="button"
               onClick={() => onSwitchTab && onSwitchTab("board")}
-              className="h-[42px] px-3 bg-[#0C0C0C] hover:bg-[#141414] border border-white/10 rounded-[6px] flex items-center justify-start gap-2.5 text-[#787878] hover:text-white text-[14px] font-medium transition-colors cursor-pointer"
+              className="h-[42px] px-3 bg-surface-l3 hover:bg-surface-l4 border border-theme-default rounded-[6px] flex items-center justify-start gap-2.5 text-theme-secondary hover:text-theme-primary text-[14px] font-medium transition-colors cursor-pointer"
             >
-              <LayoutGrid className="w-3.5 h-3.5 text-[#787878]" />
+              <LayoutGrid className="w-3.5 h-3.5 text-theme-secondary" />
               <span>Open board</span>
             </button>
 
             <button
               type="button"
               onClick={() => onSwitchTab && onSwitchTab("board")}
-              className="h-[42px] px-3 bg-[#0C0C0C] hover:bg-[#141414] border border-white/10 rounded-[6px] flex items-center justify-start gap-2.5 text-[#787878] hover:text-white text-[14px] font-medium transition-colors cursor-pointer"
+              className="h-[42px] px-3 bg-surface-l3 hover:bg-surface-l4 border border-theme-default rounded-[6px] flex items-center justify-start gap-2.5 text-theme-secondary hover:text-theme-primary text-[14px] font-medium transition-colors cursor-pointer"
             >
-              <Plus className="w-3.5 h-3.5 text-[#787878]" />
+              <Plus className="w-3.5 h-3.5 text-theme-secondary" />
               <span>Add task</span>
             </button>
 
             <button
               type="button"
               onClick={handleStartEdit}
-              className="h-[42px] px-3 bg-[#0C0C0C] hover:bg-[#141414] border border-white/10 rounded-[6px] flex items-center justify-start gap-2.5 text-[#787878] hover:text-white text-[14px] font-medium transition-colors cursor-pointer"
+              className="h-[42px] px-3 bg-surface-l3 hover:bg-surface-l4 border border-theme-default rounded-[6px] flex items-center justify-start gap-2.5 text-theme-secondary hover:text-theme-primary text-[14px] font-medium transition-colors cursor-pointer"
             >
-              <Edit3 className="w-3.5 h-3.5 text-[#787878]" />
+              <Edit3 className="w-3.5 h-3.5 text-theme-secondary" />
               <span>Edit details</span>
             </button>
           </div>

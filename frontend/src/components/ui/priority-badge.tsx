@@ -13,7 +13,7 @@ export function PriorityBadge({ priority, showDot = true, className = "" }: Prio
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[6px] text-[11px] font-medium border border-white/6 ${className}`}
+      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[6px] text-[11px] font-medium border border-theme-subtle ${className}`}
       style={{ backgroundColor: config.bgSubtle, color: config.color }}
     >
       {showDot && (

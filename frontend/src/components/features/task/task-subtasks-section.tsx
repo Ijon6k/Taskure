@@ -43,9 +43,9 @@ export function TaskSubtasksSection({
 
       {/* Progress Bar (Matching drawer.html #68D391 green bar) */}
       {checklistItems.length > 0 && (
-        <div className="w-full bg-[#1A1A1A] h-1 rounded-full overflow-hidden">
+        <div className="w-full bg-surface-l3 h-1 rounded-full overflow-hidden">
           <div
-            className="bg-[#68D391] h-full transition-all duration-300 rounded-full"
+            className="bg-semantic-success h-full transition-all duration-300 rounded-full"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -63,7 +63,7 @@ export function TaskSubtasksSection({
                 type="checkbox"
                 checked={item.is_completed}
                 onChange={() => onToggleItem(item)}
-                className="w-4 h-4 rounded border-white/20 text-[#68D391] focus:ring-0 accent-[#68D391] cursor-pointer"
+                className="w-4 h-4 rounded border-white/20 text-semantic-success focus:ring-0 accent-semantic-success cursor-pointer"
               />
               <span
                 className={`truncate ${

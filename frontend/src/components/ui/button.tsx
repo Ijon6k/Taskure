@@ -26,10 +26,10 @@ export function Button({
   };
 
   const variantClasses = {
-    primary: "bg-[#7F9CF5] hover:bg-[#6B89E3] text-black shadow-xs",
+    primary: "bg-brand-accent hover:bg-brand-accent-hover text-white shadow-xs",
     secondary: "bg-theme-elevated hover:bg-theme-hover border border-theme-default text-theme-primary",
     ghost: "bg-transparent hover:bg-theme-elevated text-theme-secondary hover:text-theme-primary",
-    danger: "bg-red-500 hover:bg-red-600 text-white shadow-xs",
+    danger: "bg-semantic-danger hover:bg-semantic-danger text-white shadow-xs",
     outline: "bg-transparent border border-theme-default hover:border-brand-accent/40 text-theme-primary hover:bg-theme-hover",
   };
 

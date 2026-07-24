@@ -51,7 +51,7 @@ export function ProjectCard({
       <div className="relative group/card">
         <Link
           href={`/projects/${project.id}/board`}
-          className={`p-4 bg-theme-surface border border-theme-default hover:border-brand-accent/40 hover:bg-theme-hover rounded-[8px] flex flex-col justify-between space-y-3 cursor-pointer transition-colors duration-150 active:scale-[0.99] group shadow-sm ${className}`}
+          className={`p-4 bg-surface-l3 border border-theme-subtle hover:border-theme-default hover:bg-surface-hover rounded-[8px] flex flex-col justify-between space-y-3 cursor-pointer transition-colors duration-150 active:scale-[0.99] group shadow-elevation-l3 ${className}`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 truncate">
@@ -102,7 +102,7 @@ export function ProjectCard({
     <div className="relative group/card">
       <Link
         href={`/projects/${project.id}/board`}
-        className={`p-4 bg-theme-surface border border-theme-default hover:border-brand-accent/40 hover:bg-theme-hover rounded-[8px] flex flex-col justify-between min-h-[102px] h-auto space-y-3 cursor-pointer transition-colors duration-150 active:scale-[0.99] group ${className}`}
+        className={`p-4 bg-surface-l3 border border-theme-subtle hover:border-theme-default hover:bg-surface-hover rounded-[8px] flex flex-col justify-between min-h-[102px] h-auto space-y-3 cursor-pointer transition-colors duration-150 active:scale-[0.99] group shadow-elevation-l3 ${className}`}
       >
         <div className="flex items-center gap-2 pr-6">
           <span

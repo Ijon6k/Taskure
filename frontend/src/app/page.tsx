@@ -25,7 +25,7 @@ export default function HomePage() {
   const recentProjects = projects.slice(0, 3);
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-theme-main text-theme-primary font-sans select-none overflow-hidden">
+    <div className="flex flex-col md:flex-row h-screen bg-surface-l0 text-theme-primary font-sans select-none overflow-hidden">
       {/* Mobile Top Header */}
       <MobileHeader title="Dashboard" onOpenCreateProject={openCreateProject} />
 

@@ -106,20 +106,20 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
   return (
     <>
       <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 select-none">
-        <div className="w-full max-w-[460px] bg-[#121214] border border-white/10 rounded-[14px] p-6 space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150 text-left">
+        <div className="w-full max-w-[460px] bg-surface-l5 border border-theme-default rounded-[14px] p-6 space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150 text-left">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-white/6 pb-4">
+          <div className="flex items-center justify-between border-b border-theme-subtle pb-4">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-[6px] bg-[#7F9CF5]/10 flex items-center justify-center text-[#7F9CF5]">
+              <div className="w-7 h-7 rounded-[6px] bg-brand-accent-subtle flex items-center justify-center text-brand-accent">
                 <Edit3 className="w-4 h-4" />
               </div>
-              <h2 className="text-[18px] font-medium text-[#F0F0F0] tracking-tight">
+              <h2 className="text-[18px] font-medium text-theme-primary tracking-tight">
                 Project settings
               </h2>
             </div>
             <button
               onClick={onClose}
-              className="w-7 h-7 rounded-[6px] text-[#787878] hover:text-[#F0F0F0] hover:bg-[#1C1C1E] flex items-center justify-center transition-colors"
+              className="w-7 h-7 rounded-[6px] text-theme-secondary hover:text-theme-primary hover:bg-surface-l3 flex items-center justify-center transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -128,7 +128,7 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="block text-[12px] font-medium text-[#787878] uppercase tracking-[0.5px]">
+              <label className="block text-[12px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
                 Project Name *
               </label>
               <div className="flex gap-2">
@@ -136,32 +136,32 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
                   type="text"
                   value={icon}
                   onChange={(e) => setIcon(e.target.value)}
-                  className="w-10 h-[38px] text-center bg-[#18181A] border border-white/8 rounded-[6px] text-[16px] outline-none"
+                  className="w-10 h-[38px] text-center bg-surface-l4 border border-theme-subtle rounded-[6px] text-[16px] outline-none"
                 />
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="flex-1 h-[38px] px-3 bg-[#18181A] border border-white/8 focus:border-[#7F9CF5] rounded-[6px] text-[14px] text-[#F0F0F0] outline-none transition-colors"
+                  className="flex-1 h-[38px] px-3 bg-surface-l4 border border-theme-subtle focus:border-brand-accent rounded-[6px] text-[14px] text-theme-primary outline-none transition-colors"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-[12px] font-medium text-[#787878] uppercase tracking-[0.5px]">
+              <label className="block text-[12px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
                 Description
               </label>
               <textarea
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full p-3 bg-[#18181A] border border-white/8 focus:border-[#7F9CF5] rounded-[6px] text-[14px] text-[#F0F0F0] placeholder-[#525252] outline-none transition-colors resize-none"
+                className="w-full p-3 bg-surface-l4 border border-theme-subtle focus:border-brand-accent rounded-[6px] text-[14px] text-theme-primary placeholder:text-theme-tertiary outline-none transition-colors resize-none"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="block text-[12px] font-medium text-[#787878] uppercase tracking-[0.5px]">
+              <label className="block text-[12px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
                 Accent Color
               </label>
               <div className="flex items-center gap-3">
@@ -184,7 +184,7 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-[12px] font-medium text-[#787878] uppercase tracking-[0.5px]">
+              <label className="block text-[12px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
                 Status
               </label>
               <div className="flex gap-2">
@@ -195,8 +195,8 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
                     onClick={() => setStatus(st.value)}
                     className={`flex-1 py-2 text-[12px] font-medium rounded-[6px] border transition-colors capitalize ${
                       status === st.value
-                        ? "bg-[#1C1C1E] border-white/20 text-[#F0F0F0]"
-                        : "bg-[#141416] border-white/6 text-[#787878] hover:text-[#F0F0F0]"
+                        ? "bg-surface-l3 border-theme-strong text-theme-primary"
+                        : "bg-surface-l4 border-theme-subtle text-theme-secondary hover:text-theme-primary"
                     }`}
                   >
                     {st.label}
@@ -208,8 +208,8 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
             {/* Pin Toggle */}
             <div className="flex items-center justify-between py-1.5">
               <div className="flex items-center gap-2.5">
-                <Pin className={`w-4 h-4 ${isPinned ? "text-accent" : "text-[#787878]"}`} />
-                <span className="text-[13px] font-medium text-[#F0F0F0]">
+                <Pin className={`w-4 h-4 ${isPinned ? "text-brand-accent" : "text-theme-secondary"}`} />
+                <span className="text-[13px] font-medium text-theme-primary">
                   Pin to top
                 </span>
               </div>
@@ -221,25 +221,25 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
             </div>
 
             {/* Danger Zone */}
-            <div className="pt-4 border-t border-red-500/20">
+            <div className="pt-4 border-t border-semantic-danger/20">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-[12px] font-medium text-red-400 uppercase tracking-[0.5px]">
+                <span className="text-[12px] font-medium text-semantic-danger uppercase tracking-[0.5px]">
                   Danger Zone
                 </span>
               </div>
-              <div className="bg-red-500/5 border border-red-500/15 rounded-[8px] p-3 flex items-center justify-between gap-3">
+              <div className="bg-semantic-danger-subtle border border-semantic-danger/15 rounded-[8px] p-3 flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-[13px] font-medium text-[#F0F0F0]">
+                  <p className="text-[13px] font-medium text-theme-primary">
                     Delete this project
                   </p>
-                  <p className="text-[11px] text-[#A0A0A5]">
+                  <p className="text-[11px] text-theme-tertiary">
                     All columns, tasks, and data will be permanently deleted.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setIsDeleteModalOpen(true)}
-                  className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-[12px] font-medium rounded-[6px] transition-colors shrink-0"
+                  className="px-3 py-1.5 bg-semantic-danger hover:bg-red-600 text-white text-[12px] font-medium rounded-[6px] transition-colors shrink-0"
                 >
                   Delete
                 </button>
@@ -247,18 +247,18 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
             </div>
 
             {/* Action Buttons */}
-            <div className="pt-4 border-t border-white/6 flex items-center justify-end gap-2.5">
+            <div className="pt-4 border-t border-theme-subtle flex items-center justify-end gap-2.5">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-3.5 py-2 rounded-[6px] text-[14px] font-medium text-[#787878] hover:text-[#F0F0F0] transition-colors"
+                className="px-3.5 py-2 rounded-[6px] text-[14px] font-medium text-theme-secondary hover:text-theme-primary transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={updateProjectMutation.isPending || !name.trim()}
-                className="px-4 py-2 bg-[#7F9CF5] hover:bg-[#6b89e3] text-black text-[14px] font-medium rounded-[6px] transition-colors disabled:opacity-40"
+                className="px-4 py-2 bg-brand-accent hover:bg-brand-accent-hover text-black text-[14px] font-medium rounded-[6px] transition-colors disabled:opacity-40"
               >
                 {updateProjectMutation.isPending ? "Saving..." : "Save changes"}
               </button>

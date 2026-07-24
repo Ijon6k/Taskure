@@ -27,7 +27,7 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-theme-surface text-theme-primary font-sans select-none overflow-hidden">
+    <div className="flex flex-col md:flex-row h-screen bg-surface-l0 text-theme-primary font-sans select-none overflow-hidden">
       {/* Mobile Top Header */}
       <MobileHeader title="Settings" onOpenCreateProject={() => setIsCreateModalOpen(true)} />
 
@@ -113,7 +113,7 @@ export default function SettingsPage() {
                         : "border-theme-default hover:border-theme-secondary"
                     }`}
                   >
-                    <div className="w-full h-10 bg-[#17171B] rounded border border-white/10" />
+                    <div className="w-full h-10 bg-surface-l4 rounded border border-white/10" />
                     <div className="flex items-center justify-between pt-2">
                       <span className="text-xs font-medium text-theme-primary">Dim</span>
                       {currentTheme === "dim" && (

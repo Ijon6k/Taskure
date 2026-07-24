@@ -39,7 +39,7 @@ export const KanbanCard = memo(function KanbanCard({ task, onClick }: KanbanCard
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className="w-full p-3.5 bg-theme-elevated border border-theme-default hover:border-accent/40 hover:bg-theme-hover rounded-lg cursor-grab active:cursor-grabbing transition-colors duration-150 active:scale-[0.99] space-y-2.5 select-none group shadow-xs"
+      className="w-full p-3.5 bg-surface-l3 border border-theme-subtle hover:border-theme-default hover:bg-surface-hover rounded-lg cursor-grab active:cursor-grabbing transition-all duration-150 active:scale-[0.99] space-y-2.5 select-none group shadow-elevation-l3"
     >
       {/* Top Header: Tag Chips & Priority Indicator */}
       <div className="flex items-center justify-between gap-2">
@@ -79,7 +79,7 @@ export const KanbanCard = memo(function KanbanCard({ task, onClick }: KanbanCard
         </div>
 
         <span
-          className="w-2 h-2 rounded-full shrink-0 shadow-accent-glow"
+          className="w-2 h-2 rounded-full shrink-0"
           style={{ backgroundColor: priorityConfig.color }}
           title={`${priorityConfig.label} priority`}
         />

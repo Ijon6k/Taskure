@@ -36,12 +36,12 @@ export function ColorSwatchPicker({
               onClick={() => onSelect(hex)}
               className={`w-5 h-5 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                 isSelected
-                  ? "ring-2 ring-white ring-offset-1 ring-offset-black scale-110"
+                  ? "ring-2 ring-white ring-offset-1 ring-offset-surface-l3 scale-110"
                   : "hover:scale-105 opacity-80 hover:opacity-100"
               }`}
               style={{ backgroundColor: hex }}
             >
-              {isSelected && <Check className="w-3 h-3 text-black font-bold" />}
+              {isSelected && <Check className="w-3 h-3 text-white font-bold" />}
             </button>
           );
         })}

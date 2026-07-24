@@ -82,9 +82,9 @@ export function ProjectContextTab({
       case "api_spec":
         return <Code className="w-4 h-4 text-brand-accent" />;
       case "database_schema":
-        return <Database className="w-4 h-4 text-[#68D391]" />;
+        return <Database className="w-4 h-4 text-semantic-success" />;
       default:
-        return <BookOpen className="w-4 h-4 text-[#F6AD8A]" />;
+        return <BookOpen className="w-4 h-4 text-semantic-warning" />;
     }
   };
 
@@ -116,7 +116,7 @@ export function ProjectContextTab({
           </div>
 
           {indexedSuccess && (
-            <div className="p-3 bg-[#68D391]/10 border border-[#68D391]/30 rounded-[6px] text-[13px] text-[#68D391] flex items-center gap-2 animate-in fade-in">
+            <div className="p-3 bg-semantic-success-subtle border border-semantic-success/30 rounded-[6px] text-[13px] text-semantic-success flex items-center gap-2 animate-in fade-in">
               <CheckCircle2 className="w-4 h-4" />
               <span>Dokumen berhasil diindeks ke dalam PgVector AI RAG pipeline!</span>
             </div>

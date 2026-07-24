@@ -209,7 +209,7 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
 
         <div className="absolute inset-x-0 bottom-0 md:inset-y-0 md:right-0 md:left-auto max-w-full flex md:pl-10">
           {/* Drawer / Bottom Sheet Container */}
-          <div className="w-full md:w-[540px] max-h-[88vh] md:max-h-full bg-theme-surface border-t md:border-t-0 md:border-l border-theme-default text-theme-primary shadow-2xl flex flex-col h-full rounded-t-2xl md:rounded-none animate-in slide-in-from-bottom md:slide-in-from-right duration-200">
+          <div className="w-full md:w-[540px] max-h-[88vh] md:max-h-full bg-surface-l4 border-t md:border-t-0 md:border-l border-theme-subtle text-theme-primary shadow-elevation-l4 flex flex-col h-full rounded-t-2xl md:rounded-none animate-in slide-in-from-bottom md:slide-in-from-right duration-200">
 
             {/* Mobile Drag Indicator Bar */}
             <div className="md:hidden pt-2 pb-1 flex justify-center shrink-0">
@@ -217,7 +217,7 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
             </div>
 
             {/* ── Header ── */}
-            <div className="px-4 md:px-6 py-3 md:py-4 border-b border-theme-default flex items-center justify-between bg-theme-elevated shrink-0">
+            <div className="px-4 md:px-6 py-3 md:py-4 border-b border-theme-subtle flex items-center justify-between bg-surface-l4 shrink-0">
               <span className="text-xs font-medium text-theme-secondary uppercase tracking-wider">
                 Task Details
               </span>

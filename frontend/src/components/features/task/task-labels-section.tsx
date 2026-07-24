@@ -140,7 +140,7 @@ export function TaskLabelsSection({ labels = [], onChange }: TaskLabelsSectionPr
                 className={`px-2 py-0.5 rounded-[5px] text-[11px] font-medium border transition-all cursor-pointer ${
                   isSelected
                     ? "opacity-100 ring-1 ring-white/30 font-semibold"
-                    : "opacity-60 hover:opacity-100 hover:bg-theme-elevated"
+                    : "opacity-85 hover:opacity-100 hover:bg-theme-elevated"
                 }`}
                 style={{
                   backgroundColor: tag.bgSubtle,
@@ -171,7 +171,7 @@ export function TaskLabelsSection({ labels = [], onChange }: TaskLabelsSectionPr
                 className={`px-2 py-0.5 rounded-[5px] text-[11px] font-medium border transition-all cursor-pointer ${
                   isSelected
                     ? "opacity-100 ring-1 ring-white/30 font-semibold"
-                    : "opacity-60 hover:opacity-100 hover:bg-theme-elevated"
+                    : "opacity-85 hover:opacity-100 hover:bg-theme-elevated"
                 }`}
                 style={{
                   backgroundColor: tag.bgSubtle,

@@ -38,7 +38,7 @@ export function TodaysFocusCard({ focusData, loading }: TodaysFocusCardProps) {
   const checklist = task.checklist_items || [];
 
   return (
-    <div className="w-full bg-theme-surface border border-theme-default rounded-[10px] p-4 sm:p-5 space-y-4 shadow-sm">
+    <div className="w-full bg-surface-l3 border border-theme-subtle rounded-[10px] p-4 sm:p-5 space-y-4 shadow-elevation-l3">
       {/* Top Bar: Project Tag & Priority Badge */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -56,7 +56,7 @@ export function TodaysFocusCard({ focusData, loading }: TodaysFocusCardProps) {
           </h2>
         </div>
 
-        <span className="px-2.5 py-1 rounded-[6px] bg-red-500/10 text-red-400 text-[11px] font-medium shrink-0 border border-red-500/20">
+        <span className="px-2.5 py-1 rounded-[6px] bg-semantic-danger-subtle text-semantic-danger text-[11px] font-medium shrink-0 border border-semantic-danger/20">
           {reason || (task.priority === "urgent" ? "Urgent" : task.priority)}
         </span>
       </div>
@@ -67,7 +67,7 @@ export function TodaysFocusCard({ focusData, loading }: TodaysFocusCardProps) {
           {checklist.slice(0, 3).map((item: ChecklistItemData) => (
             <div key={item.id} className="flex items-center gap-2.5">
               {item.is_completed ? (
-                <CheckSquare className="w-[15px] h-[15px] text-green-400 shrink-0" />
+                <CheckSquare className="w-[15px] h-[15px] text-semantic-success shrink-0" />
               ) : (
                 <Square className="w-[15px] h-[15px] text-theme-tertiary shrink-0" />
               )}

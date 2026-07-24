@@ -171,7 +171,7 @@ export function TaskAttachmentsSection({
                 {item.type === "link" ? (
                   <Link2 className="w-4 h-4 text-brand-accent shrink-0" />
                 ) : (
-                  <FileText className="w-4 h-4 text-[#68D391] shrink-0" />
+                  <FileText className="w-4 h-4 text-semantic-success shrink-0" />
                 )}
                 <div className="min-w-0">
                   <div className="text-theme-primary font-medium truncate leading-tight">
@@ -198,7 +198,7 @@ export function TaskAttachmentsSection({
                 <button
                   type="button"
                   onClick={() => handleDeleteAttachment(item.id)}
-                  className="p-1 text-theme-secondary hover:text-red-400 opacity-0 group-hover:opacity-100 rounded transition-opacity"
+                  className="p-1 text-theme-secondary hover:text-semantic-danger opacity-0 group-hover:opacity-100 rounded transition-opacity"
                   title="Remove"
                 >
                   <Trash2 className="w-3.5 h-3.5" />

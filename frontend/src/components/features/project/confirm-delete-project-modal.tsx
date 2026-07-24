@@ -39,20 +39,20 @@ export function ConfirmDeleteProjectModal({
   return (
     <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 select-none">
       <div
-        className="w-full max-w-[440px] bg-[#121214] border border-white/10 rounded-[14px] p-6 space-y-5 shadow-2xl animate-in fade-in zoom-in-95 duration-150 text-left"
+        className="w-full max-w-[440px] bg-surface-l5 border border-theme-default rounded-[14px] p-6 space-y-5 shadow-2xl animate-in fade-in zoom-in-95 duration-150 text-left"
         onKeyDown={handleKeyDown}
       >
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-[8px] bg-red-500/10 text-red-400 border border-red-500/20 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-[8px] bg-semantic-danger-subtle text-semantic-danger border border-semantic-danger/20 flex items-center justify-center">
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-[16px] font-medium text-[#F0F0F0] tracking-tight">
+              <h2 className="text-[16px] font-medium text-theme-primary tracking-tight">
                 Delete project
               </h2>
-              <p className="text-[12px] text-[#787878] mt-0.5">
+              <p className="text-[12px] text-theme-secondary mt-0.5">
                 This action cannot be undone.
               </p>
             </div>
@@ -60,23 +60,23 @@ export function ConfirmDeleteProjectModal({
           <button
             onClick={onClose}
             disabled={isPending}
-            className="w-7 h-7 rounded-[6px] text-[#787878] hover:text-[#F0F0F0] hover:bg-[#1C1C1E] flex items-center justify-center transition-colors disabled:opacity-30"
+            className="w-7 h-7 rounded-[6px] text-theme-secondary hover:text-theme-primary hover:bg-surface-l3 flex items-center justify-center transition-colors disabled:opacity-30"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Warning */}
-        <div className="bg-red-500/5 border border-red-500/15 rounded-[8px] p-3">
-          <p className="text-[12px] text-[#A0A0A5] leading-relaxed">
-            This will permanently delete <strong className="text-[#F0F0F0]">{projectName}</strong>{" "}
+        <div className="bg-semantic-danger-subtle border border-semantic-danger/15 rounded-[8px] p-3">
+          <p className="text-[12px] text-theme-tertiary leading-relaxed">
+            This will permanently delete <strong className="text-theme-primary">{projectName}</strong>{" "}
             and all of its columns, tasks, and data. You cannot undo this action.
           </p>
         </div>
 
         {/* Confirmation Input */}
         <div className="space-y-1.5">
-          <label className="block text-[12px] font-medium text-[#787878] uppercase tracking-[0.5px]">
+          <label className="block text-[12px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
             Type &quot;{projectName}&quot; to confirm
           </label>
           <input
@@ -88,10 +88,10 @@ export function ConfirmDeleteProjectModal({
             autoComplete="off"
             spellCheck={false}
             disabled={isPending}
-            className={`w-full h-[38px] px-3 bg-[#18181A] border rounded-[6px] text-[14px] text-[#F0F0F0] placeholder-[#525252] outline-none transition-colors disabled:opacity-40 ${
+            className={`w-full h-[38px] px-3 bg-surface-l4 border rounded-[6px] text-[14px] text-theme-primary placeholder:text-theme-tertiary outline-none transition-colors disabled:opacity-40 ${
               inputValue && !isMatch
-                ? "border-red-500/50 focus:border-red-500"
-                : "border-white/8 focus:border-[#7F9CF5]"
+                ? "border-semantic-danger/50 focus:border-semantic-danger"
+                : "border-theme-subtle focus:border-brand-accent"
             }`}
           />
         </div>
@@ -102,7 +102,7 @@ export function ConfirmDeleteProjectModal({
             type="button"
             onClick={onClose}
             disabled={isPending}
-            className="px-3.5 py-2 rounded-[6px] text-[14px] font-medium text-[#787878] hover:text-[#F0F0F0] transition-colors disabled:opacity-30"
+            className="px-3.5 py-2 rounded-[6px] text-[14px] font-medium text-theme-secondary hover:text-theme-primary transition-colors disabled:opacity-30"
           >
             Cancel
           </button>
@@ -110,7 +110,7 @@ export function ConfirmDeleteProjectModal({
             type="button"
             onClick={onConfirm}
             disabled={!isMatch || isPending}
-            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-[14px] font-medium rounded-[6px] transition-colors disabled:opacity-40 flex items-center gap-2"
+            className="px-4 py-2 bg-semantic-danger hover:bg-red-600 text-white text-[14px] font-medium rounded-[6px] transition-colors disabled:opacity-40 flex items-center gap-2"
           >
             {isPending ? (
               <>

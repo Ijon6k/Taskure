@@ -70,10 +70,10 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
   ];
 
   const sidebarContent = (isMobileView: boolean) => (
-    <div className="flex flex-col h-full bg-theme-surface text-theme-primary select-none">
+    <div className="flex flex-col h-full bg-surface-l1 text-theme-primary select-none">
       {/* Sidebar Header */}
       <div
-        className={`h-[56px] border-b border-theme-default flex items-center shrink-0 ${
+        className={`h-[56px] border-b border-theme-subtle flex items-center shrink-0 ${
           !isMobileView && isSidebarCollapsed ? "justify-center" : "justify-between px-4"
         }`}
       >

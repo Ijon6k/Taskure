@@ -1,60 +1,218 @@
 @import "tailwindcss";
 
 @layer base {
-  /* DIM THEME (Discord Slate-Gray Aesthetic) */
-  :root,
-  [data-theme="dim"] {
-    --bg-main: #313338;
-    --bg-surface: #2b2d31;
-    --bg-elevated: #1e1f22;
-    --bg-hover: #35373c;
-    --border-subtle: rgba(255, 255, 255, 0.08);
-    --border-default: rgba(255, 255, 255, 0.14);
-    --text-primary: #f2f3f5;
-    --text-secondary: #949ba4;
-    --text-tertiary: #80848e;
-    --brand-accent: #5865f2;
-    --brand-accent-subtle: rgba(88, 101, 242, 0.18);
-    --brand-accent-glow: rgba(88, 101, 242, 0.35);
-    --brand-accent-text: #ffffff;
-  }
+  /* ============================================================
+     GLOBAL / ROOT SHARED DESIGN TOKENS
+     ============================================================ */
+  :root {
+    /* Focus Ring Tokens */
+    --focus-ring-width: 2px;
+    --focus-ring-color: var(--brand-accent);
+    --focus-ring-offset: 2px;
+    --focus-ring: 0 0 0 var(--focus-ring-offset) var(--focus-ring-color);
+    --focus-ring-inset: inset 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
 
-  /* DARK THEME (True OLED Black) */
-  [data-theme="dark"] {
-    --bg-main: #000000;
-    --bg-surface: #050505;
-    --bg-elevated: #0d0d0d;
-    --bg-hover: #141414;
+    /* Semantic Status Colors — Intent-based (consistent across themes) */
+    --semantic-success: #22C55E;
+    --semantic-success-subtle: rgba(34, 197, 94, 0.12);
+    --semantic-warning: #F59E0B;
+    --semantic-warning-subtle: rgba(245, 158, 11, 0.12);
+    --semantic-danger: #EF4444;
+    --semantic-danger-subtle: rgba(239, 68, 68, 0.12);
+    --semantic-info: #3B82F6;
+    --semantic-info-subtle: rgba(59, 130, 246, 0.12);
+
+    /* Scrollbar Named Tokens */
+    --scrollbar-width: 6px;
+    --scrollbar-thumb-color: var(--border-default);
+    --scrollbar-thumb-hover: var(--text-tertiary);
+
+    /* Selection Styling */
+    --selection-bg: rgba(99, 102, 241, 0.25);
+    --selection-text: inherit;
+
+    /* Text on Accent */
+    --text-on-accent: #ffffff;
+
+    /* Radius Tokens */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-full: 9999px;
+
+    /* Overlay Backdrop Token */
+    --overlay-bg: rgba(0, 0, 0, 0.5);
+
+    /* DIM THEME DEFAULTS */
+    --surface-l0: #0e1015; /* Level 0: Application Canvas */
+    --surface-l1: #14171f; /* Level 1: Sidebar, Toolbar, Header */
+    --surface-l2: #1b1e28; /* Level 2: Kanban Columns & Sub-containers */
+    --surface-l3: #222632; /* Level 3: Cards & Interactive Surfaces */
+    --surface-l4: #2a2f3e; /* Level 4: Dropdown, Popover & Drawers */
+    --surface-l5: #32384a; /* Level 5: Modal Dialogs & Command Palette */
+
+    --surface-hover: #282d3b;
+    --surface-active: #2f3546;
+
+    --bg-main: var(--surface-l0);
+    --bg-surface: var(--surface-l1);
+    --bg-elevated: var(--surface-l3);
+    --bg-hover: var(--surface-hover);
+
     --border-subtle: rgba(255, 255, 255, 0.06);
     --border-default: rgba(255, 255, 255, 0.10);
-    --text-primary: #f0f0f0;
-    --text-secondary: #787878;
-    --text-tertiary: #4a4a4a;
-    --brand-accent: #7f9cf5;
-    --brand-accent-subtle: rgba(127, 156, 245, 0.15);
-    --brand-accent-glow: rgba(127, 156, 245, 0.30);
-    --brand-accent-text: #000000;
+    --border-strong: rgba(255, 255, 255, 0.16);
+
+    --text-primary: #f8fafc;   /* Slate 50 — Crisp High Contrast */
+    --text-secondary: #cbd5e1; /* Slate 300 — Bright Secondary (Upgraded) */
+    --text-tertiary: #94a3b8;  /* Slate 400 — Legible Muted (Upgraded) */
+    --text-disabled: #64748b;  /* Slate 500 — Disabled State */
+
+    --brand-accent: #6366f1;
+    --brand-accent-hover: #4f46e5;
+    --brand-accent-subtle: rgba(99, 102, 241, 0.12);
+    --brand-accent-glow: rgba(99, 102, 241, 0.20);
+    --brand-accent-text: #ffffff;
+
+    --input-bg: #14171f;
+    --input-bg-focus: #1b1e28;
+    --input-bg-disabled: rgba(20, 23, 31, 0.5);
+    --input-border: var(--border-default);
+    --input-border-focus: var(--brand-accent);
+    --input-text: var(--text-primary);
+    --input-placeholder: var(--text-tertiary);
+    --input-radius: 8px;
   }
 
-  /* LIGHT THEME */
-  [data-theme="light"] {
-    --bg-main: #f8f8fa;
-    --bg-surface: #ffffff;
-    --bg-elevated: #f0f1f4;
-    --bg-hover: #e5e7eb;
-    --border-subtle: rgba(0, 0, 0, 0.08);
-    --border-default: rgba(0, 0, 0, 0.14);
-    --text-primary: #171717;
-    --text-secondary: #6b7280;
-    --text-tertiary: #9ca3af;
+  /* DIM THEME SPECIFIC SELECTOR (same as :root) */
+  [data-theme="dim"] {
+    --surface-l0: #0e1015;
+    --surface-l1: #14171f;
+    --surface-l2: #1b1e28;
+    --surface-l3: #222632;
+    --surface-l4: #2a2f3e;
+    --surface-l5: #32384a;
+
+    --surface-hover: #282d3b;
+    --surface-active: #2f3546;
+
+    --bg-main: var(--surface-l0);
+    --bg-surface: var(--surface-l1);
+    --bg-elevated: var(--surface-l3);
+    --bg-hover: var(--surface-hover);
+
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-default: rgba(255, 255, 255, 0.10);
+    --border-strong: rgba(255, 255, 255, 0.16);
+
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-tertiary: #94a3b8;
+    --text-disabled: #64748b;
+
     --brand-accent: #6366f1;
+    --brand-accent-hover: #4f46e5;
     --brand-accent-subtle: rgba(99, 102, 241, 0.12);
-    --brand-accent-glow: rgba(99, 102, 241, 0.25);
+    --brand-accent-glow: rgba(99, 102, 241, 0.20);
     --brand-accent-text: #ffffff;
+    --text-on-accent: #ffffff;
+
+    --input-bg: #14171f;
+    --input-bg-focus: #1b1e28;
+    --input-bg-disabled: rgba(20, 23, 31, 0.5);
+    --input-border: var(--border-default);
+    --input-border-focus: var(--brand-accent);
+    --input-text: var(--text-primary);
+    --input-placeholder: var(--text-tertiary);
+  }
+
+  /* DARK THEME (Night Mode — True OLED Pitch Black) */
+  [data-theme="dark"] {
+    --surface-l0: #000000; /* Level 0: Pure Pitch Black */
+    --surface-l1: #0a0a0c; /* Level 1: Sidebar & Toolbar */
+    --surface-l2: #121318; /* Level 2: Kanban Column */
+    --surface-l3: #1a1c23; /* Level 3: Cards */
+    --surface-l4: #222530; /* Level 4: Dropdown & Drawers */
+    --surface-l5: #2b2f3d; /* Level 5: Modal Dialogs */
+
+    --surface-hover: #20232d;
+    --surface-active: #272b38;
+
+    --bg-main: var(--surface-l0);
+    --bg-surface: var(--surface-l1);
+    --bg-elevated: var(--surface-l3);
+    --bg-hover: var(--surface-hover);
+
+    --border-subtle: rgba(255, 255, 255, 0.05);
+    --border-default: rgba(255, 255, 255, 0.09);
+    --border-strong: rgba(255, 255, 255, 0.14);
+
+    --text-primary: #f4f4f6;   /* Crisp Pitch White */
+    --text-secondary: #a1a1aa; /* Zinc 400 — Clear Silver */
+    --text-tertiary: #71717a;  /* Zinc 500 — Legible Muted */
+    --text-disabled: #52525b;  /* Zinc 600 — Disabled State */
+
+    --brand-accent: #818cf8;
+    --brand-accent-hover: #6366f1;
+    --brand-accent-subtle: rgba(129, 140, 248, 0.15);
+    --brand-accent-glow: rgba(129, 140, 248, 0.25);
+    --brand-accent-text: #000000;
+    --text-on-accent: #000000;
+
+    --input-bg: #0a0a0c;
+    --input-bg-focus: #121318;
+    --input-bg-disabled: rgba(10, 10, 12, 0.5);
+    --input-border: var(--border-default);
+    --input-border-focus: var(--brand-accent);
+    --input-text: var(--text-primary);
+    --input-placeholder: var(--text-tertiary);
+  }
+
+  /* LIGHT THEME (Soft Premium Paper) */
+  [data-theme="light"] {
+    --surface-l0: #f8f9fa; /* Level 0: Warm Off-White Paper */
+    --surface-l1: #f1f3f5; /* Level 1: Sidebar & Header */
+    --surface-l2: #e9ecef; /* Level 2: Column Background */
+    --surface-l3: #ffffff; /* Level 3: Cards (Floating White) */
+    --surface-l4: #ffffff; /* Level 4: Dropdown & Popovers */
+    --surface-l5: #ffffff; /* Level 5: Modal Dialogs */
+
+    --surface-hover: #f1f3f5;
+    --surface-active: #e9ecef;
+
+    --bg-main: var(--surface-l0);
+    --bg-surface: var(--surface-l1);
+    --bg-elevated: var(--surface-l3);
+    --bg-hover: var(--surface-hover);
+
+    --border-subtle: rgba(0, 0, 0, 0.06);
+    --border-default: rgba(0, 0, 0, 0.10);
+    --border-strong: rgba(0, 0, 0, 0.16);
+
+    --text-primary: #0f172a;   /* Slate 900 */
+    --text-secondary: #475569; /* Slate 600 */
+    --text-tertiary: #9ca3af;  /* Slate 400 */
+    --text-disabled: #cbd5e1;  /* Slate 300 */
+
+    --brand-accent: #4f46e5;
+    --brand-accent-hover: #4338ca;
+    --brand-accent-subtle: rgba(79, 70, 229, 0.08);
+    --brand-accent-glow: rgba(79, 70, 229, 0.15);
+    --brand-accent-text: #ffffff;
+    --text-on-accent: #ffffff;
+
+    --input-bg: #f1f3f5;
+    --input-bg-focus: #e9ecef;
+    --input-bg-disabled: rgba(241, 243, 245, 0.5);
+    --input-border: var(--border-default);
+    --input-border-focus: var(--brand-accent);
+    --input-text: var(--text-primary);
+    --input-placeholder: var(--text-tertiary);
   }
 
   body {
-    background-color: var(--bg-main);
+    background-color: var(--surface-l0);
     color: var(--text-primary);
     font-family: var(--font-inter-tight), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -63,7 +221,7 @@
     overflow-x: hidden;
   }
 
-  /* Global Interactive Cursor & Hover Safety Base */
+  /* Global Interactive Cursor & Focus Rules */
   button,
   [role="button"],
   a,
@@ -82,43 +240,104 @@
     cursor: not-allowed;
     opacity: 0.6;
   }
+
+  /* Selection */
+  ::selection {
+    background-color: var(--selection-bg);
+    color: var(--selection-text);
+  }
 }
 
-/* Theme Utilities */
-.bg-theme-main { background-color: var(--bg-main); }
-.bg-theme-surface { background-color: var(--bg-surface); }
-.bg-theme-elevated { background-color: var(--bg-elevated); }
-.bg-theme-hover { background-color: var(--bg-hover); }
+/* Elevation Surface Utility Classes */
+.bg-surface-l0 { background-color: var(--surface-l0); }
+.bg-surface-l1 { background-color: var(--surface-l1); }
+.bg-surface-l2 { background-color: var(--surface-l2); }
+.bg-surface-l3 { background-color: var(--surface-l3); }
+.bg-surface-l4 { background-color: var(--surface-l4); }
+.bg-surface-l5 { background-color: var(--surface-l5); }
+.bg-surface-hover { background-color: var(--surface-hover); }
+.bg-surface-active { background-color: var(--surface-active); }
+
+/* Theme Legacy Utilities */
+.bg-theme-main { background-color: var(--surface-l0); }
+.bg-theme-surface { background-color: var(--surface-l1); }
+.bg-theme-elevated { background-color: var(--surface-l3); }
+.bg-theme-hover { background-color: var(--surface-hover); }
 
 .text-theme-primary { color: var(--text-primary); }
 .text-theme-secondary { color: var(--text-secondary); }
 .text-theme-tertiary { color: var(--text-tertiary); }
+.text-theme-disabled { color: var(--text-disabled); }
 
 .border-theme-subtle { border-color: var(--border-subtle); }
 .border-theme-default { border-color: var(--border-default); }
+.border-theme-strong { border-color: var(--border-strong); }
 
-/* Accent Color Utilities */
+/* Accent System Utilities */
 .bg-brand-accent { background-color: var(--brand-accent); }
 .bg-accent-subtle { background-color: var(--brand-accent-subtle); }
 .text-accent { color: var(--brand-accent); }
 .border-accent { border-color: var(--brand-accent); }
-.shadow-accent-glow { box-shadow: 0 0 15px var(--brand-accent-glow); }
+
+/* Input System Utilities */
+.bg-input { background-color: var(--input-bg); }
+.bg-input-focus { background-color: var(--input-bg-focus); }
+.bg-input-disabled { background-color: var(--input-bg-disabled); }
+.border-input { border-color: var(--input-border); }
+.border-input-focus { border-color: var(--input-border-focus); }
+.text-input { color: var(--input-text); }
+.text-input-placeholder { color: var(--input-placeholder); }
+
+/* Semantic Status Color Utilities */
+.text-semantic-success { color: var(--semantic-success); }
+.text-semantic-warning { color: var(--semantic-warning); }
+.text-semantic-danger { color: var(--semantic-danger); }
+.text-semantic-info { color: var(--semantic-info); }
+.bg-semantic-success { background-color: var(--semantic-success); }
+.bg-semantic-success-subtle { background-color: var(--semantic-success-subtle); }
+.bg-semantic-warning { background-color: var(--semantic-warning); }
+.bg-semantic-warning-subtle { background-color: var(--semantic-warning-subtle); }
+.bg-semantic-danger { background-color: var(--semantic-danger); }
+.bg-semantic-danger-subtle { background-color: var(--semantic-danger-subtle); }
+.bg-semantic-info { background-color: var(--semantic-info); }
+.bg-semantic-info-subtle { background-color: var(--semantic-info-subtle); }
+
+/* Focus Ring Utilities */
+.focus-ring { box-shadow: var(--focus-ring); }
+.focus-ring-inset { box-shadow: var(--focus-ring-inset); }
+
+/* Text on Accent Utility */
+.text-on-accent { color: var(--text-on-accent); }
+
+/* Radius Utilities */
+.r-sm { border-radius: var(--radius-sm); }
+.r-md { border-radius: var(--radius-md); }
+.r-lg { border-radius: var(--radius-lg); }
+.r-xl { border-radius: var(--radius-xl); }
+.r-full { border-radius: var(--radius-full); }
+
+/* Elevation Shadow Utilities — Default (works for dim & dark themes) */
+.shadow-elevation-l3 { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.25); }
+.shadow-elevation-l4 { box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.35); }
+.shadow-elevation-l5 { box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.50); }
+
+/* Light mode specific — softer shadows using reduced black opacity */
+[data-theme="light"] .shadow-elevation-l3 { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04); }
+[data-theme="light"] .shadow-elevation-l4 { box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.10), 0 0 0 1px rgba(0, 0, 0, 0.04); }
+[data-theme="light"] .shadow-elevation-l5 { box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04); }
 
 /* Custom Scrollbars */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+::-webkit-scrollbar { width: var(--scrollbar-width); height: var(--scrollbar-width); }
 
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--scrollbar-thumb-color);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--brand-accent);
+  background: var(--scrollbar-thumb-hover);
 }
