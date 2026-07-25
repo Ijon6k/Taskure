@@ -2,7 +2,7 @@
 
 import { use, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
-import { ChevronRight, FileText, LayoutGrid, FileCode, Download, Upload, Edit3, Filter } from "lucide-react";
+import { ChevronRight, FileText, LayoutGrid, FileCode, Edit3, Filter } from "lucide-react";
 import { useProject, TaskData } from "@/lib/api";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileHeader } from "@/components/layout/mobile-header";
@@ -14,8 +14,10 @@ import { ImportJsonModal } from "@/components/features/project/import-json-modal
 import { ExportJsonModal } from "@/components/features/project/export-json-modal";
 import { ProjectOverviewTab } from "@/components/features/project/project-overview-tab";
 import { ProjectContextTab } from "@/components/features/project/project-context-tab";
-import { SearchInput } from "@/components/ui/search-input";
+import { BoardFilterToolbar } from "@/components/features/kanban/board-filter-toolbar";
+import { BoardFilterState, DEFAULT_BOARD_FILTERS, filterAndSortTasks } from "@/lib/filter-tasks";
 import { useUIStore } from "@/store/use-ui-store";
+import { extractTaskTags } from "@/lib/tags";
 
 export default function ProjectBoardPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -23,7 +25,9 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
 
   const { data: project, isLoading: loading, refetch } = useProject(projectId);
   const [activeTab, setActiveTab] = useState<"overview" | "board" | "context">("board");
-  const [showMobileSearch, setShowMobileSearch] = useState(false);
+
+  // Board Multi-Dimensional Filter State
+  const [boardFilters, setBoardFilters] = useState<BoardFilterState>(DEFAULT_BOARD_FILTERS);
 
   const isCreateProjectOpen = useUIStore((s) => s.isCreateProjectOpen);
   const closeCreateProject = useUIStore((s) => s.closeCreateProject);
@@ -39,25 +43,35 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
   const closeExportJson = useUIStore((s) => s.closeExportJson);
   const selectedTaskId = useUIStore((s) => s.selectedTaskId);
   const setSelectedTaskId = useUIStore((s) => s.setSelectedTaskId);
-  const searchQuery = useUIStore((s) => s.searchQuery);
-  const setSearchQuery = useUIStore((s) => s.setSearchQuery);
-  const selectedTag = useUIStore((s) => s.selectedTag);
-  const setSelectedTag = useUIStore((s) => s.setSelectedTag);
 
   const handleTaskClick = useCallback((task: TaskData) => {
     setSelectedTaskId(task.id);
   }, [setSelectedTaskId]);
 
+  // Extract all unique tags in the project
   const allTags = useMemo(() => {
     if (!project?.columns) return [];
     return Array.from(
       new Set(
         project.columns
           .flatMap((c) => c.tasks || [])
-          .flatMap((t) => (t.labels || []).map((lbl) => (typeof lbl === "string" ? lbl : lbl.name)))
+          .flatMap((t) => extractTaskTags(t))
       )
-    );
+    ).filter(Boolean);
   }, [project?.columns]);
+
+  // Apply multi-dimensional filters and sorting to column tasks
+  const filteredColumns = useMemo(() => {
+    if (!project?.columns) return [];
+    return project.columns.map((col) => {
+      const rawTasks = col.tasks || [];
+      const filtered = filterAndSortTasks(rawTasks, boardFilters);
+      return {
+        ...col,
+        tasks: filtered,
+      };
+    });
+  }, [project?.columns, boardFilters]);
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-surface-l0 text-theme-primary font-sans select-none overflow-hidden">
@@ -100,16 +114,16 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
 
             <button
               onClick={() => project && openEditProject(project)}
-              className="px-3 py-1.5 rounded-[6px] bg-theme-elevated hover:bg-theme-hover border border-theme-default text-theme-primary text-[13px] font-medium transition-colors flex items-center gap-1.5 shrink-0"
+              className="px-3 py-1 bg-surface-l3 hover:bg-surface-l4 border border-theme-subtle rounded-md text-[12px] text-theme-secondary hover:text-theme-primary font-medium transition-colors flex items-center gap-1.5 shrink-0"
             >
               <Edit3 className="w-3.5 h-3.5 text-brand-accent" />
-              <span>Edit Project</span>
+              <span>Project Settings</span>
             </button>
           </div>
 
-          {/* Tabs Navigation */}
-          <div className="flex items-center justify-between text-[13px] sm:text-[14px] font-medium pt-0.5">
-            <div className="flex items-center gap-1 overflow-x-auto">
+          {/* Main Navigation Tabs Bar */}
+          <div className="flex items-center justify-between pt-1">
+            <div className="flex items-center gap-1 sm:gap-2 text-[13px] font-medium border-b border-transparent">
               <button
                 onClick={() => setActiveTab("overview")}
                 className={`px-2.5 py-1.5 md:py-2 border-b-2 flex items-center gap-1.5 transition-colors shrink-0 ${
@@ -149,17 +163,6 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
 
             <div className="md:hidden flex items-center gap-1.5">
               <button
-                onClick={() => setShowMobileSearch(!showMobileSearch)}
-                className={`p-1.5 rounded-[6px] transition-colors ${
-                  showMobileSearch || searchQuery
-                    ? "bg-brand-accent text-black font-semibold"
-                    : "text-theme-secondary hover:text-theme-primary"
-                }`}
-                title="Search Tasks"
-              >
-                <Filter className="w-4 h-4" />
-              </button>
-              <button
                 onClick={() => project && openEditProject(project)}
                 className="p-1.5 rounded-[6px] text-theme-secondary hover:text-theme-primary"
                 title="Edit Project"
@@ -173,124 +176,26 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
         {/* Main View Tab Content */}
         {activeTab === "board" && (
           <>
-            {/* Unified Board Toolbar (Desktop & Mobile Collapsible Filter Bar) */}
-            {(showMobileSearch || searchQuery || selectedTag !== "all") && (
-              <div className="md:hidden px-3 py-2 border-b border-theme-subtle bg-theme-surface/70 space-y-2 animate-in fade-in duration-150 shrink-0">
-                <SearchInput
-                  value={searchQuery}
-                  onChange={setSearchQuery}
-                  placeholder="Filter tasks..."
-                  className="!h-[32px] bg-theme-elevated w-full"
-                />
-                {allTags.length > 0 && (
-                  <div className="flex items-center gap-1 text-[11px] overflow-x-auto scrollbar-none py-0.5">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedTag("all")}
-                      className={`px-2.5 py-0.5 rounded-[4px] font-medium capitalize transition-colors shrink-0 ${
-                        selectedTag === "all"
-                          ? "bg-brand-accent text-black font-semibold"
-                          : "bg-theme-elevated text-theme-secondary"
-                      }`}
-                    >
-                      All
-                    </button>
-                    {allTags.map((tag) => (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => setSelectedTag(tag)}
-                        className={`px-2.5 py-0.5 rounded-[4px] font-medium capitalize transition-colors shrink-0 ${
-                          selectedTag === tag
-                            ? "bg-brand-accent text-black font-semibold"
-                            : "bg-theme-elevated text-theme-secondary"
-                        }`}
-                      >
-                        {tag}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Desktop Board Toolbar */}
-            <div className="hidden md:flex px-8 py-2.5 items-center justify-between gap-4 shrink-0 border-b border-theme-subtle bg-surface-l1/80">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <SearchInput
-                  value={searchQuery}
-                  onChange={setSearchQuery}
-                  placeholder="Filter tasks on board..."
-                  className="!h-[32px] bg-theme-elevated w-[220px]"
-                />
-
-                <div className="flex items-center gap-1.5 text-[12px] overflow-x-auto py-0.5">
-                  <span className="text-theme-tertiary flex items-center gap-1 shrink-0 font-medium">
-                    <Filter className="w-3 h-3 text-brand-accent" />
-                    <span>Tag:</span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedTag("all")}
-                    className={`px-2.5 py-0.5 rounded-[4px] text-[11px] font-medium capitalize transition-colors ${
-                      selectedTag === "all"
-                        ? "bg-brand-accent text-black font-semibold"
-                        : "bg-theme-elevated text-theme-secondary hover:text-theme-primary"
-                    }`}
-                  >
-                    All
-                  </button>
-                  {allTags.map((tag) => (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => setSelectedTag(tag)}
-                      className={`px-2.5 py-0.5 rounded-[4px] text-[11px] font-medium capitalize transition-colors ${
-                        selectedTag === tag
-                          ? "bg-brand-accent text-black font-semibold"
-                          : "bg-theme-elevated text-theme-secondary hover:text-theme-primary"
-                      }`}
-                    >
-                      {tag}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => project && openExportJson(project)}
-                  className="px-2.5 py-1 rounded-[6px] border border-theme-default text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated transition-colors flex items-center gap-1.5 font-medium text-[12px]"
-                >
-                  <Download className="w-[13px] h-[13px]" />
-                  <span>Export JSON</span>
-                </button>
-
-                <button
-                  onClick={openImportJson}
-                  className="px-2.5 py-1 rounded-[6px] bg-theme-elevated border border-theme-default text-theme-primary hover:bg-theme-hover transition-colors flex items-center gap-1.5 font-medium text-[12px]"
-                >
-                  <Upload className="w-[13px] h-[13px]" />
-                  <span>Import JSON</span>
-                </button>
-              </div>
-            </div>
+            {/* Multi-Dimensional Board Filter Toolbar */}
+            <BoardFilterToolbar
+              filters={boardFilters}
+              onChangeFilters={setBoardFilters}
+              boardTags={allTags}
+              onExportJson={() => project && openExportJson(project)}
+              onImportJson={openImportJson}
+            />
 
             <div className="flex-1 overflow-hidden">
               {loading ? (
                 <div className="flex gap-4 animate-pulse h-full items-start p-4 md:p-6">
-                  <div className="w-[280px] h-96 bg-theme-surface rounded-[8px]" />
-                  <div className="w-[280px] h-96 bg-theme-surface rounded-[8px]" />
-                  <div className="w-[280px] h-96 bg-theme-surface rounded-[8px]" />
-                </div>
-              ) : !project ? (
-                <div className="p-8 text-center text-theme-secondary">
-                  Proyek tidak ditemukan.
+                  <div className="w-[280px] h-96 bg-theme-surface rounded-md" />
+                  <div className="w-[280px] h-96 bg-theme-surface rounded-md" />
+                  <div className="w-[280px] h-96 bg-theme-surface rounded-md" />
                 </div>
               ) : (
                 <KanbanBoard
-                  projectId={project.id}
-                  columns={project.columns || []}
+                  projectId={projectId}
+                  columns={filteredColumns}
                   onTaskClick={handleTaskClick}
                   onRefreshProject={refetch}
                 />
@@ -303,37 +208,37 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
           <ProjectOverviewTab
             project={project || null}
             onRefreshProject={refetch}
-            onSwitchTab={(tab) => setActiveTab(tab)}
+            onSwitchTab={() => setActiveTab("board")}
           />
         )}
 
         {activeTab === "context" && (
-          <ProjectContextTab
-            projectId={projectId}
-            contexts={project?.contexts || []}
-          />
+          <ProjectContextTab projectId={projectId} />
         )}
       </div>
 
-      {/* Modals & Drawer */}
+      {/* Task Drawer */}
       <TaskDrawer
         taskId={selectedTaskId}
         onClose={() => setSelectedTaskId(null)}
         onTaskUpdated={refetch}
       />
 
+      {/* Modals */}
       <CreateProjectModal
         isOpen={isCreateProjectOpen}
         onClose={closeCreateProject}
         onSuccess={() => refetch()}
       />
 
-      <EditProjectModal
-        isOpen={isEditProjectOpen}
-        project={project || null}
-        onClose={closeEditProject}
-        onSuccess={() => refetch()}
-      />
+      {project && (
+        <EditProjectModal
+          isOpen={isEditProjectOpen}
+          project={project}
+          onClose={closeEditProject}
+          onSuccess={() => refetch()}
+        />
+      )}
 
       <ImportJsonModal
         isOpen={isImportJsonOpen}
@@ -341,11 +246,13 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
         onSuccess={() => refetch()}
       />
 
-      <ExportJsonModal
-        isOpen={isExportJsonOpen}
-        project={project || null}
-        onClose={closeExportJson}
-      />
+      {project && (
+        <ExportJsonModal
+          isOpen={isExportJsonOpen}
+          project={project}
+          onClose={closeExportJson}
+        />
+      )}
     </div>
   );
 }

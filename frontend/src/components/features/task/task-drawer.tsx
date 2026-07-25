@@ -15,6 +15,8 @@ import { TaskAttachmentsSection, AttachmentItem } from "./task-attachments-secti
 import { toast } from "sonner";
 import { useHotkeys } from "react-hotkeys-hook";
 
+import { extractTaskTags } from "@/lib/tags";
+
 interface TaskDrawerProps {
   taskId: string | null;
   onClose: () => void;
@@ -56,7 +58,7 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
 
       const rawDue = data.due_date;
       setEditDueDate(rawDue ? (rawDue.split("T")[0] ?? null) : null);
-      setTaskTags(data.tags ?? []);
+      setTaskTags(extractTaskTags(data));
     } catch {
       toast.error("Failed to load task details.");
     } finally {
@@ -143,6 +145,8 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
     try {
       const updated = await api.updateTask(task.id, { tags: newTags });
       setTask(updated);
+      const refreshed = extractTaskTags(updated);
+      setTaskTags(refreshed.length > 0 ? refreshed : newTags);
       onTaskUpdated?.();
     } catch (e) {
       toast.error("Failed to update tags: " + (e as Error).message);
@@ -262,7 +266,7 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
 
                 {/* Column Location & Move Selector */}
                 {columns.length > 0 && (
-                  <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-theme-elevated border border-theme-default text-sm">
+                  <div className="flex items-center justify-between gap-3 p-3 rounded-md bg-theme-elevated border border-theme-default text-sm">
                     <span className="text-theme-secondary font-medium flex items-center gap-1.5">
                       <ArrowRightLeft className="w-4 h-4 text-brand-accent" />
                       <span>Column:</span>
@@ -336,16 +340,17 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
                   )}
                 </div>
 
-                {/* Tags & Categories */}
-                <CollapsibleSection title="Tags & Categories" defaultOpen={true}>
+                {/* Tags */}
+                <CollapsibleSection title="Tags" defaultOpen={true}>
                   <TaskLabelsSection
                     labels={taskTags}
                     onChange={handleTagsChange}
+                    projectId={task.project_id}
                   />
                 </CollapsibleSection>
 
-                {/* Subtasks & Checklist */}
-                <CollapsibleSection title="Subtasks & Checklist" defaultOpen={true}>
+                {/* Subtasks */}
+                <CollapsibleSection title="Subtasks" defaultOpen={true}>
                   <TaskSubtasksSection
                     checklistItems={task.checklist_items ?? []}
                     onToggleItem={handleToggleChecklist}
@@ -354,8 +359,8 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
                   />
                 </CollapsibleSection>
 
-                {/* Attachments & Links */}
-                <CollapsibleSection title="Attachments & Links" defaultOpen={true}>
+                {/* Attachments */}
+                <CollapsibleSection title="Attachments" defaultOpen={true}>
                   <TaskAttachmentsSection
                     attachments={taskAttachments}
                     onChange={(newAtts) => setTaskAttachments(newAtts)}

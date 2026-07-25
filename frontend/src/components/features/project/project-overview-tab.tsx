@@ -9,6 +9,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { sortBy } from "es-toolkit";
 import { toast } from "sonner";
 import { useUIStore } from "@/store/use-ui-store";
+import { PageContainer } from "@/components/ui/page-container";
 
 interface ProjectOverviewTabProps {
   project: ProjectData | null;
@@ -129,9 +130,8 @@ export function ProjectOverviewTab({
     .filter(Boolean);
 
   return (
-    <div className="flex-1 overflow-y-auto px-8 py-10 text-theme-primary font-sans">
-      {/* Expanded Container Width: max-w-[780px] */}
-      <div className="max-w-[780px] mx-auto space-y-9">
+    <div className="flex-1 overflow-y-auto text-theme-primary font-sans flex flex-col items-center">
+      <PageContainer variant="default" className="!space-y-9">
         {/* OVERVIEW Header & Edit Action Toggle */}
         <div className="flex items-center justify-between">
           <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.60px]">
@@ -530,7 +530,7 @@ export function ProjectOverviewTab({
             </button>
           </div>
         </div>
-      </div>
+      </PageContainer>
     </div>
   );
 }

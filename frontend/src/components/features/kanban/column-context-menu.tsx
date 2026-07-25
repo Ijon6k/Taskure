@@ -195,7 +195,7 @@ export function ColumnContextMenu({
         <DropdownMenu.Trigger asChild>{trigger}</DropdownMenu.Trigger>
         <DropdownMenu.Portal>
           <DropdownMenu.Content
-            className="z-50 min-w-[180px] rounded-lg bg-theme-elevated border border-theme-default p-1 shadow-xl animate-in fade-in duration-100"
+            className="z-50 min-w-[180px] rounded-md bg-theme-elevated border border-theme-default p-1 shadow-xl animate-in fade-in duration-100"
             sideOffset={4}
             align="end"
           >
@@ -237,7 +237,7 @@ export function ColumnContextMenu({
               </DropdownMenu.SubTrigger>
               <DropdownMenu.Portal>
                 <DropdownMenu.SubContent
-                  className="z-50 rounded-lg bg-theme-elevated border border-theme-default p-2 shadow-xl animate-in fade-in duration-100"
+                  className="z-50 rounded-md bg-theme-elevated border border-theme-default p-2 shadow-xl animate-in fade-in duration-100"
                   sideOffset={8}
                 >
                   <ColorSwatchPicker

@@ -70,6 +70,16 @@ const PRESET_OPTIONS: PresetOption[] = [
     description: `Runs Next.js on host (bun dev:${PORT_WEB}) + Hot-reload backend in Docker (${PORT_API}).`,
   },
   {
+    id: "rebuild-backend",
+    name: "Rebuild Backend Containers (Go API & AI)",
+    description: "Forces a full rebuild of backend Docker images (api & ai) with --build flag.",
+  },
+  {
+    id: "rebuild-all",
+    name: "Rebuild All Docker Containers",
+    description: "Forces a full rebuild of all Docker service images with --build flag.",
+  },
+  {
     id: "full",
     name: "Full Stack Docker Mode",
     description: "Runs all services inside hot-reload Docker containers.",
@@ -249,8 +259,26 @@ async function main() {
     print(`${BOLD}Kanban Dev Launcher CLI${RESET}`);
     print(`Usage: ./scripts/dev.ts [options]`);
     print(`Options:`);
-    print(`  --help, -h       Show this help menu`);
-    print(`  --stop           Stop all running dev containers`);
+    print(`  --help, -h          Show this help menu`);
+    print(`  --rebuild-backend   Force rebuild backend containers (api, ai)`);
+    print(`  --rebuild-api       Force rebuild Go API container only`);
+    print(`  --rebuild-all       Force rebuild all Docker containers`);
+    print(`  --stop              Stop all running dev containers`);
+    process.exit(0);
+  }
+
+  if (args.includes("--rebuild-backend")) {
+    rebuildBackend();
+    process.exit(0);
+  }
+
+  if (args.includes("--rebuild-api")) {
+    rebuildApiOnly();
+    process.exit(0);
+  }
+
+  if (args.includes("--rebuild-all") || args.includes("--rebuild")) {
+    rebuildAll();
     process.exit(0);
   }
 
@@ -271,6 +299,10 @@ async function main() {
     runFrontendFastMode();
   } else if (choice === "frontend-dev" || choice === "frontend") {
     runFrontendDevMode();
+  } else if (choice === "rebuild-backend") {
+    rebuildBackend();
+  } else if (choice === "rebuild-all") {
+    rebuildAll();
   } else if (choice === "full") {
     runDockerCompose(["--profile", "full", "up", "-d"]);
   } else if (choice === "services") {
@@ -302,6 +334,24 @@ function detectContainerEngine(): { binary: string; composeArgs: string[]; name:
   } catch { }
 
   return { binary: "docker", composeArgs: ["compose"], name: "Docker" };
+}
+
+function rebuildBackend() {
+  print(`\n${CYAN}Rebuilding backend Docker containers (api, ai)...${RESET}`);
+  runDockerCompose(["up", "-d", "--build", "api", "ai"]);
+  print(`\n${GREEN}Backend containers rebuilt and started successfully.${RESET}\n`);
+}
+
+function rebuildApiOnly() {
+  print(`\n${CYAN}Rebuilding Go API Docker container...${RESET}`);
+  runDockerCompose(["up", "-d", "--build", "api"]);
+  print(`\n${GREEN}Go API container rebuilt and started successfully.${RESET}\n`);
+}
+
+function rebuildAll() {
+  print(`\n${CYAN}Rebuilding all Docker containers...${RESET}`);
+  runDockerCompose(["--profile", "full", "up", "-d", "--build"]);
+  print(`\n${GREEN}All containers rebuilt and started successfully.${RESET}\n`);
 }
 
 function stopContainers() {

@@ -39,7 +39,7 @@ export function ConfirmDeleteProjectModal({
   return (
     <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 select-none">
       <div
-        className="w-full max-w-[440px] bg-surface-l5 border border-theme-default rounded-[14px] p-6 space-y-5 shadow-2xl animate-in fade-in zoom-in-95 duration-150 text-left"
+        className="w-full max-w-[440px] bg-surface-l5 border border-theme-default rounded-md p-6 space-y-5 shadow-2xl animate-in fade-in zoom-in-95 duration-150 text-left"
         onKeyDown={handleKeyDown}
       >
         {/* Header */}

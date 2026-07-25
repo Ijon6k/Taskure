@@ -92,7 +92,7 @@ export function ProjectContextTab({
     <div className="flex-1 overflow-y-auto p-8 text-[14px]">
       <div className="max-w-[840px] mx-auto space-y-8 font-sans">
         {/* Header & Overview Banner */}
-        <div className="p-6 bg-theme-surface border border-theme-default rounded-[10px] space-y-4">
+        <div className="p-6 bg-theme-surface border border-theme-default rounded-md space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-[8px] bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center">
@@ -125,7 +125,7 @@ export function ProjectContextTab({
 
         {/* Add Context Form */}
         {isAdding && (
-          <form onSubmit={handleCreateDoc} className="p-5 bg-theme-elevated border border-theme-default rounded-[10px] space-y-4 animate-in fade-in">
+          <form onSubmit={handleCreateDoc} className="p-5 bg-theme-elevated border border-theme-default rounded-md space-y-4 animate-in fade-in">
             <h3 className="text-[14px] font-medium text-theme-primary flex items-center gap-2">
               <FileCode className="w-4 h-4 text-brand-accent" />
               <span>Tambah Dokumen Konteks Pengetahuan</span>
@@ -207,7 +207,7 @@ export function ProjectContextTab({
             {docList.map((doc) => (
               <div
                 key={doc.id}
-                className="p-5 bg-theme-surface border border-theme-default hover:border-theme-secondary rounded-[10px] space-y-3 transition-colors group"
+                className="p-5 bg-theme-surface border border-theme-default hover:border-theme-secondary rounded-md space-y-3 transition-colors group"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">

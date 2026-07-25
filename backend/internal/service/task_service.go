@@ -118,10 +118,21 @@ func (s *taskService) UpdateTask(idOrPublicID string, updates map[string]interfa
 		}
 	}
 
-	// Safely serialize tags slice into JSONB
+	// Safely serialize tags slice into JSONB (handles []interface{} from Gin JSON map binding)
 	if tagsRaw, ok := updates["tags"]; ok {
-		if tags, isSlice := tagsRaw.([]string); isSlice && len(tags) > 0 {
-			if tagsJSON, err := json.Marshal(tags); err == nil {
+		var tagStrings []string
+		if tagsInterface, isSlice := tagsRaw.([]interface{}); isSlice {
+			for _, item := range tagsInterface {
+				if str, isStr := item.(string); isStr && str != "" {
+					tagStrings = append(tagStrings, str)
+				}
+			}
+		} else if tagsStr, isSlice := tagsRaw.([]string); isSlice {
+			tagStrings = tagsStr
+		}
+
+		if len(tagStrings) > 0 {
+			if tagsJSON, err := json.Marshal(tagStrings); err == nil {
 				updates["tags"] = datatypes.JSON(tagsJSON)
 			}
 		} else {

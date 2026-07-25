@@ -24,7 +24,7 @@ export function MobileHeader({ title = "My Kanban", onOpenCreateProject }: Mobil
         <button
           type="button"
           onClick={toggleMobileMenu}
-          className="w-10 h-10 rounded-lg flex items-center justify-center text-theme-secondary hover:text-theme-primary active:bg-theme-hover transition-colors -ml-1"
+          className="w-10 h-10 rounded-md flex items-center justify-center text-theme-secondary hover:text-theme-primary active:bg-theme-hover transition-colors -ml-1"
           aria-label="Open Workspace Navigation Menu"
           title="Open Menu"
         >
@@ -44,7 +44,7 @@ export function MobileHeader({ title = "My Kanban", onOpenCreateProject }: Mobil
       <div className="flex items-center gap-1.5 shrink-0">
         <Link
           href="/projects"
-          className="w-9 h-9 rounded-lg flex items-center justify-center text-theme-secondary hover:text-theme-primary active:bg-theme-hover transition-colors"
+          className="w-9 h-9 rounded-md flex items-center justify-center text-theme-secondary hover:text-theme-primary active:bg-theme-hover transition-colors"
           title="Browse Projects"
           aria-label="Browse Projects"
         >

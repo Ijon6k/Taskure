@@ -10,6 +10,7 @@ import { TodaysFocusCard } from "@/components/features/dashboard/todays-focus-ca
 import { ProjectCard } from "@/components/features/project/project-card";
 import { CreateProjectModal } from "@/components/features/project/create-project-modal";
 import { useUIStore } from "@/store/use-ui-store";
+import { PageContainer } from "@/components/ui/page-container";
 
 export default function HomePage() {
   const { data: projects = [], isLoading: isProjectsLoading } = useProjects();
@@ -35,7 +36,7 @@ export default function HomePage() {
       {/* Main View Area */}
       <main className="flex-1 overflow-y-auto">
         <div className="flex flex-col items-center">
-          <div className="w-full max-w-[672px] px-3.5 sm:px-8 py-4 sm:py-10 md:py-12 space-y-6 sm:space-y-10">
+          <PageContainer variant="default">
             {/* Header Greeting */}
             <div>
               <h1 className="text-2xl sm:text-3xl font-normal text-theme-primary tracking-tight leading-tight">
@@ -62,7 +63,7 @@ export default function HomePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   onClick={openCreateProject}
-                  className="h-11 sm:h-10 px-3.5 border border-theme-default rounded-lg sm:rounded-md flex items-center gap-2.5 text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated active:bg-theme-hover transition-colors text-sm font-medium"
+                  className="h-11 sm:h-10 px-3.5 border border-theme-default rounded-md flex items-center gap-2.5 text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated active:bg-theme-hover transition-colors text-sm font-medium"
                 >
                   <FolderPlus className="w-4 h-4 text-brand-accent shrink-0" />
                   <span>New project</span>
@@ -70,7 +71,7 @@ export default function HomePage() {
 
                 <Link
                   href="/projects"
-                  className="h-11 sm:h-10 px-3.5 border border-theme-default rounded-lg sm:rounded-md flex items-center gap-2.5 text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated active:bg-theme-hover transition-colors text-sm font-medium"
+                  className="h-11 sm:h-10 px-3.5 border border-theme-default rounded-md flex items-center gap-2.5 text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated active:bg-theme-hover transition-colors text-sm font-medium"
                 >
                   <FolderKanban className="w-4 h-4 text-brand-accent shrink-0" />
                   <span>Browse projects</span>
@@ -88,11 +89,11 @@ export default function HomePage() {
               </div>
 
               {pinnedProjects.length === 0 ? (
-                <div className="p-4 border border-theme-default rounded-lg bg-theme-surface text-xs text-theme-secondary">
+                <div className="p-4 border border-theme-default rounded-md bg-theme-surface text-xs text-theme-secondary">
                   No pinned projects yet.
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-stretch">
                   {pinnedProjects.map((proj) => (
                     <ProjectCard key={proj.id} project={proj} variant="grid" />
                   ))}
@@ -123,7 +124,7 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
-          </div>
+          </PageContainer>
         </div>
       </main>
 

@@ -11,6 +11,7 @@ import { FilterPills } from "@/components/ui/filter-pills";
 import { CreateProjectModal } from "@/components/features/project/create-project-modal";
 import { EditProjectModal } from "@/components/features/project/edit-project-modal";
 import { useUIStore } from "@/store/use-ui-store";
+import { PageContainer } from "@/components/ui/page-container";
 
 type StatusFilter = "all" | "active" | "paused" | "archived";
 
@@ -66,7 +67,7 @@ export default function ProjectsPage() {
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto">
         <div className="flex flex-col items-center">
-          <div className="w-full max-w-[896px] px-3.5 sm:px-8 py-4 sm:py-10 md:py-12 space-y-5 sm:space-y-8">
+          <PageContainer variant="wide">
             {/* Header: Title & New Project Button */}
             <div className="flex items-center justify-between">
               <h1 className="text-xl sm:text-2xl font-normal text-theme-primary tracking-tight">
@@ -108,7 +109,7 @@ export default function ProjectsPage() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-stretch">
                   {pinnedProjects.map((proj) => (
                     <ProjectCard key={proj.id} project={proj} variant="detailed" onEdit={openEditProject} />
                   ))}
@@ -129,11 +130,11 @@ export default function ProjectsPage() {
 
               {isLoading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 animate-pulse">
-                  <div className="h-32 bg-theme-surface border border-theme-default rounded-lg" />
-                  <div className="h-32 bg-theme-surface border border-theme-default rounded-lg" />
+                  <div className="h-32 bg-theme-surface border border-theme-default rounded-md" />
+                  <div className="h-32 bg-theme-surface border border-theme-default rounded-md" />
                 </div>
               ) : unpinnedProjects.length === 0 ? (
-                <div className="p-8 border border-theme-default rounded-lg bg-theme-surface text-center space-y-2">
+                <div className="p-8 border border-theme-default rounded-md bg-theme-surface text-center space-y-2">
                   <FolderKanban className="w-8 h-8 text-theme-secondary mx-auto" />
                   <p className="text-sm text-theme-primary">No projects found</p>
                   <p className="text-xs text-theme-secondary">
@@ -141,14 +142,14 @@ export default function ProjectsPage() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-stretch">
                   {unpinnedProjects.map((proj) => (
                     <ProjectCard key={proj.id} project={proj} variant="detailed" onEdit={openEditProject} />
                   ))}
                 </div>
               )}
             </div>
-          </div>
+          </PageContainer>
         </div>
       </main>
 

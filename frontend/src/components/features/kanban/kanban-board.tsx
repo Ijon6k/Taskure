@@ -314,7 +314,7 @@ export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, o
           className="w-full h-full flex-1 flex gap-4 md:gap-5 overflow-x-auto p-3.5 md:p-6 items-start select-none relative snap-x snap-mandatory md:snap-none"
         >
           {columns.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 md:p-12 bg-theme-surface border border-theme-default rounded-xl text-center space-y-4 max-w-md mx-auto my-8 md:my-12">
+            <div className="flex-1 flex flex-col items-center justify-center p-8 md:p-12 bg-theme-surface border border-theme-default rounded-md text-center space-y-4 max-w-md mx-auto my-8 md:my-12">
               <LayoutGrid className="w-10 h-10 text-brand-accent opacity-80" />
               <div>
                 <h3 className="text-base font-medium text-theme-primary">No columns created yet</h3>
@@ -350,7 +350,7 @@ export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, o
 
           {/* Inline New Column Creation Box */}
           {isAddingColumn ? (
-            <div className="w-[calc(100vw-2rem)] md:w-80 shrink-0 p-3 bg-theme-elevated border border-accent rounded-xl space-y-2.5 shadow-xl animate-in fade-in duration-100 snap-center">
+            <div className="w-[calc(100vw-2rem)] md:w-80 shrink-0 p-3 bg-theme-elevated border border-accent rounded-md space-y-2.5 shadow-xl animate-in fade-in duration-100 snap-center">
               <input
                 type="text"
                 autoFocus
@@ -385,7 +385,7 @@ export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, o
             columns.length > 0 && (
               <button
                 onClick={() => setIsAddingColumn(true)}
-                className="w-[calc(100vw-2rem)] md:w-80 shrink-0 h-12 border border-dashed border-theme-default hover:border-theme-hover bg-theme-surface/30 hover:bg-theme-surface rounded-xl flex items-center justify-center gap-2 text-theme-secondary hover:text-theme-primary text-xs font-medium transition-all group snap-center"
+                className="w-[calc(100vw-2rem)] md:w-80 shrink-0 h-12 border border-dashed border-theme-default hover:border-theme-hover bg-theme-surface/30 hover:bg-theme-surface rounded-md flex items-center justify-center gap-2 text-theme-secondary hover:text-theme-primary text-xs font-medium transition-all group snap-center"
               >
                 <Plus className="w-4 h-4 text-brand-accent group-hover:scale-110 transition-transform" />
                 <span>Add column</span>

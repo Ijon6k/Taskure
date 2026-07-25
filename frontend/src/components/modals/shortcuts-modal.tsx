@@ -22,7 +22,7 @@ export function ShortcutsModal({ isOpen, onClose }: ShortcutsModalProps) {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-theme-subtle pb-3">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-[6px] bg-brand-accent/10 flex items-center justify-center text-brand-accent">
+          <div className="w-7 h-7 rounded-md bg-brand-accent/10 flex items-center justify-center text-brand-accent">
             <Keyboard className="w-4 h-4" />
           </div>
           <div>
@@ -40,7 +40,7 @@ export function ShortcutsModal({ isOpen, onClose }: ShortcutsModalProps) {
         {SHORTCUTS.map((item) => (
           <div
             key={item.key}
-            className="flex items-center justify-between p-2.5 bg-surface-l4 border border-theme-subtle rounded-[8px] text-[13px]"
+            className="flex items-center justify-between p-2.5 bg-surface-l4 border border-theme-subtle rounded-md text-[13px]"
           >
             <span className="text-theme-primary/90 font-medium">{item.description}</span>
             <kbd className="px-2 py-1 bg-theme-elevated border border-theme-default rounded-[5px] text-[11px] font-mono text-brand-accent font-semibold shadow-xs">

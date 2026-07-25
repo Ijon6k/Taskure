@@ -106,7 +106,7 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
   return (
     <>
       <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 select-none">
-        <div className="w-full max-w-[460px] bg-surface-l5 border border-theme-default rounded-[14px] p-6 space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150 text-left">
+        <div className="w-full max-w-[460px] bg-surface-l5 border border-theme-default rounded-md p-6 space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150 text-left">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-theme-subtle pb-4">
             <div className="flex items-center gap-2.5">

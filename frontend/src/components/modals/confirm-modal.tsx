@@ -31,7 +31,7 @@ export function ConfirmModal({
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           <div
-            className={`w-9 h-9 rounded-[8px] flex items-center justify-center ${
+            className={`w-9 h-9 rounded-md flex items-center justify-center ${
               isDanger
                 ? "bg-semantic-danger-subtle text-semantic-danger border border-semantic-danger/20"
                 : "bg-semantic-info-subtle text-semantic-info border border-semantic-info/20"

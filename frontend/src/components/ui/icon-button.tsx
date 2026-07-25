@@ -20,7 +20,7 @@ export function IconButton({
   ...props
 }: IconButtonProps) {
   const baseClasses =
-    "inline-flex items-center justify-center rounded-[6px] cursor-pointer transition-all duration-150 active:scale-[0.96] disabled:opacity-40 disabled:cursor-not-allowed";
+    "inline-flex items-center justify-center rounded-md cursor-pointer transition-all duration-150 active:scale-[0.96] disabled:opacity-40 disabled:cursor-not-allowed";
 
   const sizeClasses = {
     sm: "w-7 h-7 p-1",

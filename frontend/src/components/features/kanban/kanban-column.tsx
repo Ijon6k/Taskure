@@ -8,6 +8,7 @@ import { Plus, GripVertical } from "lucide-react";
 import { ColumnData, TaskData, api } from "@/lib/api";
 import { KanbanCard } from "./kanban-card";
 import { ColumnContextMenu } from "./column-context-menu";
+import { extractTaskTags } from "@/lib/tags";
 import { toast } from "sonner";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useUIStore } from "@/store/use-ui-store";
@@ -79,7 +80,7 @@ function KanbanColumnInner({
         !searchQuery.trim() ||
         t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (t.description || "").toLowerCase().includes(searchQuery.toLowerCase());
-      const taskLabels = (t.labels || []).map((l) => (typeof l === "string" ? l : l.name).toLowerCase());
+      const taskLabels = extractTaskTags(t).map((l) => l.toLowerCase());
       const matchesTag = selectedTag === "all" || taskLabels.includes(selectedTag.toLowerCase());
       return matchesSearch && matchesTag;
     });
@@ -171,7 +172,7 @@ function KanbanColumnInner({
         ...style,
         borderColor: showOver ? "var(--brand-accent)" : hexToRgba(columnColor, 0.15),
       }}
-      className={`relative w-full md:w-80 md:min-w-80 shrink-0 flex flex-col max-h-full rounded-xl bg-surface-l2 border border-theme-subtle shadow-xs group/col ${
+      className={`relative w-full md:w-80 md:min-w-80 shrink-0 flex flex-col max-h-full rounded-md bg-surface-l2 border border-theme-subtle shadow-xs group/col ${
         showOver ? "ring-2 ring-brand-accent/20 bg-surface-hover" : ""
       }`}
     >
@@ -256,7 +257,7 @@ function KanbanColumnInner({
         </SortableContext>
 
         {isAdding ? (
-          <div className="p-3 bg-theme-elevated border border-accent rounded-lg space-y-2.5 shadow-md animate-in fade-in duration-100">
+          <div className="p-3 bg-theme-elevated border border-accent rounded-md space-y-2.5 shadow-md animate-in fade-in duration-100">
             <textarea
               autoFocus
               rows={2}
@@ -272,7 +273,7 @@ function KanbanColumnInner({
                 <button
                   type="button"
                   onClick={() => { setIsAdding(false); setTaskTitle(""); }}
-                  className="px-2.5 py-1 text-xs text-theme-secondary hover:text-theme-primary rounded"
+                  className="px-2.5 py-1 text-xs text-theme-secondary hover:text-theme-primary rounded-md"
                 >
                   Cancel
                 </button>
@@ -280,7 +281,7 @@ function KanbanColumnInner({
                   type="button"
                   onClick={handleCreateInlineTask}
                   disabled={!taskTitle.trim() || isSubmitting}
-                  className="px-3 py-1 bg-brand-accent text-black text-xs font-semibold rounded hover:opacity-90 active:scale-95 transition-all disabled:opacity-40"
+                  className="px-3 py-1 bg-brand-accent text-black text-xs font-semibold rounded-md hover:opacity-90 active:scale-95 transition-all disabled:opacity-40"
                 >
                   Add
                 </button>
@@ -290,7 +291,7 @@ function KanbanColumnInner({
         ) : (
           <button
             onClick={() => setIsAdding(true)}
-            className="w-full h-10 md:h-9 px-3 border border-dashed border-theme-default hover:border-theme-hover rounded-lg flex items-center gap-2 text-theme-secondary hover:text-theme-primary bg-theme-surface/50 hover:bg-theme-elevated transition-all text-xs font-medium"
+            className="w-full h-10 md:h-9 px-3 border border-dashed border-theme-default hover:border-theme-hover rounded-md flex items-center gap-2 text-theme-secondary hover:text-theme-primary bg-theme-surface/50 hover:bg-theme-elevated transition-all text-xs font-medium"
           >
             <Plus className="w-4 h-4 md:w-3.5 md:h-3.5 text-brand-accent" />
             <span>Add task</span>

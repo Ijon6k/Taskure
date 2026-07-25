@@ -85,7 +85,7 @@ export function DatePickerPopover({
           disabled={disabled}
           className={`
             group flex items-center gap-2 w-full px-3 py-2
-            bg-theme-elevated border border-theme-default rounded-[6px]
+            bg-theme-elevated border border-theme-default rounded-md
             text-[13px] transition-colors cursor-pointer
             hover:border-brand-accent/50 focus:outline-none focus:border-brand-accent
             disabled:opacity-50 disabled:cursor-not-allowed
@@ -115,7 +115,7 @@ export function DatePickerPopover({
           align="start"
           sideOffset={6}
           className="
-            z-[200] w-[280px] rounded-[10px]
+            z-[200] w-[280px] rounded-md
             bg-surface-l4 border border-theme-default
             shadow-elevation-l4
             animate-in fade-in-0 zoom-in-95 duration-150
@@ -127,7 +127,7 @@ export function DatePickerPopover({
             <button
               type="button"
               onClick={() => setViewMonth(subMonths(viewMonth, 1))}
-              className="w-7 h-7 flex items-center justify-center rounded-[6px] text-theme-secondary hover:bg-theme-default/10 hover:text-theme-primary transition-colors cursor-pointer"
+              className="w-7 h-7 flex items-center justify-center rounded-md text-theme-secondary hover:bg-theme-default/10 hover:text-theme-primary transition-colors cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -139,7 +139,7 @@ export function DatePickerPopover({
             <button
               type="button"
               onClick={() => setViewMonth(addMonths(viewMonth, 1))}
-              className="w-7 h-7 flex items-center justify-center rounded-[6px] text-theme-secondary hover:bg-theme-default/10 hover:text-theme-primary transition-colors cursor-pointer"
+              className="w-7 h-7 flex items-center justify-center rounded-md text-theme-secondary hover:bg-theme-default/10 hover:text-theme-primary transition-colors cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -168,7 +168,7 @@ export function DatePickerPopover({
                   onClick={() => handleSelectDay(day)}
                   className={`
                     relative w-full aspect-square flex items-center justify-center
-                    rounded-[6px] text-[12px] font-medium transition-all cursor-pointer
+                    rounded-md text-[12px] font-medium transition-all cursor-pointer
                     ${selected
                       ? "bg-brand-accent text-on-accent shadow-md shadow-brand-accent/30"
                       : today

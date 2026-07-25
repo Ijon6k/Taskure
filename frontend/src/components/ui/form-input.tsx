@@ -21,7 +21,7 @@ export function FormInput({
         </label>
       )}
       <input
-        className={`w-full bg-theme-elevated border border-theme-default rounded-[6px] px-3 py-2 text-[14px] text-theme-primary placeholder-theme-tertiary focus:outline-none focus:border-brand-accent transition-colors ${className}`}
+        className={`w-full bg-theme-elevated border border-theme-default rounded-md px-3 py-2 text-[14px] text-theme-primary placeholder-theme-tertiary focus:outline-none focus:border-brand-accent transition-colors ${className}`}
         {...props}
       />
       {error && <p className="text-[12px] text-red-400 font-medium">{error}</p>}
@@ -50,7 +50,7 @@ export function FormTextarea({
       )}
       <textarea
         rows={rows}
-        className={`w-full bg-theme-elevated border border-theme-default rounded-[6px] p-3 text-[14px] text-theme-primary placeholder-theme-tertiary focus:outline-none focus:border-brand-accent transition-colors resize-none ${className}`}
+        className={`w-full bg-theme-elevated border border-theme-default rounded-md p-3 text-[14px] text-theme-primary placeholder-theme-tertiary focus:outline-none focus:border-brand-accent transition-colors resize-none ${className}`}
         {...props}
       />
       {error && <p className="text-[12px] text-red-400 font-medium">{error}</p>}

@@ -66,7 +66,7 @@ export function ReorderColumnsModal({
     <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 animate-in fade-in duration-150" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[92vw] max-w-md bg-theme-surface border border-theme-default rounded-xl shadow-2xl p-5 space-y-4 animate-in zoom-in-95 duration-150 select-none">
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[92vw] max-w-md bg-theme-surface border border-theme-default rounded-md shadow-2xl p-5 space-y-4 animate-in zoom-in-95 duration-150 select-none">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-theme-default pb-3">
             <div className="flex items-center gap-2">
@@ -96,7 +96,7 @@ export function ReorderColumnsModal({
               return (
                 <div
                   key={col.id}
-                  className="flex items-center justify-between p-3 bg-theme-elevated border border-theme-default rounded-lg text-sm"
+                  className="flex items-center justify-between p-3 bg-theme-elevated border border-theme-default rounded-md text-sm"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <span

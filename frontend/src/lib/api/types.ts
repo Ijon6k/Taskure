@@ -88,6 +88,8 @@ export interface TaskData {
   status: "todo" | "in_progress" | "done";
   position: number;
   due_date?: string;
+  created_at?: string;
+  updated_at?: string;
   // Tags stored as string array (matches backend UpdateTask JSON key)
   tags?: string[];
   // Legacy field from backend — kept for backwards compat
