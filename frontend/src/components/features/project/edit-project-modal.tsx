@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Toggle } from "@/components/ui/toggle";
 import { ModalContainer } from "@/components/ui/modal-container";
 import { ColorSwatchPicker } from "@/components/ui/color-swatch-picker";
+import { FormTextarea } from "@/components/ui/form-input";
 import { ConfirmDeleteProjectModal } from "./confirm-delete-project-modal";
 
 interface EditProjectModalProps {
@@ -144,17 +145,12 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="block text-[12px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
-              Description
-            </label>
-            <textarea
-              rows={3}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full p-3 bg-surface-l4 border border-theme-subtle focus:border-brand-accent rounded-md text-[14px] text-theme-primary placeholder:text-theme-tertiary outline-none transition-colors resize-none"
-            />
-          </div>
+          <FormTextarea
+            label="Description"
+            rows={3}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
 
           <ColorSwatchPicker
             label="Accent Color"

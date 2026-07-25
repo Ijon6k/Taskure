@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { X, FileCode, Upload, ArrowRight, Clipboard, Sparkles, Trash2, Layers, LayoutGrid } from "lucide-react";
 import { useCreateProject, ProjectData } from "@/lib/api";
+import { ModalContainer } from "@/components/ui/modal-container";
+import { FormTextarea } from "@/components/ui/form-input";
 import { toast } from "sonner";
-import { useHotkeys } from "react-hotkeys-hook";
 
 interface ImportJsonModalProps {
   isOpen: boolean;
@@ -19,10 +20,6 @@ export function ImportJsonModal({ isOpen, onClose, onSuccess }: ImportJsonModalP
   const [error, setError] = useState<string | null>(null);
 
   const createProjectMutation = useCreateProject();
-
-  useHotkeys("esc", () => {
-    if (isOpen) onClose();
-  }, { enabled: isOpen });
 
   if (!isOpen) return null;
 
@@ -117,202 +114,198 @@ export function ImportJsonModal({ isOpen, onClose, onSuccess }: ImportJsonModalP
   const byteSize = jsonText ? (new Blob([jsonText]).size / 1024).toFixed(1) : "0";
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 select-none">
-      <div className="w-full max-w-[560px] bg-surface-l5 border border-theme-default rounded-md p-6 space-y-5 shadow-2xl animate-in fade-in zoom-in-95 duration-150 text-left">
-        {/* Header */}
-        <div className="flex items-start justify-between border-b border-theme-subtle pb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-[8px] bg-brand-accent-subtle flex items-center justify-center text-accent">
-              <FileCode className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="text-[18px] font-medium text-theme-primary tracking-tight">
-                Import JSON
-              </h2>
-              <p className="text-[12px] text-theme-secondary">
-                Import full project spec or board layout from external JSON.
-              </p>
-            </div>
+    <ModalContainer isOpen={isOpen} onClose={onClose} maxWidth="max-w-[560px]">
+      {/* Header */}
+      <div className="flex items-start justify-between border-b border-theme-subtle pb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-md bg-brand-accent-subtle flex items-center justify-center text-accent">
+            <FileCode className="w-4 h-4" />
           </div>
-          <button
-            onClick={onClose}
-            className="w-7 h-7 rounded-[6px] text-theme-secondary hover:text-theme-primary hover:bg-surface-l3 flex items-center justify-center transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Import Scope Selector */}
-        <div className="space-y-1.5">
-          <label className="block text-[11px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
-            Target Scope
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setScope("project")}
-              className={`p-3 rounded-[8px] border text-left flex items-center gap-2.5 transition-all ${
-                scope === "project"
-                  ? "bg-surface-l4 border-brand-accent text-theme-primary"
-                  : "bg-surface-l4 border-theme-subtle text-theme-secondary hover:text-theme-primary"
-              }`}
-            >
-              <Layers className="w-4 h-4 text-brand-accent" />
-              <div className="space-y-0.5">
-                <div className="text-[13px] font-medium">Full Project</div>
-                <div className="text-[10px] text-theme-secondary">Name, specs & columns</div>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setScope("board")}
-              className={`p-3 rounded-[8px] border text-left flex items-center gap-2.5 transition-all ${
-                scope === "board"
-                  ? "bg-surface-l4 border-brand-accent text-theme-primary"
-                  : "bg-surface-l4 border-theme-subtle text-theme-secondary hover:text-theme-primary"
-              }`}
-            >
-              <LayoutGrid className="w-4 h-4 text-accent" />
-              <div className="space-y-0.5">
-                <div className="text-[13px] font-medium">Kanban Board Only</div>
-                <div className="text-[10px] text-theme-secondary">Columns & tasks</div>
-              </div>
-            </button>
+          <div>
+            <h2 className="text-[18px] font-medium text-theme-primary tracking-tight">
+              Import JSON
+            </h2>
+            <p className="text-[12px] text-theme-secondary">
+              Import full project spec or board layout from external JSON.
+            </p>
           </div>
         </div>
+        <button
+          onClick={onClose}
+          className="w-7 h-7 rounded-md text-theme-secondary hover:text-theme-primary hover:bg-surface-l3 flex items-center justify-center transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
 
-        {/* Input Mode Selector (Paste vs Upload) */}
-        <div className="flex items-center justify-between border-b border-theme-subtle pb-2">
-          <div className="flex items-center gap-2 text-[12px] font-medium">
-            <button
-              type="button"
-              onClick={() => setMode("paste")}
-              className={`px-3 py-1 rounded-[6px] transition-colors ${
-                mode === "paste"
-                  ? "bg-surface-l3 text-theme-primary"
-                  : "text-theme-secondary hover:text-theme-primary"
-              }`}
-            >
-              Paste Code
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("upload")}
-              className={`px-3 py-1 rounded-[6px] transition-colors ${
-                mode === "upload"
-                  ? "bg-surface-l3 text-theme-primary"
-                  : "text-theme-secondary hover:text-theme-primary"
-              }`}
-            >
-              Upload File
-            </button>
-          </div>
-
-          {/* Quick Toolbar for Paste Mode */}
-          {mode === "paste" && (
-            <div className="flex items-center gap-2 text-[11px]">
-              <button
-                type="button"
-                onClick={handlePasteClipboard}
-                className="px-2 py-1 rounded-[5px] bg-brand-accent-subtle hover:bg-brand-accent/20 text-brand-accent font-medium flex items-center gap-1 transition-colors"
-              >
-                <Clipboard className="w-3 h-3" />
-                <span>Paste Clipboard</span>
-              </button>
-
-              {jsonText && (
-                <>
-                  <button
-                    type="button"
-                    onClick={handleFormatJson}
-                    className="px-2 py-1 rounded-[5px] bg-theme-subtle/50 hover:bg-theme-subtle text-theme-secondary hover:text-theme-primary flex items-center gap-1 transition-colors"
-                    title="Prettify JSON"
-                  >
-                    <Sparkles className="w-3 h-3" />
-                    <span>Format</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setJsonText("");
-                      setError(null);
-                    }}
-                    className="p-1 rounded text-theme-secondary hover:text-semantic-danger transition-colors"
-                    title="Clear text"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Input & Code Editor Area */}
-        {mode === "paste" ? (
-          <div className="space-y-1.5">
-            <div className="relative">
-              <textarea
-                rows={7}
-                value={jsonText}
-                onChange={(e) => {
-                  setJsonText(e.target.value);
-                  setError(null);
-                }}
-                placeholder={`{\n  "name": "My Project",\n  "description": "JSON spec from ChatGPT / Claude",\n  "columns": [\n    { "name": "Todo", "tasks": [] }\n  ]\n}`}
-                className="w-full p-3 bg-surface-l2 border border-theme-subtle focus:border-brand-accent rounded-[8px] text-[12px] font-mono text-theme-primary placeholder:text-theme-tertiary outline-none transition-colors resize-none overflow-y-auto"
-              />
-            </div>
-            {jsonText && (
-              <div className="text-[11px] font-mono text-theme-secondary text-right">
-                {lineCount} lines • {byteSize} KB
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="border-2 border-dashed border-theme-default hover:border-theme-strong rounded-[10px] p-6 text-center bg-surface-l2 transition-colors cursor-pointer relative">
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleFileUpload}
-              className="absolute inset-0 opacity-0 cursor-pointer"
-            />
-            <Upload className="w-6 h-6 text-theme-secondary mx-auto mb-2" />
-            <div className="text-[13px] font-medium text-theme-primary">
-              {jsonText ? "File loaded into editor" : "Click to select a .json file"}
-            </div>
-            <div className="text-[11px] text-theme-secondary mt-1">Supports standard JSON project or board files</div>
-          </div>
-        )}
-
-        {error && (
-          <div className="text-[12px] text-semantic-danger bg-semantic-danger-subtle p-2.5 rounded-[6px] border border-semantic-danger/20">
-            {error}
-          </div>
-        )}
-
-        {/* Action Buttons */}
-        <div className="pt-2 flex items-center justify-end gap-2.5 border-t border-theme-subtle">
+      {/* Import Scope Selector */}
+      <div className="space-y-1.5">
+        <label className="block text-[11px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
+          Target Scope
+        </label>
+        <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={onClose}
-            className="px-4 py-2 rounded-[8px] text-[13px] font-medium text-theme-secondary hover:text-theme-primary transition-colors"
+            onClick={() => setScope("project")}
+            className={`p-3 rounded-md border text-left flex items-center gap-2.5 transition-all ${
+              scope === "project"
+                ? "bg-surface-l4 border-brand-accent text-theme-primary"
+                : "bg-surface-l4 border-theme-subtle text-theme-secondary hover:text-theme-primary"
+            }`}
           >
-            Cancel
+            <Layers className="w-4 h-4 text-brand-accent" />
+            <div className="space-y-0.5">
+              <div className="text-[13px] font-medium">Full Project</div>
+              <div className="text-[10px] text-theme-secondary">Name, specs & columns</div>
+            </div>
           </button>
+
           <button
             type="button"
-            onClick={handleImport}
-            disabled={createProjectMutation.isPending || !jsonText.trim()}
-            className="px-4 py-2 bg-brand-accent hover:bg-brand-accent-hover text-black text-[13px] font-medium rounded-[8px] transition-colors flex items-center gap-1.5 disabled:opacity-40"
+            onClick={() => setScope("board")}
+            className={`p-3 rounded-md border text-left flex items-center gap-2.5 transition-all ${
+              scope === "board"
+                ? "bg-surface-l4 border-brand-accent text-theme-primary"
+                : "bg-surface-l4 border-theme-subtle text-theme-secondary hover:text-theme-primary"
+            }`}
           >
-            <span>{createProjectMutation.isPending ? "Importing..." : "Import JSON"}</span>
-            <ArrowRight className="w-4 h-4" />
+            <LayoutGrid className="w-4 h-4 text-accent" />
+            <div className="space-y-0.5">
+              <div className="text-[13px] font-medium">Kanban Board Only</div>
+              <div className="text-[10px] text-theme-secondary">Columns & tasks</div>
+            </div>
           </button>
         </div>
       </div>
-    </div>
+
+      {/* Input Mode Selector (Paste vs Upload) */}
+      <div className="flex items-center justify-between border-b border-theme-subtle pb-2">
+        <div className="flex items-center gap-2 text-[12px] font-medium">
+          <button
+            type="button"
+            onClick={() => setMode("paste")}
+            className={`px-3 py-1 rounded-md transition-colors ${
+              mode === "paste"
+                ? "bg-surface-l3 text-theme-primary"
+                : "text-theme-secondary hover:text-theme-primary"
+            }`}
+          >
+            Paste Code
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("upload")}
+            className={`px-3 py-1 rounded-md transition-colors ${
+              mode === "upload"
+                ? "bg-surface-l3 text-theme-primary"
+                : "text-theme-secondary hover:text-theme-primary"
+            }`}
+          >
+            Upload File
+          </button>
+        </div>
+
+        {/* Quick Toolbar for Paste Mode */}
+        {mode === "paste" && (
+          <div className="flex items-center gap-2 text-[11px]">
+            <button
+              type="button"
+              onClick={handlePasteClipboard}
+              className="px-2 py-1 rounded-md bg-brand-accent-subtle hover:bg-brand-accent/20 text-brand-accent font-medium flex items-center gap-1 transition-colors"
+            >
+              <Clipboard className="w-3 h-3" />
+              <span>Paste Clipboard</span>
+            </button>
+
+            {jsonText && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleFormatJson}
+                  className="px-2 py-1 rounded-md bg-theme-subtle/50 hover:bg-theme-subtle text-theme-secondary hover:text-theme-primary flex items-center gap-1 transition-colors"
+                  title="Prettify JSON"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  <span>Format</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setJsonText("");
+                    setError(null);
+                  }}
+                  className="p-1 rounded text-theme-secondary hover:text-semantic-danger transition-colors"
+                  title="Clear text"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Input & Code Editor Area */}
+      {mode === "paste" ? (
+        <div className="space-y-1.5">
+          <FormTextarea
+            rows={7}
+            value={jsonText}
+            onChange={(e) => {
+              setJsonText(e.target.value);
+              setError(null);
+            }}
+            placeholder={`{\n  "name": "My Project",\n  "description": "JSON spec from ChatGPT / Claude",\n  "columns": [\n    { "name": "Todo", "tasks": [] }\n  ]\n}`}
+            className="font-mono text-[12px] bg-surface-l2 p-3 overflow-y-auto"
+          />
+          {jsonText && (
+            <div className="text-[11px] font-mono text-theme-secondary text-right">
+              {lineCount} lines • {byteSize} KB
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="border-2 border-dashed border-theme-default hover:border-theme-strong rounded-md p-6 text-center bg-surface-l2 transition-colors cursor-pointer relative">
+          <input
+            type="file"
+            accept=".json"
+            onChange={handleFileUpload}
+            className="absolute inset-0 opacity-0 cursor-pointer"
+          />
+          <Upload className="w-6 h-6 text-theme-secondary mx-auto mb-2" />
+          <div className="text-[13px] font-medium text-theme-primary">
+            {jsonText ? "File loaded into editor" : "Click to select a .json file"}
+          </div>
+          <div className="text-[11px] text-theme-secondary mt-1">Supports standard JSON project or board files</div>
+        </div>
+      )}
+
+      {error && (
+        <div className="text-[12px] text-semantic-danger bg-semantic-danger-subtle p-2.5 rounded-md border border-semantic-danger/20">
+          {error}
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="pt-2 flex items-center justify-end gap-2.5 border-t border-theme-subtle">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2 rounded-md text-[13px] font-medium text-theme-secondary hover:text-theme-primary transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={handleImport}
+          disabled={createProjectMutation.isPending || !jsonText.trim()}
+          className="px-4 py-2 bg-brand-accent hover:bg-brand-accent-hover text-black text-[13px] font-medium rounded-md transition-colors flex items-center gap-1.5 disabled:opacity-40"
+        >
+          <span>{createProjectMutation.isPending ? "Importing..." : "Import JSON"}</span>
+          <ArrowRight className="w-4 h-4" />
+        </button>
+      </div>
+    </ModalContainer>
   );
 }

@@ -222,14 +222,6 @@ function KanbanColumnInner({
         </div>
 
         <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover/col:opacity-100 transition-all duration-200 shrink-0">
-          <button
-            onClick={() => setIsAdding(true)}
-            className="w-8 h-8 md:w-6 md:h-6 rounded-md text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated active:bg-theme-hover flex items-center justify-center transition-colors shrink-0"
-            title="Add task"
-            aria-label="Add task to column"
-          >
-            <Plus className="w-4 h-4 md:w-3.5 md:h-3.5" />
-          </button>
           <ColumnContextMenu
             columnId={column.id}
             columnName={column.name}

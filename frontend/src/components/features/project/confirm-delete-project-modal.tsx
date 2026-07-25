@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { X, AlertTriangle } from "lucide-react";
 import { ModalContainer } from "@/components/ui/modal-container";
+import { FormInput } from "@/components/ui/form-input";
 
 interface ConfirmDeleteProjectModalProps {
   isOpen: boolean;
@@ -66,12 +67,9 @@ export function ConfirmDeleteProjectModal({
       </div>
 
       {/* Confirmation Input */}
-      <div className="space-y-1.5">
-        <label className="block text-[12px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
-          Type &quot;{projectName}&quot; to confirm
-        </label>
-        <input
+        <FormInput
           ref={inputRef}
+          label={`Type "${projectName}" to confirm`}
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
@@ -79,13 +77,12 @@ export function ConfirmDeleteProjectModal({
           autoComplete="off"
           spellCheck={false}
           disabled={isPending}
-          className={`w-full h-[38px] px-3 bg-surface-l4 border rounded-md text-[14px] text-theme-primary placeholder:text-theme-tertiary outline-none transition-colors disabled:opacity-40 ${
+          className={
             inputValue && !isMatch
-              ? "border-semantic-danger/50 focus:border-semantic-danger"
-              : "border-theme-subtle focus:border-brand-accent"
-          }`}
+              ? "!border-semantic-danger/50 focus:!border-semantic-danger"
+              : ""
+          }
         />
-      </div>
 
       {/* Action Buttons */}
       <div className="flex items-center justify-end gap-2.5 pt-1">

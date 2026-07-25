@@ -9,6 +9,7 @@ import { createProjectSchema, CreateProjectSchema } from "@/lib/validations";
 import { ImportJsonModal } from "./import-json-modal";
 import { ModalContainer } from "@/components/ui/modal-container";
 import { ColorSwatchPicker } from "@/components/ui/color-swatch-picker";
+import { FormInput } from "@/components/ui/form-input";
 import { toast } from "sonner";
 
 interface CreateProjectModalProps {
@@ -95,21 +96,13 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
 
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="block text-[12px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
-              Project name *
-            </label>
-            <input
-              type="text"
-              autoFocus
-              {...register("name")}
-              placeholder="e.g. Mobile App Redesign"
-              className="w-full h-[38px] px-3 bg-surface-l4 border border-theme-subtle focus:border-brand-accent rounded-[6px] text-[14px] text-theme-primary placeholder:text-theme-tertiary outline-none transition-colors"
-            />
-            {errors.name && (
-              <p className="text-[11px] text-semantic-danger font-medium">{errors.name.message}</p>
-            )}
-          </div>
+          <FormInput
+            label="Project name *"
+            autoFocus
+            {...register("name")}
+            placeholder="e.g. Mobile App Redesign"
+            error={errors.name?.message}
+          />
 
           <ColorSwatchPicker
             label="Accent"
@@ -123,7 +116,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
             <button
               type="submit"
               disabled={createProjectMutation.isPending}
-              className="p-3.5 bg-surface-l4 hover:bg-surface-l5 border border-theme-subtle rounded-[10px] text-left transition-all space-y-1 group disabled:opacity-40"
+              className="p-3.5 bg-surface-l4 hover:bg-surface-l5 border border-theme-subtle rounded-md text-left transition-all space-y-1 group disabled:opacity-40"
             >
               <div className="flex items-center gap-2 text-[13px] font-medium text-theme-primary">
                 <FolderPlus className="w-4 h-4 text-brand-accent" />
@@ -137,7 +130,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
             <button
               type="button"
               onClick={() => setIsImportJsonOpen(true)}
-              className="p-3.5 bg-surface-l4 hover:bg-surface-l5 border border-theme-subtle rounded-[10px] text-left transition-all space-y-1 group"
+              className="p-3.5 bg-surface-l4 hover:bg-surface-l5 border border-theme-subtle rounded-md text-left transition-all space-y-1 group"
             >
               <div className="flex items-center justify-between text-[13px] font-medium text-theme-primary">
                 <div className="flex items-center gap-2">

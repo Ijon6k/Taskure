@@ -1,15 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Edit3, CheckCircle2, LayoutGrid, Plus, Calendar, Tag, Target, Check, X, Link as LinkIcon, Trash2, ExternalLink } from "lucide-react";
+import { Edit3, CheckCircle2, LayoutGrid, Plus, Check, X } from "lucide-react";
 import { api, ProjectData, TaskData, ResourceLinkItem } from "@/lib/api";
 import { computeTaskStats, formatDateShort } from "@/lib/helpers";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { StatCard } from "@/components/ui/stat-card";
+import { PriorityBadge } from "@/components/ui/priority-badge";
+import { Card, CardHeader } from "@/components/ui/card";
 import { sortBy } from "es-toolkit";
 import { toast } from "sonner";
 import { useUIStore } from "@/store/use-ui-store";
 import { PageContainer } from "@/components/ui/page-container";
+import { ProjectMetaSection } from "./overview/project-meta-section";
+import { ProjectResourcesSection } from "./overview/project-resources-section";
 
 interface ProjectOverviewTabProps {
   project: ProjectData | null;
@@ -24,36 +28,27 @@ export function ProjectOverviewTab({
 }: ProjectOverviewTabProps) {
   const { setSelectedTaskId } = useUIStore();
   const [isEditingInline, setIsEditingInline] = useState(false);
-  // Use typed settings field — no more (as any) casting
   const settings = project?.settings ?? {};
 
-  // BUG FIX: Default to empty array — no hardcoded placeholders
   const defaultResources: ResourceLinkItem[] = settings.resources ?? [];
 
   // Editable Form States
   const [name, setName] = useState(project?.name || "");
   const [description, setDescription] = useState(project?.description || "");
   const [status, setStatus] = useState(project?.status || "active");
-  const [targetGoal, setTargetGoal] = useState(
-    settings.target_goal ?? ""
-  );
+  const [targetGoal, setTargetGoal] = useState(settings.target_goal ?? "");
   const [targetDate, setTargetDate] = useState(settings.target_date ?? "");
-  const [tagsInput, setTagsInput] = useState<string>(
-    (settings.tags ?? []).join(", ")
-  );
+  const [tagsInput, setTagsInput] = useState<string>((settings.tags ?? []).join(", "));
   const [resources, setResources] = useState<ResourceLinkItem[]>(defaultResources);
   const [newResTitle, setNewResTitle] = useState("");
   const [newResUrl, setNewResUrl] = useState("");
-  const [strategyNotes, setStrategyNotes] = useState(
-    settings.strategy_notes ?? ""
-  );
+  const [strategyNotes, setStrategyNotes] = useState(settings.strategy_notes ?? "");
   const [saving, setSaving] = useState(false);
 
   if (!project) return null;
 
   const stats = computeTaskStats(project.columns || []);
 
-  // Dynamic Priority Focus using es-toolkit sortBy
   const priorityOrder: Record<string, number> = { urgent: 1, high: 2, medium: 3, low: 4 };
   const sortedActiveTasks = sortBy(
     stats.allTasks.filter((t) => t.status !== "done"),
@@ -61,13 +56,11 @@ export function ProjectOverviewTab({
   );
   const focusTask = sortedActiveTasks[0] || null;
 
-  // Dynamic Upcoming Deadlines using es-toolkit sortBy
   const upcomingTasks = sortBy(
     stats.allTasks.filter((t) => t.due_date && t.status !== "done"),
     [(t) => new Date(t.due_date!).getTime()]
   ).slice(0, 5);
 
-  // Dynamic Recently Completed Tasks
   const completedTasks = stats.allTasks
     .filter((t) => t.status === "done" || (t as any).is_completed)
     .slice(0, 5);
@@ -132,11 +125,9 @@ export function ProjectOverviewTab({
   return (
     <div className="flex-1 overflow-y-auto text-theme-primary font-sans flex flex-col items-center">
       <PageContainer variant="default" className="!space-y-9">
-        {/* OVERVIEW Header & Edit Action Toggle */}
+        {/* Header & Edit Action Toggle */}
         <div className="flex items-center justify-between">
-          <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.60px]">
-            Overview
-          </div>
+          <CardHeader>Overview</CardHeader>
 
           {isEditingInline ? (
             <div className="flex items-center gap-2">
@@ -170,123 +161,30 @@ export function ProjectOverviewTab({
           )}
         </div>
 
-        {/* PROJECT META & TARGET GOAL SECTION */}
-        {isEditingInline ? (
-          <div className="p-4 bg-surface-l2 border border-theme-default rounded-[8px] space-y-4 animate-in fade-in duration-150">
-            <div>
-              <label className="text-[12px] font-mono text-theme-secondary block mb-1">Project Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full bg-surface-l4 border border-theme-default rounded-md px-3 py-2 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent"
-              />
-            </div>
+        {/* Project Meta Section */}
+        <ProjectMetaSection
+          project={project}
+          isEditingInline={isEditingInline}
+          name={name}
+          setName={setName}
+          description={description}
+          setDescription={setDescription}
+          targetGoal={targetGoal}
+          setTargetGoal={setTargetGoal}
+          status={status}
+          setStatus={setStatus}
+          targetDate={targetDate}
+          setTargetDate={setTargetDate}
+          tagsInput={tagsInput}
+          setTagsInput={setTagsInput}
+          parsedTagsList={parsedTagsList}
+        />
 
-            <div>
-              <label className="text-[12px] font-mono text-theme-secondary block mb-1">Description</label>
-              <textarea
-                rows={3}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full bg-surface-l4 border border-theme-default rounded-md p-3 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent resize-none"
-              />
-            </div>
-
-            <div>
-              <label className="text-[12px] font-mono text-theme-secondary block mb-1">Target Goal / Objective</label>
-              <textarea
-                rows={2}
-                value={targetGoal}
-                onChange={(e) => setTargetGoal(e.target.value)}
-                className="w-full bg-surface-l4 border border-theme-default rounded-md p-3 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent resize-none"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-[12px] font-mono text-theme-secondary block mb-1">Status</label>
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="w-full bg-surface-l4 border border-theme-default rounded-md px-3 py-2 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent"
-                >
-                  <option value="active">active</option>
-                  <option value="paused">paused</option>
-                  <option value="completed">completed</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-[12px] font-mono text-theme-secondary block mb-1">Target Due Date</label>
-                <input
-                  type="date"
-                  value={targetDate}
-                  onChange={(e) => setTargetDate(e.target.value)}
-                  className="w-full bg-surface-l4 border border-theme-default rounded-md px-3 py-2 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-[12px] font-mono text-theme-secondary block mb-1">Tags (comma-separated)</label>
-              <input
-                type="text"
-                value={tagsInput}
-                onChange={(e) => setTagsInput(e.target.value)}
-                placeholder="api, backend, q3..."
-                className="w-full bg-surface-l4 border border-theme-default rounded-md px-3 py-2 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent"
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-3 pt-1">
-            <p className="text-[14px] text-theme-primary/80 leading-[22.75px] font-normal">
-              {project.description || "Redesign the public REST API to support the v2 schema and OAuth 2.1."}
-            </p>
-
-            {/* Target Goal with Target Icon */}
-            <div className="flex items-start gap-2.5 pt-1">
-              <Target className="w-4 h-4 text-theme-secondary shrink-0 mt-1" />
-              <p className="text-[14px] text-theme-primary/80 leading-[22.75px]">
-                {targetGoal}
-              </p>
-            </div>
-
-            {/* Status & Target Date Line */}
-            <div className="flex items-center gap-4 text-[12px] pt-1">
-              <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-accent" />
-                <span className="text-theme-secondary capitalize">{project.status || "active"}</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-theme-secondary font-mono">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>{targetDate ? formatDateShort(targetDate) : "Sep 30"}</span>
-              </div>
-            </div>
-
-            {/* Project Tags */}
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {parsedTagsList.map((tag, index) => (
-                <span
-                  key={`${tag}-${index}`}
-                  className="px-2 py-0.5 bg-surface-l4 border border-theme-default rounded-[4px] text-[11px] text-theme-secondary font-medium flex items-center gap-1"
-                >
-                  <Tag className="w-2.5 h-2.5 text-theme-secondary" />
-                  <span>{tag}</span>
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* PROGRESS SECTION */}
+        {/* Progress Section */}
         <div className="space-y-3">
-          <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.60px]">
-            Progress
-          </div>
+          <CardHeader>Progress</CardHeader>
 
-          <div className="p-5 bg-surface-l2 border border-theme-default rounded-[8px] space-y-5 shadow-elevation-l3">
+          <Card className="space-y-5">
             <div className="flex items-center justify-between text-[14px]">
               <span className="text-theme-primary font-normal">{stats.completionPercent}% complete</span>
               <span className="text-theme-secondary font-mono text-[12px]">
@@ -296,34 +194,41 @@ export function ProjectOverviewTab({
 
             <ProgressBar percent={stats.completionPercent} color="var(--brand-accent)" />
 
-            {/* 4 Stat Cards */}
-            <div className="grid grid-cols-4 gap-2.5 pt-1">
-              <StatCard label="Backlog" value={stats.backlogCount} />
-              <StatCard label="In Progress" value={stats.inProgressCount} />
-              <StatCard label="Review" value={stats.reviewCount} />
-              <StatCard label="Done" value={stats.doneCount} />
+            <div className={`grid gap-2.5 pt-1 ${
+              stats.columnStats.length >= 5
+                ? "grid-cols-2 sm:grid-cols-5"
+                : stats.columnStats.length === 4
+                ? "grid-cols-2 sm:grid-cols-4"
+                : stats.columnStats.length === 3
+                ? "grid-cols-3"
+                : "grid-cols-2"
+            }`}>
+              {stats.columnStats.map((col) => (
+                <StatCard
+                  key={col.id}
+                  label={col.name}
+                  value={col.taskCount}
+                  color={col.color}
+                />
+              ))}
             </div>
-          </div>
+          </Card>
         </div>
 
-        {/* TODAY'S FOCUS SECTION */}
+        {/* Today's Focus Section */}
         <div className="space-y-3">
-          <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.60px]">
-            Today's focus
-          </div>
+          <CardHeader>Today's focus</CardHeader>
 
           <div
             onClick={() => focusTask && setSelectedTaskId(focusTask.id)}
-            className="p-4 bg-surface-l2 border border-theme-default rounded-[8px] flex items-center justify-between cursor-pointer hover:bg-surface-l4 transition-colors shadow-elevation-l3"
+            className="p-4 bg-surface-l2 border border-theme-default rounded-md flex items-center justify-between cursor-pointer hover:bg-surface-l4 transition-colors shadow-elevation-l3"
           >
             {focusTask ? (
               <>
                 <span className="text-[14px] font-medium text-theme-primary truncate pr-3">
                   {focusTask.title}
                 </span>
-                <span className="px-2 py-0.5 bg-semantic-danger-subtle text-semantic-danger text-[11px] font-medium rounded-md shrink-0 border border-semantic-danger/20">
-                  {focusTask.priority || "Urgent"}
-                </span>
+                <PriorityBadge priority={focusTask.priority} />
               </>
             ) : (
               <span className="text-[13px] text-theme-secondary">
@@ -333,13 +238,10 @@ export function ProjectOverviewTab({
           </div>
         </div>
 
-        {/* UPCOMING DEADLINES & RECENTLY COMPLETED GRID */}
+        {/* Upcoming Deadlines & Recently Completed Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {/* Upcoming Deadlines */}
           <div className="space-y-3">
-            <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.60px]">
-              Upcoming deadlines
-            </div>
+            <CardHeader>Upcoming deadlines</CardHeader>
             <div className="space-y-1">
               {upcomingTasks.length === 0 ? (
                 <div className="text-[12px] text-theme-secondary p-2">
@@ -364,11 +266,8 @@ export function ProjectOverviewTab({
             </div>
           </div>
 
-          {/* Recently Completed */}
           <div className="space-y-3">
-            <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.60px]">
-              Recently completed
-            </div>
+            <CardHeader>Recently completed</CardHeader>
             <div className="space-y-1">
               {completedTasks.length === 0 ? (
                 <div className="text-[12px] text-theme-secondary p-2">
@@ -392,103 +291,27 @@ export function ProjectOverviewTab({
           </div>
         </div>
 
-        {/* DYNAMIC RESOURCES SECTION */}
+        {/* Dynamic Resources Section */}
         <div className="space-y-3">
-          <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.60px]">
-            Resources & Links
-          </div>
+          <CardHeader>Resources & Links</CardHeader>
 
-          {isEditingInline ? (
-            <div className="p-4 bg-surface-l2 border border-theme-default rounded-[8px] space-y-4">
-              <div className="space-y-2">
-                <span className="text-[12px] font-mono text-theme-secondary">Custom Resource Links:</span>
-                {resources.map((res, index) => (
-                  <div key={res.id || res.url || `res-edit-${index}`} className="flex items-center justify-between p-2.5 bg-surface-l4 border border-theme-default rounded-md text-[13px]">
-                    <div className="truncate pr-2">
-                      <span className="text-theme-primary font-medium">{res.title}: </span>
-                      <span className="text-theme-secondary font-mono truncate">{res.url}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveResource(res.id)}
-                      className="p-1 text-semantic-danger hover:text-red-300 hover:bg-semantic-danger-subtle rounded-[4px] transition-colors"
-                      title="Remove resource"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              {/* Add New Custom Resource Link Form */}
-              <div className="pt-2 space-y-2 border-t border-theme-subtle">
-                <span className="text-[11px] text-theme-secondary font-mono">Add Custom Link (e.g. Video Tutorial, Figma):</span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <input
-                    type="text"
-                    value={newResTitle}
-                    onChange={(e) => setNewResTitle(e.target.value)}
-                    placeholder="Title (e.g. YouTube Guide)"
-                    className="bg-surface-l4 border border-theme-default rounded-md px-3 py-1.5 text-[13px] text-theme-primary focus:outline-none focus:border-brand-accent"
-                  />
-                  <input
-                    type="text"
-                    value={newResUrl}
-                    onChange={(e) => setNewResUrl(e.target.value)}
-                    placeholder="URL (e.g. https://...)"
-                    className="bg-surface-l4 border border-theme-default rounded-md px-3 py-1.5 text-[13px] text-theme-primary focus:outline-none focus:border-brand-accent"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={handleAddResource}
-                  disabled={!newResTitle.trim() || !newResUrl.trim()}
-                  className="px-3 py-1 bg-theme-default/10 hover:bg-theme-default/20 text-theme-primary text-[12px] font-medium rounded-md transition-colors disabled:opacity-40"
-                >
-                  + Add Link
-                </button>
-              </div>
-
-              <div className="pt-2">
-                <label className="text-[12px] font-mono text-theme-secondary block mb-1">Strategy Notes</label>
-                <textarea
-                  rows={2}
-                  value={strategyNotes}
-                  onChange={(e) => setStrategyNotes(e.target.value)}
-                  className="w-full bg-surface-l4 border border-theme-default rounded-md p-3 text-[13px] text-theme-primary focus:outline-none focus:border-brand-accent resize-none"
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {resources.map((res, index) => (
-                <a
-                  key={res.id || res.url || `res-${index}`}
-                  href={res.url.startsWith("http") ? res.url : `https://${res.url}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-3 py-2.5 bg-surface-l4 border border-theme-default rounded-md flex items-center justify-between text-[14px] text-theme-primary/90 hover:text-theme-primary hover:border-brand-accent/40 transition-colors cursor-pointer group"
-                >
-                  <div className="flex items-center gap-2.5 truncate">
-                    <LinkIcon className="w-3.5 h-3.5 text-theme-secondary group-hover:text-brand-accent transition-colors shrink-0" />
-                    <span className="font-medium truncate">{res.title}</span>
-                  </div>
-                  <ExternalLink className="w-3.5 h-3.5 text-theme-secondary opacity-60 group-hover:opacity-100 shrink-0" />
-                </a>
-              ))}
-
-              <div className="p-3 bg-surface-l2 border border-theme-default rounded-md text-[14px] text-theme-primary/80 leading-[22.75px]">
-                {strategyNotes}
-              </div>
-            </div>
-          )}
+          <ProjectResourcesSection
+            isEditingInline={isEditingInline}
+            resources={resources}
+            newResTitle={newResTitle}
+            setNewResTitle={setNewResTitle}
+            newResUrl={newResUrl}
+            setNewResUrl={setNewResUrl}
+            handleAddResource={handleAddResource}
+            handleRemoveResource={handleRemoveResource}
+            strategyNotes={strategyNotes}
+            setStrategyNotes={setStrategyNotes}
+          />
         </div>
 
-        {/* QUICK ACTIONS SECTION */}
+        {/* Quick Actions Section */}
         <div className="space-y-3">
-          <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.60px]">
-            Quick actions
-          </div>
+          <CardHeader>Quick actions</CardHeader>
 
           <div className="grid grid-cols-3 gap-3">
             <button
