@@ -170,9 +170,9 @@ function KanbanColumnInner({
       ref={setNodeRef}
       style={{
         ...style,
-        borderColor: showOver ? "var(--brand-accent)" : hexToRgba(columnColor, 0.15),
+        borderColor: showOver ? "var(--brand-accent)" : "transparent",
       }}
-      className={`relative w-full md:w-80 md:min-w-80 shrink-0 flex flex-col max-h-full rounded-md bg-surface-l2 border border-theme-subtle shadow-xs group/col ${
+      className={`relative w-full md:w-80 md:min-w-80 shrink-0 flex flex-col max-h-full rounded-md bg-surface-l2 shadow-xs group/col ${
         showOver ? "ring-2 ring-brand-accent/20 bg-surface-hover" : ""
       }`}
     >
@@ -211,12 +211,12 @@ function KanbanColumnInner({
               onBlur={handleRenameSubmit}
               onKeyDown={handleRenameKeyDown}
               maxLength={50}
-              className="w-full max-w-[140px] bg-theme-elevated border border-brand-accent rounded px-2 py-0.5 text-sm font-medium text-theme-primary outline-none"
+              className="w-full max-w-[140px] bg-theme-elevated border border-brand-accent rounded px-2 py-0.5 text-base font-medium text-theme-primary outline-none"
             />
           ) : (
-            <h3 className="text-sm font-medium text-theme-primary truncate">{column.name}</h3>
+            <h3 className="text-base font-medium text-theme-primary truncate">{column.name}</h3>
           )}
-          <span className="px-2 py-0.5 bg-theme-elevated text-theme-secondary font-mono text-xs rounded border border-theme-subtle shrink-0 leading-none">
+          <span className="px-2 py-0.5 bg-theme-elevated text-theme-secondary font-mono text-[13px] rounded border border-theme-subtle shrink-0 leading-none">
             {filteredTasks.length}
           </span>
         </div>
@@ -250,12 +250,7 @@ function KanbanColumnInner({
 
       {/* Task Stack Container */}
       <div className="flex-1 overflow-y-auto space-y-2.5 px-3.5 pb-3.5 min-h-[100px]">
-        <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-          {filteredTasks.map((task) => (
-            <KanbanCard key={task.id} task={task} onClick={() => onTaskClick(task)} />
-          ))}
-        </SortableContext>
-
+        {/* Add Task Button / Form at the VERY TOP of the Task List */}
         {isAdding ? (
           <div className="p-3 bg-theme-elevated border border-accent rounded-md space-y-2.5 shadow-md animate-in fade-in duration-100">
             <textarea
@@ -291,12 +286,19 @@ function KanbanColumnInner({
         ) : (
           <button
             onClick={() => setIsAdding(true)}
-            className="w-full h-10 md:h-9 px-3 border border-dashed border-theme-default hover:border-theme-hover rounded-md flex items-center gap-2 text-theme-secondary hover:text-theme-primary bg-theme-surface/50 hover:bg-theme-elevated transition-all text-xs font-medium"
+            className="w-full h-10 md:h-9 px-3 border border-dashed border-theme-default hover:border-theme-hover rounded-md flex items-center gap-2 text-theme-secondary hover:text-theme-primary bg-theme-surface/50 hover:bg-theme-elevated transition-all text-[13px] font-medium"
           >
             <Plus className="w-4 h-4 md:w-3.5 md:h-3.5 text-brand-accent" />
             <span>Add task</span>
           </button>
         )}
+
+        {/* Task Cards Stack */}
+        <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
+          {filteredTasks.map((task) => (
+            <KanbanCard key={task.id} task={task} onClick={() => onTaskClick(task)} />
+          ))}
+        </SortableContext>
       </div>
     </div>
   );

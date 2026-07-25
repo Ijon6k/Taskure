@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { getPriorityConfig } from "@/lib/helpers";
 
 interface PriorityBadgeProps {
@@ -9,31 +8,21 @@ interface PriorityBadgeProps {
   className?: string;
 }
 
-export function PriorityBadge({ priority, showDot = true, className = "" }: PriorityBadgeProps) {
+export function PriorityBadge({ priority, showDot = false, className = "" }: PriorityBadgeProps) {
   const config = getPriorityConfig(priority);
 
-  const getVariant = (p?: string) => {
-    switch (p) {
-      case "urgent":
-        return "danger";
-      case "high":
-        return "warning";
-      case "low":
-        return "success";
-      default:
-        return "secondary";
-    }
-  };
-
   return (
-    <Badge variant={getVariant(priority)} className={className}>
+    <div
+      className={`inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-normal text-slate-900 select-none border border-black/10 transition-colors shrink-0 ${className}`}
+      style={{ backgroundColor: config.bgPastel }}
+    >
       {showDot && (
         <span
-          className="w-1.5 h-1.5 rounded-full shrink-0 mr-1"
+          className="w-1.5 h-1.5 rounded-full shrink-0 mr-1.5 opacity-80"
           style={{ backgroundColor: config.color }}
         />
       )}
-      <span>{config.label}</span>
-    </Badge>
+      <span className="font-normal tracking-wide">{config.label}</span>
+    </div>
   );
 }

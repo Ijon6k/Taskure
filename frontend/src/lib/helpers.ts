@@ -22,40 +22,40 @@ export interface PriorityConfig {
   id: string;
   label: string;
   color: string;
-  bgSubtle: string;
+  bgPastel: string;
   textClass: string;
 }
 
 export const DEFAULT_PRIORITY: PriorityConfig = {
   id: "medium",
   label: "Medium",
-  color: "#7F9CF5",
-  bgSubtle: "bg-brand-accent-subtle",
-  textClass: "text-brand-accent",
+  color: "#3B82F6",
+  bgPastel: "#BAE6FD",
+  textClass: "text-slate-900",
 };
 
 export const PRIORITIES: Record<string, PriorityConfig> = {
   urgent: {
     id: "urgent",
     label: "Urgent",
-    color: "#F6685E",
-    bgSubtle: "rgba(246, 104, 94, 0.10)",
-    textClass: "text-semantic-danger",
+    color: "#E11D48",
+    bgPastel: "#FCA5A5",
+    textClass: "text-slate-900",
   },
   high: {
     id: "high",
     label: "High",
-    color: "#F6AD8A",
-    bgSubtle: "rgba(246, 173, 138, 0.10)",
-    textClass: "text-[#F6AD8A]",
+    color: "#D97706",
+    bgPastel: "#FDE68A",
+    textClass: "text-slate-900",
   },
   medium: DEFAULT_PRIORITY,
   low: {
     id: "low",
     label: "Low",
-    color: "#8A8F98",
-    bgSubtle: "rgba(138, 143, 152, 0.10)",
-    textClass: "text-theme-tertiary",
+    color: "#16A34A",
+    bgPastel: "#BBF7D0",
+    textClass: "text-slate-900",
   },
 };
 

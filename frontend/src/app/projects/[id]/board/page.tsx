@@ -102,11 +102,11 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
                 className="w-3 h-3 rounded-full shrink-0"
                 style={{ backgroundColor: project?.color || "#7F9CF5" }}
               />
-              <h1 className="text-[20px] font-medium text-theme-primary tracking-tight truncate">
+              <h1 className="text-[22px] font-medium text-theme-primary tracking-tight truncate">
                 {project?.name || "Loading..."}
               </h1>
               {project?.status && (
-                <span className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-theme-elevated border border-theme-default text-theme-secondary capitalize">
+                <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-theme-elevated border border-theme-default text-theme-secondary capitalize">
                   {project.status}
                 </span>
               )}
@@ -114,7 +114,7 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
 
             <button
               onClick={() => project && openEditProject(project)}
-              className="px-3 py-1 bg-surface-l3 hover:bg-surface-l4 border border-theme-subtle rounded-md text-[12px] text-theme-secondary hover:text-theme-primary font-medium transition-colors flex items-center gap-1.5 shrink-0"
+              className="px-3 py-1 bg-surface-l3 hover:bg-surface-l4 border border-theme-subtle rounded-md text-[13px] text-theme-secondary hover:text-theme-primary font-medium transition-colors flex items-center gap-1.5 shrink-0"
             >
               <Edit3 className="w-3.5 h-3.5 text-brand-accent" />
               <span>Project Settings</span>
@@ -123,7 +123,7 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
 
           {/* Main Navigation Tabs Bar */}
           <div className="flex items-center justify-between pt-1">
-            <div className="flex items-center gap-1 sm:gap-2 text-[13px] font-medium border-b border-transparent">
+            <div className="flex items-center gap-1 sm:gap-2 text-sm font-medium border-b border-transparent">
               <button
                 onClick={() => setActiveTab("overview")}
                 className={`px-2.5 py-1.5 md:py-2 border-b-2 flex items-center gap-1.5 transition-colors shrink-0 ${

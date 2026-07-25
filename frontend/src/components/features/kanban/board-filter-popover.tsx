@@ -35,10 +35,10 @@ export function BoardFilterPopover({
 
   const priorityOptions = [
     { key: "all", label: "All priorities" },
-    { key: "urgent", label: "Urgent", color: "#EF4444" },
-    { key: "high", label: "High", color: "#F97316" },
-    { key: "medium", label: "Medium", color: "#F59E0B" },
-    { key: "low", label: "Low", color: "#10B981" },
+    { key: "urgent", label: "Urgent", color: "#ff87a1ff" },
+    { key: "high", label: "High", color: "#ffc482ff" },
+    { key: "medium", label: "Medium", color: "#8eb9ffff" },
+    { key: "low", label: "Low", color: "#6ff39fff" },
   ];
 
   const dueDateOptions = [

@@ -14,8 +14,8 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType>({
   theme: "dark",
   accentColor: "#7F9CF5",
-  setTheme: () => {},
-  setAccentColor: () => {},
+  setTheme: () => { },
+  setAccentColor: () => { },
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {

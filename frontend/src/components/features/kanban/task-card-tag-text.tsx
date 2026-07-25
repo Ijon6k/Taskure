@@ -14,12 +14,12 @@ export function TaskCardTagText({ tags = [] }: TaskCardTagTextProps) {
   const style = getTagStyle(firstTag);
 
   return (
-    <div className="inline-flex items-center gap-1 text-[11px] font-medium tracking-tight truncate max-w-[150px]">
+    <div className="inline-flex items-center gap-1 text-xs font-medium       tracking-tight truncate max-w-[150px]">
       <span className="truncate" style={{ color: style.color }}>
         {firstTag}
       </span>
       {extraCount > 0 && (
-        <span className="text-theme-tertiary font-mono text-[10px] shrink-0 font-normal">
+        <span className="text-theme-tertiary font-mono text-[11px] shrink-0 font-normal">
           +{extraCount}
         </span>
       )}

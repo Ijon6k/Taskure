@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { CheckSquare, Square, ArrowRight } from "lucide-react";
 import { FocusResult, ChecklistItemData } from "@/lib/api";
+import { PriorityBadge } from "@/components/ui/priority-badge";
 
 interface TodaysFocusCardProps {
   focusData: FocusResult | null;
@@ -56,9 +57,7 @@ export function TodaysFocusCard({ focusData, loading }: TodaysFocusCardProps) {
           </h2>
         </div>
 
-        <span className="px-2.5 py-1 rounded-md bg-semantic-danger-subtle text-semantic-danger text-[11px] font-medium shrink-0 border border-semantic-danger/20">
-          {reason || (task.priority === "urgent" ? "Urgent" : task.priority)}
-        </span>
+        <PriorityBadge priority={task.priority} />
       </div>
 
       {/* Checklist Preview */}

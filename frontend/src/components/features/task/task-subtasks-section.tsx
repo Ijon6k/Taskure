@@ -63,7 +63,7 @@ export function TaskSubtasksSection({
                 type="checkbox"
                 checked={item.is_completed}
                 onChange={() => onToggleItem(item)}
-                className="w-4 h-4 rounded border-white/20 text-semantic-success focus:ring-0 accent-semantic-success cursor-pointer"
+                className="w-4 h-4 rounded border-white/20 text-[#68D391] focus:ring-0 accent-[#68D391] cursor-pointer"
               />
               <span
                 className={`truncate ${
@@ -78,7 +78,7 @@ export function TaskSubtasksSection({
             <button
               type="button"
               onClick={() => onDeleteItem(item.id)}
-              className="text-theme-secondary hover:text-red-400 opacity-0 group-hover:opacity-100 p-1 transition-opacity"
+              className="text-theme-secondary hover:text-semantic-danger opacity-0 group-hover:opacity-100 p-1 transition-opacity"
             >
               <X className="w-3.5 h-3.5" />
             </button>

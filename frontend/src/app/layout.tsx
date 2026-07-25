@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Inter_Tight, JetBrains_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import { QueryProvider } from "@/components/providers/query-provider";
 import "./globals.css";
 
-const interTight = Inter_Tight({
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-inter-tight",
+  variable: "--font-plus-jakarta",
   display: "swap",
 });
 
@@ -32,7 +32,7 @@ export default function RootLayout({
     <html
       lang="en"
       data-theme="dark"
-      className={`${interTight.variable} ${jetbrainsMono.variable}`}
+      className={`${plusJakartaSans.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
       <body className="antialiased font-sans">

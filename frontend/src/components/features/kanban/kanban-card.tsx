@@ -49,7 +49,7 @@ export const KanbanCard = memo(function KanbanCard({ task, onClick }: KanbanCard
       </div>
 
       {/* Task Title (Visually Dominant) */}
-      <h4 className="text-[13px] font-medium text-theme-primary group-hover:text-brand-accent transition-colors leading-snug line-clamp-2">
+      <h4 className="text-sm font-normal text-theme-primary group-hover:text-brand-accent transition-colors leading-snug line-clamp-2">
         {task.title}
       </h4>
 
@@ -60,7 +60,7 @@ export const KanbanCard = memo(function KanbanCard({ task, onClick }: KanbanCard
 
       {/* Card Footer Details */}
       {(checklistItems.length > 0 || task.due_date) && (
-        <div className="flex items-center justify-between text-[11px] font-mono text-theme-tertiary pt-0.5">
+        <div className="flex items-center justify-between text-xs font-mono text-theme-tertiary pt-0.5">
           <span>
             {checklistItems.length > 0
               ? `${completedChecklist}/${checklistItems.length} subtasks`
