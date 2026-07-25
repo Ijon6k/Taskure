@@ -48,27 +48,37 @@ function loadEnv(): Record<string, string> {
 const envVars = loadEnv();
 const PORT_WEB = envVars["PORT_WEB"] || process.env["PORT_WEB"] || "3000";
 const PORT_API = envVars["PORT_API"] || process.env["PORT_API"] || "4000";
-const PORT_NGINX = envVars["PORT_NGINX"] || process.env["PORT_NGINX"] || "1106";
 
-// ─── Menu Options Definition ──────────────────────────────────────────────────
+// ─── Categorized Menu Options Definition ─────────────────────────────────────
 
 interface PresetOption {
   id: string;
   name: string;
   description: string;
+  isHeader?: boolean;
 }
 
 const PRESET_OPTIONS: PresetOption[] = [
+  // Section 1: Development Modes
+  { id: "h-dev", name: "DEVELOPMENT MODES", description: "", isHeader: true },
   {
     id: "frontend-fast",
-    name: "Frontend Dev Mode (Fast Pre-built Prod Backend)",
-    description: `Instant backend startup (pre-built images) + Hot-reload Next.js on host (bun dev:${PORT_WEB}).`,
+    name: "Frontend Dev Mode (Fast Pre-built Backend)",
+    description: `Instant backend startup (pre-built images) + Hot-reload Next.js on host (http://localhost:${PORT_WEB}).`,
   },
   {
     id: "frontend-dev",
     name: "Frontend Dev Mode (Hot-Reload Dev Backend)",
-    description: `Runs Next.js on host (bun dev:${PORT_WEB}) + Hot-reload backend in Docker (${PORT_API}).`,
+    description: `Runs Next.js on host (http://localhost:${PORT_WEB}) + Hot-reload backend in Docker (${PORT_API}).`,
   },
+  {
+    id: "full",
+    name: "Full Stack Docker Mode",
+    description: "Runs all services (Frontend, Backend, DB) inside hot-reload Docker containers.",
+  },
+
+  // Section 2: Rebuild & Maintenance
+  { id: "h-rebuild", name: "CONTAINER REBUILD & MAINTENANCE", description: "", isHeader: true },
   {
     id: "rebuild-backend",
     name: "Rebuild Backend Containers (Go API & AI)",
@@ -77,18 +87,24 @@ const PRESET_OPTIONS: PresetOption[] = [
   {
     id: "rebuild-all",
     name: "Rebuild All Docker Containers",
-    description: "Forces a full rebuild of all Docker service images with --build flag.",
+    description: "Forces a full rebuild of all service Docker images with --build flag.",
   },
+
+  // Section 3: Data & Database Management
+  { id: "h-data", name: "DATABASE & DATA MANAGEMENT", description: "", isHeader: true },
   {
-    id: "full",
-    name: "Full Stack Docker Mode",
-    description: "Runs all services inside hot-reload Docker containers.",
+    id: "reset-data",
+    name: "Reset App Database & Volumes (Fresh Start)",
+    description: "Stops containers & wipes Postgres/Redis/MinIO data volumes for a fresh state.",
   },
   {
     id: "services",
     name: "Infrastructure Services Only",
     description: "Runs PostgreSQL, Redis, and MinIO storage in Docker.",
   },
+
+  // Section 4: Control & Stop
+  { id: "h-control", name: "CONTROL & STOP", description: "", isHeader: true },
   {
     id: "custom",
     name: "Custom Service Selection",
@@ -96,8 +112,13 @@ const PRESET_OPTIONS: PresetOption[] = [
   },
   {
     id: "stop",
-    name: "Stop All Dev Containers",
-    description: "Stops and removes all running development containers.",
+    name: "Stop All Running Containers",
+    description: "Stops and removes all running development containers without losing data.",
+  },
+  {
+    id: "clean-all",
+    name: "Clean Stop + Remove Volumes (Wipe All)",
+    description: "Stops containers, removes volumes, and cleans orphan instances.",
   },
 ];
 
@@ -116,13 +137,23 @@ const CUSTOM_SERVICES: CustomServiceOption[] = [
   { id: "web", name: "Next.js Web Frontend", checked: false },
 ];
 
-// ─── Terminal Key Listener ─────────────────────────────────────────────────────
+// ─── Interactive Terminal Key Listener ───────────────────────────────────────
 
 async function selectMenuOption(
   title: string,
   options: PresetOption[]
 ): Promise<number> {
-  let selectedIndex = 0;
+  // Find initial non-header option
+  let selectedIndex = options.findIndex((opt) => !opt.isHeader);
+  if (selectedIndex === -1) selectedIndex = 0;
+
+  const getNextSelectableIndex = (current: number, dir: 1 | -1): number => {
+    let next = (current + dir + options.length) % options.length;
+    while (options[next].isHeader) {
+      next = (next + dir + options.length) % options.length;
+    }
+    return next;
+  };
 
   return new Promise((resolve) => {
     const stdin = process.stdin;
@@ -136,15 +167,20 @@ async function selectMenuOption(
       print(`${DIM}Use UP/DOWN arrows to navigate, ENTER to select, ESC/Ctrl+C to quit${RESET}\n`);
 
       options.forEach((opt, idx) => {
+        if (opt.isHeader) {
+          print(`\n ${BOLD}${CYAN}--- ${opt.name} ---${RESET}`);
+          return;
+        }
+
         const isSelected = idx === selectedIndex;
-        const prefix = isSelected ? `${CYAN}> ` : "  ";
+        const prefix = isSelected ? `${CYAN}> ` : "   ";
         const label = isSelected
           ? `${BOLD}${CYAN}${opt.name}${RESET}`
           : `${opt.name}`;
 
         print(`${prefix}${label}`);
-        if (isSelected) {
-          print(`   ${DIM}${opt.description}${RESET}`);
+        if (isSelected && opt.description) {
+          print(`     ${DIM}${opt.description}${RESET}`);
         }
       });
       print("");
@@ -164,11 +200,11 @@ async function selectMenuOption(
         resolve(selectedIndex);
       } else if (key === "\u001b[A") {
         // Up arrow
-        selectedIndex = (selectedIndex - 1 + options.length) % options.length;
+        selectedIndex = getNextSelectableIndex(selectedIndex, -1);
         render();
       } else if (key === "\u001b[B") {
         // Down arrow
-        selectedIndex = (selectedIndex + 1) % options.length;
+        selectedIndex = getNextSelectableIndex(selectedIndex, 1);
         render();
       }
     };
@@ -223,7 +259,6 @@ async function customCheckboxMenu(
         print(`\n${YELLOW}Operation cancelled.${RESET}`);
         process.exit(0);
       } else if (key === " ") {
-        // Toggle space
         items[cursor].checked = !items[cursor].checked;
         render();
       } else if (key === "\r" || key === "\n") {
@@ -263,7 +298,19 @@ async function main() {
     print(`  --rebuild-backend   Force rebuild backend containers (api, ai)`);
     print(`  --rebuild-api       Force rebuild Go API container only`);
     print(`  --rebuild-all       Force rebuild all Docker containers`);
+    print(`  --reset-data, -v    Reset app database & storage volumes (fresh start)`);
+    print(`  --clean-all         Stop containers, remove volumes and orphan instances`);
     print(`  --stop              Stop all running dev containers`);
+    process.exit(0);
+  }
+
+  if (args.includes("--reset-data") || args.includes("-v") || args.includes("--wipe")) {
+    resetAppData();
+    process.exit(0);
+  }
+
+  if (args.includes("--clean-all")) {
+    cleanAllAndStop();
     process.exit(0);
   }
 
@@ -295,6 +342,10 @@ async function main() {
 
   if (choice === "stop") {
     stopContainers();
+  } else if (choice === "reset-data") {
+    resetAppData();
+  } else if (choice === "clean-all") {
+    cleanAllAndStop();
   } else if (choice === "frontend-fast") {
     runFrontendFastMode();
   } else if (choice === "frontend-dev" || choice === "frontend") {
@@ -324,14 +375,14 @@ function detectContainerEngine(): { binary: string; composeArgs: string[]; name:
     if (res.status === 0) {
       return { binary: "podman", composeArgs: ["compose"], name: "Podman" };
     }
-  } catch { }
+  } catch {}
 
   try {
     const res = spawnSync("podman-compose", ["version"], { encoding: "utf-8" });
     if (res.status === 0) {
       return { binary: "podman-compose", composeArgs: [], name: "Podman-Compose" };
     }
-  } catch { }
+  } catch {}
 
   return { binary: "docker", composeArgs: ["compose"], name: "Docker" };
 }
@@ -354,15 +405,84 @@ function rebuildAll() {
   print(`\n${GREEN}All containers rebuilt and started successfully.${RESET}\n`);
 }
 
-function stopContainers() {
+function resetAppData() {
   const engine = detectContainerEngine();
-  print(`\n${YELLOW}Stopping development containers using ${engine.name}...${RESET}`);
-  const fullArgs = [...engine.composeArgs, "-f", "compose.yaml", "-f", "compose.dev.yaml", "--profile", "*", "down", "--remove-orphans"];
+  print(`\n${YELLOW}Wiping app database & storage volumes using ${engine.name}...${RESET}`);
+  const fullArgs = [
+    ...engine.composeArgs,
+    "-f",
+    "compose.yaml",
+    "-f",
+    "compose.dev.yaml",
+    "--profile",
+    "*",
+    "down",
+    "-v",
+    "--remove-orphans",
+  ];
   const res = spawnSync(engine.binary, fullArgs, { stdio: "inherit" });
 
   if (res.status !== 0 && engine.binary !== "docker") {
     print(`${YELLOW}Podman command failed, falling back to Docker Compose...${RESET}`);
-    spawnSync("docker", ["compose", "-f", "compose.yaml", "-f", "compose.dev.yaml", "--profile", "*", "down", "--remove-orphans"], { stdio: "inherit" });
+    spawnSync(
+      "docker",
+      [
+        "compose",
+        "-f",
+        "compose.yaml",
+        "-f",
+        "compose.dev.yaml",
+        "--profile",
+        "*",
+        "down",
+        "-v",
+        "--remove-orphans",
+      ],
+      { stdio: "inherit" }
+    );
+  }
+
+  print(`\n${GREEN}[OK] App database & volumes wiped successfully.${RESET}`);
+  print(`${CYAN}Next start will launch with a fresh database & auto-migration.${RESET}\n`);
+}
+
+function cleanAllAndStop() {
+  resetAppData();
+}
+
+function stopContainers() {
+  const engine = detectContainerEngine();
+  print(`\n${YELLOW}Stopping development containers using ${engine.name}...${RESET}`);
+  const fullArgs = [
+    ...engine.composeArgs,
+    "-f",
+    "compose.yaml",
+    "-f",
+    "compose.dev.yaml",
+    "--profile",
+    "*",
+    "down",
+    "--remove-orphans",
+  ];
+  const res = spawnSync(engine.binary, fullArgs, { stdio: "inherit" });
+
+  if (res.status !== 0 && engine.binary !== "docker") {
+    print(`${YELLOW}Podman command failed, falling back to Docker Compose...${RESET}`);
+    spawnSync(
+      "docker",
+      [
+        "compose",
+        "-f",
+        "compose.yaml",
+        "-f",
+        "compose.dev.yaml",
+        "--profile",
+        "*",
+        "down",
+        "--remove-orphans",
+      ],
+      { stdio: "inherit" }
+    );
   }
 
   print(`${GREEN}Containers stopped successfully.${RESET}\n`);
@@ -388,13 +508,31 @@ function runProdDockerCompose(args: string[]) {
 
 function runDockerCompose(args: string[]) {
   let engine = detectContainerEngine();
-  let fullArgs = [...engine.composeArgs, "-f", "compose.yaml", "-f", "compose.dev.yaml", "--profile", "*", ...args];
+  let fullArgs = [
+    ...engine.composeArgs,
+    "-f",
+    "compose.yaml",
+    "-f",
+    "compose.dev.yaml",
+    "--profile",
+    "*",
+    ...args,
+  ];
   print(`\n${CYAN}Running (${engine.name}): ${engine.binary} ${fullArgs.join(" ")}${RESET}\n`);
   let result = spawnSync(engine.binary, fullArgs, { stdio: "inherit" });
 
   if (result.status !== 0 && engine.binary !== "docker") {
     print(`\n${YELLOW}Podman command failed, falling back to Docker Compose...${RESET}\n`);
-    const dockerArgs = ["compose", "-f", "compose.yaml", "-f", "compose.dev.yaml", "--profile", "*", ...args];
+    const dockerArgs = [
+      "compose",
+      "-f",
+      "compose.yaml",
+      "-f",
+      "compose.dev.yaml",
+      "--profile",
+      "*",
+      ...args,
+    ];
     result = spawnSync("docker", dockerArgs, { stdio: "inherit" });
   }
 

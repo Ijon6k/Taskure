@@ -46,60 +46,6 @@ export function ProjectCard({
     );
   }
 
-  if (variant === "detailed") {
-    return (
-      <div className="relative group/card h-full">
-        <Link
-          href={`/projects/${project.id}/board`}
-          className={`p-4 bg-surface-l3 border border-theme-subtle hover:border-theme-default hover:bg-surface-hover rounded-md flex flex-col justify-between h-full min-h-[140px] space-y-3 cursor-pointer transition-colors duration-150 active:scale-[0.99] group shadow-elevation-l3 ${className}`}
-        >
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between pr-6">
-              <div className="flex items-center gap-2 truncate">
-                <span
-                  className="w-2 h-2 rounded-full shrink-0"
-                  style={{ backgroundColor: projectColor }}
-                />
-                <span className="text-[14px] font-medium text-theme-primary group-hover:text-brand-accent transition-colors truncate">
-                  {project.name}
-                </span>
-              </div>
-            </div>
-
-            <p className="text-[12px] text-theme-secondary line-clamp-2 min-h-[2rem]">
-              {project.description || (
-                <span className="invisible">No description provided</span>
-              )}
-            </p>
-          </div>
-
-          <div className="flex items-center justify-between text-[12px] text-theme-secondary mt-auto">
-            <span>
-              {doneCount}/{totalCount} tasks
-            </span>
-            <span className="capitalize">{project.status || "active"}</span>
-          </div>
-        </Link>
-
-        {onEdit && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onEdit(project);
-            }}
-            className="absolute top-2.5 right-2.5 w-7 h-7 rounded-md flex items-center justify-center text-theme-secondary opacity-100 md:opacity-0 md:group-hover/card:opacity-100 hover:bg-theme-elevated hover:text-theme-primary transition-all duration-150"
-            title="Project settings"
-          >
-            <Settings className="w-3.5 h-3.5" />
-          </button>
-        )}
-      </div>
-    );
-  }
-
-  // Default "grid" variant
   return (
     <div className="relative group/card h-full">
       <Link
@@ -125,21 +71,27 @@ export function ProjectCard({
         </div>
 
         <div className="space-y-2 mt-auto">
-          <div className="w-full h-1 bg-theme-elevated rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-300"
-              style={{
-                width: `${percent}%`,
-                backgroundColor: projectColor,
-              }}
-            />
-          </div>
+          {variant === "grid" && (
+            <div className="w-full h-1 bg-theme-elevated rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-300"
+                style={{
+                  width: `${percent}%`,
+                  backgroundColor: projectColor,
+                }}
+              />
+            </div>
+          )}
 
           <div className="flex items-center justify-between text-[12px] text-theme-secondary">
             <span>
-              {doneCount}/{totalCount} done
+              {doneCount}/{totalCount} {variant === "grid" ? "done" : "tasks"}
             </span>
-            <span className="font-mono">{percent}%</span>
+            {variant === "grid" ? (
+              <span className="font-mono">{percent}%</span>
+            ) : (
+              <span className="capitalize">{project.status || "active"}</span>
+            )}
           </div>
         </div>
       </Link>

@@ -1,10 +1,12 @@
 package service
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/models"
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/repository"
+	"gorm.io/datatypes"
 )
 
 type SeedService interface {
@@ -32,157 +34,233 @@ func NewSeedService(
 	}
 }
 
+func jsonRaw(v interface{}) datatypes.JSON {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return datatypes.JSON([]byte("{}"))
+	}
+	return datatypes.JSON(b)
+}
+
 func (s *seedService) SeedDemoData() ([]string, error) {
 	ws, err := s.workspaceRepo.EnsureUserAndWorkspace()
 	if err != nil {
 		return nil, err
 	}
 
-	dueInTwoDays := time.Now().AddDate(0, 0, 2)
-	dueTomorrow := time.Now().AddDate(0, 0, 1)
-	dueNextWeek := time.Now().AddDate(0, 0, 7)
+	today := time.Now()
+	tomorrow := time.Now().AddDate(0, 0, 1)
+	nextWeek := time.Now().AddDate(0, 0, 7)
 
-	// 1. Project: Q3 API Redesign
+	// ============================================================
+	// DEMO PROJECT 1: Welcome & Getting Started (Intro Project)
+	// ============================================================
+	p1Settings := map[string]interface{}{
+		"target_goal":    "Master all Kanban features and set up your team workflow in 5 minutes.",
+		"target_date":    today.AddDate(0, 3, 0).Format("2006-01-02"),
+		"tags":           []string{"guide", "onboarding", "tips"},
+		"resources": []map[string]string{
+			{"title": "Keyboard Shortcuts Guide", "url": "https://github.com"},
+			{"title": "Kanban Best Practices", "url": "https://kanbanize.com"},
+		},
+		"strategy_notes": "Use this intro project as a sandbox to test task creation, column reordering, tag filtering, and focus mode.",
+	}
+
 	p1 := models.Project{
-		Name:        "Q3 API Redesign",
-		Description: "Redesign the public REST API to support the v2 schema and OAuth 2.1.",
-		Color:       "#7F9CF5",
+		Name:        "Welcome & Getting Started",
+		Description: "Interactive guide to explore all Kanban features: columns, tasks, checklists, tags, shortcuts, and focus mode.",
+		Color:       "#6366F1",
+		Icon:        "🚀",
+		Status:      "active",
+		IsPinned:    true,
+		WorkspaceID: ws.ID,
+		OwnerID:     ws.OwnerID,
+		Settings:    jsonRaw(p1Settings),
+	}
+	_ = s.projectRepo.CreateProject(&p1)
+
+	col1_1 := models.Column{Name: "Getting Started", Position: 0, ProjectID: p1.ID, Color: "#6366F1"}
+	col1_2 := models.Column{Name: "In Progress", Position: 1, ProjectID: p1.ID, Color: "#3B82F6"}
+	col1_3 := models.Column{Name: "Completed", Position: 2, ProjectID: p1.ID, Color: "#22C55E"}
+	_ = s.columnRepo.CreateColumn(&col1_1)
+	_ = s.columnRepo.CreateColumn(&col1_2)
+	_ = s.columnRepo.CreateColumn(&col1_3)
+
+	// Task 1: Explore Board
+	t1_1 := models.Task{
+		Title:       "Explore the Kanban Board",
+		Description: "Drag tasks between columns, click to open task details drawer, add subtask checklists, and assign tags.",
+		ColumnID:    col1_1.ID,
+		ProjectID:   p1.ID,
+		Priority:    "high",
+		Status:      "todo",
+		Position:    0,
+		Tags:        jsonRaw([]string{"guide", "interactive"}),
+	}
+	_ = s.taskRepo.CreateTask(&t1_1)
+	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Try dragging this task to In Progress", IsCompleted: true, Position: 0, TaskID: t1_1.ID})
+	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Click this task to view drawer details", IsCompleted: true, Position: 1, TaskID: t1_1.ID})
+	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Add a new subtask checklist item", IsCompleted: false, Position: 2, TaskID: t1_1.ID})
+
+	// Task 2: Keyboard Shortcuts
+	t1_2 := models.Task{
+		Title:       "Try Keyboard Shortcuts",
+		Description: "Press 'N' for new project modal, Shift+'?' for shortcuts guide, and Esc to cancel or close dialogs.",
+		ColumnID:    col1_1.ID,
+		ProjectID:   p1.ID,
+		Priority:    "medium",
+		Status:      "todo",
+		Position:    1,
+		Tags:        jsonRaw([]string{"shortcuts", "tips"}),
+	}
+	_ = s.taskRepo.CreateTask(&t1_2)
+	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Press 'N' to open New Project modal", IsCompleted: false, Position: 0, TaskID: t1_2.ID})
+	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Press '?' to open Keyboard Shortcuts guide", IsCompleted: false, Position: 1, TaskID: t1_2.ID})
+
+	// Task 3: Today's Focus
+	t1_3 := models.Task{
+		Title:       "Review Today's Focus Task",
+		Description: "Urgent tasks due today appear directly on your Home Dashboard Today's Focus card.",
+		ColumnID:    col1_2.ID,
+		ProjectID:   p1.ID,
+		Priority:    "urgent",
+		Status:      "in_progress",
+		Position:    0,
+		DueDate:     &today,
+		Tags:        jsonRaw([]string{"focus", "urgent"}),
+	}
+	_ = s.taskRepo.CreateTask(&t1_3)
+	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "View focus task on home dashboard", IsCompleted: true, Position: 0, TaskID: t1_3.ID})
+	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Complete focus task subitems", IsCompleted: false, Position: 1, TaskID: t1_3.ID})
+
+	// Task 4: Custom Project
+	t1_4 := models.Task{
+		Title:       "Set up Your First Custom Project",
+		Description: "Create a custom project with custom column colors, tag templates, and team member permissions.",
+		ColumnID:    col1_3.ID,
+		ProjectID:   p1.ID,
+		Priority:    "medium",
+		Status:      "done",
+		Position:    0,
+		Tags:        jsonRaw([]string{"setup"}),
+	}
+	_ = s.taskRepo.CreateTask(&t1_4)
+	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Click + New Project in top bar", IsCompleted: true, Position: 0, TaskID: t1_4.ID})
+	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Choose custom project color & icon", IsCompleted: true, Position: 1, TaskID: t1_4.ID})
+
+	// ============================================================
+	// DEMO PROJECT 2: Product Roadmap 2026 (Generic Theme Project)
+	// ============================================================
+	p2Settings := map[string]interface{}{
+		"target_goal":    "Ship core v2.0 features, 99.9% uptime, and sub-100ms response time.",
+		"target_date":    today.AddDate(0, 6, 0).Format("2006-01-02"),
+		"tags":           []string{"roadmap", "product", "q3-goals"},
+		"resources": []map[string]string{
+			{"title": "OpenAPI Spec Documentation", "url": "https://swagger.io"},
+			{"title": "Figma Design System Tokens", "url": "https://figma.com"},
+		},
+		"strategy_notes": "Prioritize high-impact performance items, dark OLED theme, and token authentication security before release.",
+	}
+
+	p2 := models.Project{
+		Name:        "Product Roadmap 2026",
+		Description: "Feature backlog, UI redesign, performance optimization, and release planning for Q3/Q4.",
+		Color:       "#10B981",
 		Icon:        "⚡",
 		Status:      "active",
 		IsPinned:    true,
 		WorkspaceID: ws.ID,
 		OwnerID:     ws.OwnerID,
+		Settings:    jsonRaw(p2Settings),
 	}
-	_ = s.projectRepo.CreateProject(&p1)
+	_ = s.projectRepo.CreateProject(&p2)
 
-	col1 := models.Column{Name: "Backlog", Position: 0, ProjectID: p1.ID, Color: "#8A8F98"}
-	col2 := models.Column{Name: "Todo", Position: 1, ProjectID: p1.ID, Color: "#6B7280"}
-	col3 := models.Column{Name: "In Progress", Position: 2, ProjectID: p1.ID, Color: "#7F9CF5"}
-	col4 := models.Column{Name: "Done", Position: 3, ProjectID: p1.ID, Color: "#68D391"}
-	_ = s.columnRepo.CreateColumn(&col1)
-	_ = s.columnRepo.CreateColumn(&col2)
-	_ = s.columnRepo.CreateColumn(&col3)
-	_ = s.columnRepo.CreateColumn(&col4)
+	col2_1 := models.Column{Name: "Backlog", Position: 0, ProjectID: p2.ID, Color: "#6B7280"}
+	col2_2 := models.Column{Name: "To Do", Position: 1, ProjectID: p2.ID, Color: "#F59E0B"}
+	col2_3 := models.Column{Name: "In Progress", Position: 2, ProjectID: p2.ID, Color: "#3B82F6"}
+	col2_4 := models.Column{Name: "Done", Position: 3, ProjectID: p2.ID, Color: "#10B981"}
+	_ = s.columnRepo.CreateColumn(&col2_1)
+	_ = s.columnRepo.CreateColumn(&col2_2)
+	_ = s.columnRepo.CreateColumn(&col2_3)
+	_ = s.columnRepo.CreateColumn(&col2_4)
 
-	lblFeature := models.Label{Name: "Feature", Color: "#7F9CF5", WorkspaceID: ws.ID}
-	lblRefactor := models.Label{Name: "Refactor", Color: "#B794F6", WorkspaceID: ws.ID}
-	lblBug := models.Label{Name: "Bug", Color: "#F6685E", WorkspaceID: ws.ID}
-	lblDocs := models.Label{Name: "Docs", Color: "#68D391", WorkspaceID: ws.ID}
-
-	t1 := models.Task{
-		Title:       "Migrate pagination to cursor-based model",
-		Description: "Refactor list endpoints to use opaque cursor tokens for improved scaling.",
-		ColumnID:    col3.ID,
-		ProjectID:   p1.ID,
-		Priority:    "urgent",
-		Status:      "in_progress",
-		Position:    0,
-		DueDate:     &dueInTwoDays,
-		Labels:      []models.Label{lblRefactor},
-	}
-	_ = s.taskRepo.CreateTask(&t1)
-	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Implement cursor encoding", IsCompleted: true, Position: 0, TaskID: t1.ID})
-	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Update list endpoints", IsCompleted: true, Position: 1, TaskID: t1.ID})
-	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Update SDK helpers", IsCompleted: false, Position: 2, TaskID: t1.ID})
-
-	t2 := models.Task{
-		Title:       "Implement auth refresh token rotation",
-		Description: "Add sliding expiration for session tokens.",
-		ColumnID:    col1.ID,
-		ProjectID:   p1.ID,
+	// Task 1 (Backlog): OAuth 2.1
+	t2_1 := models.Task{
+		Title:       "OAuth 2.1 & Refresh Token Rotation",
+		Description: "Implement secure refresh token sliding window and session revocation endpoint.",
+		ColumnID:    col2_1.ID,
+		ProjectID:   p2.ID,
 		Priority:    "high",
 		Status:      "todo",
 		Position:    0,
-		DueDate:     &dueTomorrow,
-		Labels:      []models.Label{lblFeature},
+		DueDate:     &nextWeek,
+		Tags:        jsonRaw([]string{"backend", "security"}),
 	}
-	_ = s.taskRepo.CreateTask(&t2)
-	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Design refresh token schema", IsCompleted: true, Position: 0, TaskID: t2.ID})
-	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Implement store & revocation", IsCompleted: false, Position: 1, TaskID: t2.ID})
-	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Unit tests", IsCompleted: false, Position: 2, TaskID: t2.ID})
+	_ = s.taskRepo.CreateTask(&t2_1)
+	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Design token revocation schema", IsCompleted: true, Position: 0, TaskID: t2_1.ID})
+	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Add refresh handler endpoint", IsCompleted: false, Position: 1, TaskID: t2_1.ID})
+	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Write integration test suite", IsCompleted: false, Position: 2, TaskID: t2_1.ID})
 
-	t3 := models.Task{
-		Title:       "Add rate limiting to public endpoints",
-		Description: "Enforce strict per-key rate limits with Redis token bucket.",
-		ColumnID:    col1.ID,
-		ProjectID:   p1.ID,
-		Priority:    "urgent",
-		Status:      "todo",
-		Position:    1,
-		DueDate:     &dueInTwoDays,
-		Labels:      []models.Label{lblBug},
-	}
-	_ = s.taskRepo.CreateTask(&t3)
-	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Redis rate limit middleware", IsCompleted: true, Position: 0, TaskID: t3.ID})
-	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Test limit response headers", IsCompleted: false, Position: 1, TaskID: t3.ID})
-
-	t4 := models.Task{
-		Title:       "Write OpenAPI 3.1 spec for v2",
-		Description: "Complete API specification doc.",
-		ColumnID:    col1.ID,
-		ProjectID:   p1.ID,
+	// Task 2 (Backlog): Dark OLED
+	t2_2 := models.Task{
+		Title:       "Global Dark OLED & Theme Palette",
+		Description: "Support OLED pitch black surface mode with high contrast slate typography tokens.",
+		ColumnID:    col2_1.ID,
+		ProjectID:   p2.ID,
 		Priority:    "low",
 		Status:      "todo",
-		Position:    2,
-		DueDate:     &dueNextWeek,
-		Labels:      []models.Label{lblDocs},
+		Position:    1,
+		Tags:        jsonRaw([]string{"design", "ui"}),
 	}
-	_ = s.taskRepo.CreateTask(&t4)
+	_ = s.taskRepo.CreateTask(&t2_2)
 
-	// 2. Project: Mobile App Redesign
-	p2 := models.Project{
-		Name:        "Mobile App Redesign",
-		Description: "Complete visual refresh of the iOS and Android apps for the 3.0 release.",
-		Color:       "#B794F6",
-		Icon:        "📱",
-		Status:      "active",
-		IsPinned:    true,
-		WorkspaceID: ws.ID,
-		OwnerID:     ws.OwnerID,
+	// Task 3 (To Do): Cursor Pagination
+	t2_3 := models.Task{
+		Title:       "Cursor-based Database Pagination",
+		Description: "Replace offset pagination with opaque cursor tokens for scalable list queries.",
+		ColumnID:    col2_2.ID,
+		ProjectID:   p2.ID,
+		Priority:    "urgent",
+		Status:      "todo",
+		Position:    0,
+		DueDate:     &tomorrow,
+		Tags:        jsonRaw([]string{"backend", "performance"}),
 	}
-	_ = s.projectRepo.CreateProject(&p2)
-	_ = s.columnRepo.CreateColumn(&models.Column{Name: "Todo", Position: 0, ProjectID: p2.ID, Color: "#6B7280"})
-	_ = s.columnRepo.CreateColumn(&models.Column{Name: "In Progress", Position: 1, ProjectID: p2.ID, Color: "#3B82F6"})
-	_ = s.columnRepo.CreateColumn(&models.Column{Name: "Done", Position: 2, ProjectID: p2.ID, Color: "#22C55E"})
+	_ = s.taskRepo.CreateTask(&t2_3)
+	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Encode base64 cursor token", IsCompleted: true, Position: 0, TaskID: t2_3.ID})
+	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Benchmark 100k records query", IsCompleted: false, Position: 1, TaskID: t2_3.ID})
 
-	// 3. Project: Design System v2
-	p3 := models.Project{
-		Name:        "Design System v2",
-		Description: "A unified, token-based component library across all product surfaces.",
-		Color:       "#68D391",
-		Icon:        "🎨",
-		Status:      "active",
-		IsPinned:    false,
-		WorkspaceID: ws.ID,
-		OwnerID:     ws.OwnerID,
+	// Task 4 (In Progress): Board Drag & Drop
+	t2_4 := models.Task{
+		Title:       "Kanban Board Drag & Drop Performance",
+		Description: "Optimize dnd-kit sensor delays and memoize column card renders for smooth 60fps dragging.",
+		ColumnID:    col2_3.ID,
+		ProjectID:   p2.ID,
+		Priority:    "urgent",
+		Status:      "in_progress",
+		Position:    0,
+		DueDate:     &today,
+		Tags:        jsonRaw([]string{"frontend", "performance"}),
 	}
-	_ = s.projectRepo.CreateProject(&p3)
+	_ = s.taskRepo.CreateTask(&t2_4)
+	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Memoize KanbanColumnInner props", IsCompleted: true, Position: 0, TaskID: t2_4.ID})
+	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Fix touch device drag sensor threshold", IsCompleted: true, Position: 1, TaskID: t2_4.ID})
+	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Verify 60fps card drag smooth animation", IsCompleted: false, Position: 2, TaskID: t2_4.ID})
 
-	// 4. Project: Content Calendar
-	p4 := models.Project{
-		Name:        "Content Calendar",
-		Description: "Plan and schedule editorial content for the next quarter.",
-		Color:       "#F6AD8A",
-		Icon:        "📅",
-		Status:      "paused",
-		IsPinned:    false,
-		WorkspaceID: ws.ID,
-		OwnerID:     ws.OwnerID,
+	// Task 5 (Done): 6-Level Elevation
+	t2_5 := models.Task{
+		Title:       "6-Level Surface Elevation System",
+		Description: "Implement CSS elevation variables --surface-l0 to --surface-l5 for layered UI hierarchy.",
+		ColumnID:    col2_4.ID,
+		ProjectID:   p2.ID,
+		Priority:    "medium",
+		Status:      "done",
+		Position:    0,
+		Tags:        jsonRaw([]string{"frontend", "design-system"}),
 	}
-	_ = s.projectRepo.CreateProject(&p4)
+	_ = s.taskRepo.CreateTask(&t2_5)
+	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Define CSS variables in globals.css", IsCompleted: true, Position: 0, TaskID: t2_5.ID})
+	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Update cards, dropdowns, and modals", IsCompleted: true, Position: 1, TaskID: t2_5.ID})
 
-	// 5. Project: Onboarding Flow
-	p5 := models.Project{
-		Name:        "Onboarding Flow",
-		Description: "Streamline user activation from signup to first meaningful action.",
-		Color:       "#F6A5C0",
-		Icon:        "🚀",
-		Status:      "active",
-		IsPinned:    false,
-		WorkspaceID: ws.ID,
-		OwnerID:     ws.OwnerID,
-	}
-	_ = s.projectRepo.CreateProject(&p5)
-
-	return []string{p1.Name, p2.Name, p3.Name, p4.Name, p5.Name}, nil
+	return []string{p1.Name, p2.Name}, nil
 }
