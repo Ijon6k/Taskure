@@ -86,7 +86,7 @@ function KanbanColumnInner({
     });
   }, [tasks, searchQuery, selectedTag]);
 
-  const taskIds = filteredTasks.map((t) => t.id);
+  const taskIds = useMemo(() => filteredTasks.map((t) => t.id), [filteredTasks]);
 
   const handleCreateInlineTask = async () => {
     if (!taskTitle.trim() || isSubmitting) return;
@@ -286,10 +286,11 @@ function KanbanColumnInner({
         ) : (
           <button
             onClick={() => setIsAdding(true)}
-            className="w-full h-10 md:h-9 px-3 border border-dashed border-theme-default hover:border-theme-hover rounded-md flex items-center gap-2 text-theme-secondary hover:text-theme-primary bg-theme-surface/50 hover:bg-theme-elevated transition-all text-[13px] font-medium"
+            className="w-full h-9 border border-dashed border-theme-default hover:border-brand-accent/50 rounded-md flex items-center justify-center text-theme-secondary hover:text-brand-accent bg-theme-surface/30 hover:bg-theme-elevated transition-all group"
+            title="Add task"
+            aria-label="Add task to column"
           >
-            <Plus className="w-4 h-4 md:w-3.5 md:h-3.5 text-brand-accent" />
-            <span>Add task</span>
+            <Plus className="w-4 h-4 text-brand-accent stroke-[2.5] group-hover:scale-110 transition-transform" />
           </button>
         )}
 

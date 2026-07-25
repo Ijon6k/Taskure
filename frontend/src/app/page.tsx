@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { FolderPlus, FolderKanban, Pin, Clock } from "lucide-react";
 import { useProjects, useFocusTask } from "@/lib/api";
@@ -22,8 +23,8 @@ export default function HomePage() {
   const focusData = focusResp?.focus || null;
   const isLoading = isProjectsLoading || isFocusLoading;
 
-  const pinnedProjects = projects.filter((p) => p.is_pinned);
-  const recentProjects = projects.slice(0, 3);
+  const pinnedProjects = useMemo(() => projects.filter((p) => p.is_pinned), [projects]);
+  const recentProjects = useMemo(() => projects.slice(0, 3), [projects]);
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-surface-l0 text-theme-primary font-sans select-none overflow-hidden">

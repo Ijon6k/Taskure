@@ -101,12 +101,19 @@ const GLOBAL_CATEGORIES_KEY = "kanban_global_tag_categories";
 const GLOBAL_TAGS_KEY = "kanban_global_tags";
 const PROJECT_TAGS_PREFIX = "kanban_project_tags_";
 
-// Helper to Safely Access LocalStorage
+// Helper to Safely Access LocalStorage with In-Memory Cache
+const storageCache = new Map<string, any>();
+
 function getStorage<T>(key: string, defaultValue: T): T {
   if (typeof window === "undefined") return defaultValue;
+  if (storageCache.has(key)) {
+    return storageCache.get(key) as T;
+  }
   try {
     const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : defaultValue;
+    const parsed = item ? JSON.parse(item) : defaultValue;
+    storageCache.set(key, parsed);
+    return parsed;
   } catch {
     return defaultValue;
   }
@@ -114,6 +121,7 @@ function getStorage<T>(key: string, defaultValue: T): T {
 
 function setStorage<T>(key: string, value: T): void {
   if (typeof window === "undefined") return;
+  storageCache.set(key, value);
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch {

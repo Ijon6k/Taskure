@@ -112,7 +112,7 @@ export function ProjectOverviewTab({
         tags: parsedTags,
         resources: resources,
         strategy_notes: strategyNotes.trim(),
-      } as any);
+      });
 
       toast.success("Overview updated successfully!");
       setIsEditingInline(false);
@@ -143,7 +143,7 @@ export function ProjectOverviewTab({
               <button
                 type="button"
                 onClick={() => setIsEditingInline(false)}
-                className="px-2.5 py-1 bg-surface-l3 hover:bg-surface-l4 border border-theme-default rounded-[6px] text-[12px] text-theme-secondary hover:text-theme-primary flex items-center gap-1 transition-colors cursor-pointer"
+                className="px-2.5 py-1 bg-surface-l3 hover:bg-surface-l4 border border-theme-default rounded-md text-[12px] text-theme-secondary hover:text-theme-primary flex items-center gap-1 transition-colors cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
                 <span>Cancel</span>
@@ -152,7 +152,7 @@ export function ProjectOverviewTab({
                 type="button"
                 onClick={handleSaveInline}
                 disabled={saving}
-                className="px-3 py-1 bg-brand-accent hover:bg-brand-accent-hover text-black font-medium rounded-[6px] text-[12px] hover:opacity-90 flex items-center gap-1 transition-opacity cursor-pointer disabled:opacity-50"
+                className="px-3 py-1 bg-brand-accent hover:bg-brand-accent-hover text-black font-medium rounded-md text-[12px] hover:opacity-90 flex items-center gap-1 transition-opacity cursor-pointer disabled:opacity-50"
               >
                 <Check className="w-3.5 h-3.5 font-bold" />
                 <span>{saving ? "Saving..." : "Save Changes"}</span>
@@ -162,7 +162,7 @@ export function ProjectOverviewTab({
             <button
               type="button"
               onClick={handleStartEdit}
-              className="px-2.5 py-1 bg-surface-l3 hover:bg-surface-l4 border border-theme-default rounded-[6px] text-[12px] text-theme-secondary hover:text-theme-primary flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+              className="px-2.5 py-1 bg-surface-l3 hover:bg-surface-l4 border border-theme-default rounded-md text-[12px] text-theme-secondary hover:text-theme-primary flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
             >
               <Edit3 className="w-3.5 h-3.5 text-brand-accent" />
               <span>Edit</span>
@@ -179,7 +179,7 @@ export function ProjectOverviewTab({
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-surface-l4 border border-theme-default rounded-[6px] px-3 py-2 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent"
+                className="w-full bg-surface-l4 border border-theme-default rounded-md px-3 py-2 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent"
               />
             </div>
 
@@ -189,7 +189,7 @@ export function ProjectOverviewTab({
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full bg-surface-l4 border border-theme-default rounded-[6px] p-3 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent resize-none"
+                className="w-full bg-surface-l4 border border-theme-default rounded-md p-3 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent resize-none"
               />
             </div>
 
@@ -199,7 +199,7 @@ export function ProjectOverviewTab({
                 rows={2}
                 value={targetGoal}
                 onChange={(e) => setTargetGoal(e.target.value)}
-                className="w-full bg-surface-l4 border border-theme-default rounded-[6px] p-3 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent resize-none"
+                className="w-full bg-surface-l4 border border-theme-default rounded-md p-3 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent resize-none"
               />
             </div>
 
@@ -209,7 +209,7 @@ export function ProjectOverviewTab({
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  className="w-full bg-surface-l4 border border-theme-default rounded-[6px] px-3 py-2 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent"
+                  className="w-full bg-surface-l4 border border-theme-default rounded-md px-3 py-2 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent"
                 >
                   <option value="active">active</option>
                   <option value="paused">paused</option>
@@ -223,7 +223,7 @@ export function ProjectOverviewTab({
                   type="date"
                   value={targetDate}
                   onChange={(e) => setTargetDate(e.target.value)}
-                  className="w-full bg-surface-l4 border border-theme-default rounded-[6px] px-3 py-2 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent"
+                  className="w-full bg-surface-l4 border border-theme-default rounded-md px-3 py-2 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent"
                 />
               </div>
             </div>
@@ -235,7 +235,7 @@ export function ProjectOverviewTab({
                 value={tagsInput}
                 onChange={(e) => setTagsInput(e.target.value)}
                 placeholder="api, backend, q3..."
-                className="w-full bg-surface-l4 border border-theme-default rounded-[6px] px-3 py-2 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent"
+                className="w-full bg-surface-l4 border border-theme-default rounded-md px-3 py-2 text-[14px] text-theme-primary focus:outline-none focus:border-brand-accent"
               />
             </div>
           </div>
@@ -267,9 +267,9 @@ export function ProjectOverviewTab({
 
             {/* Project Tags */}
             <div className="flex flex-wrap gap-1.5 pt-1">
-              {parsedTagsList.map((tag) => (
+              {parsedTagsList.map((tag, index) => (
                 <span
-                  key={tag}
+                  key={`${tag}-${index}`}
                   className="px-2 py-0.5 bg-surface-l4 border border-theme-default rounded-[4px] text-[11px] text-theme-secondary font-medium flex items-center gap-1"
                 >
                   <Tag className="w-2.5 h-2.5 text-theme-secondary" />
@@ -321,7 +321,7 @@ export function ProjectOverviewTab({
                 <span className="text-[14px] font-medium text-theme-primary truncate pr-3">
                   {focusTask.title}
                 </span>
-                <span className="px-2 py-0.5 bg-semantic-danger-subtle text-semantic-danger text-[11px] font-medium rounded-[6px] shrink-0 border border-semantic-danger/20">
+                <span className="px-2 py-0.5 bg-semantic-danger-subtle text-semantic-danger text-[11px] font-medium rounded-md shrink-0 border border-semantic-danger/20">
                   {focusTask.priority || "Urgent"}
                 </span>
               </>
@@ -350,7 +350,7 @@ export function ProjectOverviewTab({
                   <div
                     key={item.id}
                     onClick={() => setSelectedTaskId(item.id)}
-                    className="flex items-center justify-between px-2.5 py-1.5 rounded-[6px] hover:bg-surface-l4 transition-colors cursor-pointer text-[14px]"
+                    className="flex items-center justify-between px-2.5 py-1.5 rounded-md hover:bg-surface-l4 transition-colors cursor-pointer text-[14px]"
                   >
                     <span className="text-theme-primary/80 font-medium truncate pr-2">
                       {item.title}
@@ -379,7 +379,7 @@ export function ProjectOverviewTab({
                   <div
                     key={item.id}
                     onClick={() => setSelectedTaskId(item.id)}
-                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-[6px] hover:bg-surface-l4 transition-colors cursor-pointer text-[14px]"
+                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-md hover:bg-surface-l4 transition-colors cursor-pointer text-[14px]"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5 text-semantic-success shrink-0" />
                     <span className="text-theme-secondary font-normal truncate">
@@ -402,8 +402,8 @@ export function ProjectOverviewTab({
             <div className="p-4 bg-surface-l2 border border-theme-default rounded-[8px] space-y-4">
               <div className="space-y-2">
                 <span className="text-[12px] font-mono text-theme-secondary">Custom Resource Links:</span>
-                {resources.map((res) => (
-                  <div key={res.id} className="flex items-center justify-between p-2.5 bg-surface-l4 border border-theme-default rounded-[6px] text-[13px]">
+                {resources.map((res, index) => (
+                  <div key={res.id || res.url || `res-edit-${index}`} className="flex items-center justify-between p-2.5 bg-surface-l4 border border-theme-default rounded-md text-[13px]">
                     <div className="truncate pr-2">
                       <span className="text-theme-primary font-medium">{res.title}: </span>
                       <span className="text-theme-secondary font-mono truncate">{res.url}</span>
@@ -429,21 +429,21 @@ export function ProjectOverviewTab({
                     value={newResTitle}
                     onChange={(e) => setNewResTitle(e.target.value)}
                     placeholder="Title (e.g. YouTube Guide)"
-                    className="bg-surface-l4 border border-theme-default rounded-[6px] px-3 py-1.5 text-[13px] text-theme-primary focus:outline-none focus:border-brand-accent"
+                    className="bg-surface-l4 border border-theme-default rounded-md px-3 py-1.5 text-[13px] text-theme-primary focus:outline-none focus:border-brand-accent"
                   />
                   <input
                     type="text"
                     value={newResUrl}
                     onChange={(e) => setNewResUrl(e.target.value)}
                     placeholder="URL (e.g. https://...)"
-                    className="bg-surface-l4 border border-theme-default rounded-[6px] px-3 py-1.5 text-[13px] text-theme-primary focus:outline-none focus:border-brand-accent"
+                    className="bg-surface-l4 border border-theme-default rounded-md px-3 py-1.5 text-[13px] text-theme-primary focus:outline-none focus:border-brand-accent"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={handleAddResource}
                   disabled={!newResTitle.trim() || !newResUrl.trim()}
-                  className="px-3 py-1 bg-theme-default/10 hover:bg-theme-default/20 text-theme-primary text-[12px] font-medium rounded-[6px] transition-colors disabled:opacity-40"
+                  className="px-3 py-1 bg-theme-default/10 hover:bg-theme-default/20 text-theme-primary text-[12px] font-medium rounded-md transition-colors disabled:opacity-40"
                 >
                   + Add Link
                 </button>
@@ -455,19 +455,19 @@ export function ProjectOverviewTab({
                   rows={2}
                   value={strategyNotes}
                   onChange={(e) => setStrategyNotes(e.target.value)}
-                  className="w-full bg-surface-l4 border border-theme-default rounded-[6px] p-3 text-[13px] text-theme-primary focus:outline-none focus:border-brand-accent resize-none"
+                  className="w-full bg-surface-l4 border border-theme-default rounded-md p-3 text-[13px] text-theme-primary focus:outline-none focus:border-brand-accent resize-none"
                 />
               </div>
             </div>
           ) : (
             <div className="space-y-2">
-              {resources.map((res) => (
+              {resources.map((res, index) => (
                 <a
-                  key={res.id}
+                  key={res.id || res.url || `res-${index}`}
                   href={res.url.startsWith("http") ? res.url : `https://${res.url}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-3 py-2.5 bg-surface-l4 border border-theme-default rounded-[6px] flex items-center justify-between text-[14px] text-theme-primary/90 hover:text-theme-primary hover:border-brand-accent/40 transition-colors cursor-pointer group"
+                  className="px-3 py-2.5 bg-surface-l4 border border-theme-default rounded-md flex items-center justify-between text-[14px] text-theme-primary/90 hover:text-theme-primary hover:border-brand-accent/40 transition-colors cursor-pointer group"
                 >
                   <div className="flex items-center gap-2.5 truncate">
                     <LinkIcon className="w-3.5 h-3.5 text-theme-secondary group-hover:text-brand-accent transition-colors shrink-0" />
@@ -477,18 +477,7 @@ export function ProjectOverviewTab({
                 </a>
               ))}
 
-              {/* DISABLED OWNER DISPLAY SECTION (Preserved code as requested) */}
-              {/* 
-              <div className="px-3 py-2 bg-surface-l4 border border-theme-default rounded-[6px] flex items-center justify-between text-[14px]">
-                <span className="text-theme-secondary text-[12px]">Owner</span>
-                <div className="flex items-center gap-1.5 text-theme-primary/90">
-                  <User className="w-3.5 h-3.5 text-theme-secondary" />
-                  <span>You</span>
-                </div>
-              </div> 
-              */}
-
-              <div className="p-3 bg-surface-l2 border border-theme-default rounded-[6px] text-[14px] text-theme-primary/80 leading-[22.75px]">
+              <div className="p-3 bg-surface-l2 border border-theme-default rounded-md text-[14px] text-theme-primary/80 leading-[22.75px]">
                 {strategyNotes}
               </div>
             </div>
@@ -505,7 +494,7 @@ export function ProjectOverviewTab({
             <button
               type="button"
               onClick={() => onSwitchTab && onSwitchTab("board")}
-              className="h-[42px] px-3 bg-surface-l3 hover:bg-surface-l4 border border-theme-default rounded-[6px] flex items-center justify-start gap-2.5 text-theme-secondary hover:text-theme-primary text-[14px] font-medium transition-colors cursor-pointer"
+              className="h-[42px] px-3 bg-surface-l3 hover:bg-surface-l4 border border-theme-default rounded-md flex items-center justify-start gap-2.5 text-theme-secondary hover:text-theme-primary text-[14px] font-medium transition-colors cursor-pointer"
             >
               <LayoutGrid className="w-3.5 h-3.5 text-theme-secondary" />
               <span>Open board</span>
@@ -514,7 +503,7 @@ export function ProjectOverviewTab({
             <button
               type="button"
               onClick={() => onSwitchTab && onSwitchTab("board")}
-              className="h-[42px] px-3 bg-surface-l3 hover:bg-surface-l4 border border-theme-default rounded-[6px] flex items-center justify-start gap-2.5 text-theme-secondary hover:text-theme-primary text-[14px] font-medium transition-colors cursor-pointer"
+              className="h-[42px] px-3 bg-surface-l3 hover:bg-surface-l4 border border-theme-default rounded-md flex items-center justify-start gap-2.5 text-theme-secondary hover:text-theme-primary text-[14px] font-medium transition-colors cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5 text-theme-secondary" />
               <span>Add task</span>
@@ -523,7 +512,7 @@ export function ProjectOverviewTab({
             <button
               type="button"
               onClick={handleStartEdit}
-              className="h-[42px] px-3 bg-surface-l3 hover:bg-surface-l4 border border-theme-default rounded-[6px] flex items-center justify-start gap-2.5 text-theme-secondary hover:text-theme-primary text-[14px] font-medium transition-colors cursor-pointer"
+              className="h-[42px] px-3 bg-surface-l3 hover:bg-surface-l4 border border-theme-default rounded-md flex items-center justify-start gap-2.5 text-theme-secondary hover:text-theme-primary text-[14px] font-medium transition-colors cursor-pointer"
             >
               <Edit3 className="w-3.5 h-3.5 text-theme-secondary" />
               <span>Edit details</span>

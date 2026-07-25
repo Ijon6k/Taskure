@@ -133,13 +133,17 @@ export default function ProjectsPage() {
                   <div className="h-32 bg-theme-surface border border-theme-default rounded-md" />
                   <div className="h-32 bg-theme-surface border border-theme-default rounded-md" />
                 </div>
-              ) : unpinnedProjects.length === 0 ? (
+              ) : filteredProjects.length === 0 ? (
                 <div className="p-8 border border-theme-default rounded-md bg-theme-surface text-center space-y-2">
                   <FolderKanban className="w-8 h-8 text-theme-secondary mx-auto" />
                   <p className="text-sm text-theme-primary">No projects found</p>
                   <p className="text-xs text-theme-secondary">
                     Try adjusting your search query or status filter.
                   </p>
+                </div>
+              ) : unpinnedProjects.length === 0 ? (
+                <div className="p-4 border border-dashed border-theme-subtle rounded-md bg-theme-surface/30 text-center text-xs text-theme-tertiary">
+                  All matching projects are pinned above.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-stretch">
