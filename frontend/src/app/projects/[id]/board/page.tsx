@@ -18,6 +18,7 @@ import { BoardFilterToolbar } from "@/components/features/kanban/board-filter-to
 import { BoardFilterState, DEFAULT_BOARD_FILTERS, filterAndSortTasks } from "@/lib/filter-tasks";
 import { useUIStore } from "@/store/use-ui-store";
 import { extractTaskTags } from "@/lib/tags";
+import { ProjectStatusIndicator } from "@/components/ui/project-status-indicator";
 
 export default function ProjectBoardPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -106,9 +107,7 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
                 {project?.name || "Loading..."}
               </h1>
               {project?.status && (
-                <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-theme-elevated border border-theme-default text-theme-secondary capitalize">
-                  {project.status}
-                </span>
+                <ProjectStatusIndicator status={project.status} className="ml-1" />
               )}
             </div>
 

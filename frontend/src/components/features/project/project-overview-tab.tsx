@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Edit3, CheckCircle2, LayoutGrid, Plus, Check, X } from "lucide-react";
 import { api, ProjectData, TaskData, ResourceLinkItem } from "@/lib/api";
 import { computeTaskStats, formatDateShort } from "@/lib/helpers";
-import { ProgressBar } from "@/components/ui/progress-bar";
+import { ColumnDistributionBar } from "@/components/ui/column-distribution-bar";
 import { StatCard } from "@/components/ui/stat-card";
 import { PriorityBadge } from "@/components/ui/priority-badge";
 import { DueDateText } from "@/components/ui/due-date-text";
@@ -181,39 +181,12 @@ export function ProjectOverviewTab({
           parsedTagsList={parsedTagsList}
         />
 
-        {/* Progress Section */}
-        <div className="space-y-3">
-          <CardHeader>Progress</CardHeader>
-
-          <Card className="space-y-5">
-            <div className="flex items-center justify-between text-[14px]">
-              <span className="text-theme-primary font-normal">{stats.completionPercent}% complete</span>
-              <span className="text-theme-secondary font-mono text-[12px]">
-                {stats.doneCount}/{stats.allTasks.length} tasks
-              </span>
-            </div>
-
-            <ProgressBar percent={stats.completionPercent} color="var(--brand-accent)" />
-
-            <div className={`grid gap-2.5 pt-1 ${
-              stats.columnStats.length >= 5
-                ? "grid-cols-2 sm:grid-cols-5"
-                : stats.columnStats.length === 4
-                ? "grid-cols-2 sm:grid-cols-4"
-                : stats.columnStats.length === 3
-                ? "grid-cols-3"
-                : "grid-cols-2"
-            }`}>
-              {stats.columnStats.map((col) => (
-                <StatCard
-                  key={col.id}
-                  label={col.name}
-                  value={col.taskCount}
-                  color={col.color}
-                />
-              ))}
-            </div>
-          </Card>
+        {/* Task Distribution Section */}
+        <div className="pt-2">
+          <ColumnDistributionBar
+            columnStats={stats.columnStats}
+            totalTasks={stats.allTasks.length}
+          />
         </div>
 
         {/* Today's Focus Section */}

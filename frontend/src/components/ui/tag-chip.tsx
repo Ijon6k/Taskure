@@ -7,8 +7,8 @@ import { getTagConfig } from "@/lib/tags";
 export interface TagChipProps {
   label: string;
   color?: string;
-  onRemove?: () => void;
-  onClick?: () => void;
+  onRemove?: (() => void) | undefined;
+  onClick?: (() => void) | undefined;
   className?: string;
 }
 
