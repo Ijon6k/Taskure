@@ -7,6 +7,7 @@ import { computeTaskStats, formatDateShort } from "@/lib/helpers";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { StatCard } from "@/components/ui/stat-card";
 import { PriorityBadge } from "@/components/ui/priority-badge";
+import { DueDateText } from "@/components/ui/due-date-text";
 import { Card, CardHeader } from "@/components/ui/card";
 import { sortBy } from "es-toolkit";
 import { toast } from "sonner";
@@ -257,9 +258,7 @@ export function ProjectOverviewTab({
                     <span className="text-theme-primary/80 font-medium truncate pr-2">
                       {item.title}
                     </span>
-                    <span className="text-[11px] font-mono text-theme-secondary shrink-0">
-                      {formatDateShort(item.due_date)}
-                    </span>
+                    <DueDateText dateStr={item.due_date} />
                   </div>
                 ))
               )}

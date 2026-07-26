@@ -8,6 +8,7 @@ import { getTimeGreeting, getFormattedDate } from "@/lib/helpers";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileHeader } from "@/components/layout/mobile-header";
 import { TodaysFocusCard } from "@/components/features/dashboard/todays-focus-card";
+import { RecommendedNextSection } from "@/components/features/dashboard/recommended-next-section";
 import { ProjectCard } from "@/components/features/project/project-card";
 import { CreateProjectModal } from "@/components/features/project/create-project-modal";
 import { useUIStore } from "@/store/use-ui-store";
@@ -20,7 +21,8 @@ export default function HomePage() {
   const openCreateProject = useUIStore((s) => s.openCreateProject);
   const closeCreateProject = useUIStore((s) => s.closeCreateProject);
 
-  const focusData = focusResp?.focus || null;
+  const hero = focusResp?.hero || null;
+  const recommendations = focusResp?.recommendations || [];
   const isLoading = isProjectsLoading || isFocusLoading;
 
   const pinnedProjects = useMemo(() => projects.filter((p) => p.is_pinned), [projects]);
@@ -48,13 +50,18 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* Today's Focus */}
+            {/* Today's Focus Hero Card */}
             <div className="space-y-2">
               <div className="text-xs font-medium text-theme-secondary uppercase tracking-wider">
                 Today's focus
               </div>
-              <TodaysFocusCard focusData={focusData} loading={isLoading} />
+              <TodaysFocusCard hero={hero} loading={isLoading} />
             </div>
+
+            {/* Recommended Next Section */}
+            {recommendations.length > 0 && (
+              <RecommendedNextSection recommendations={recommendations} loading={isLoading} />
+            )}
 
             {/* Quick Actions */}
             <div className="space-y-2">

@@ -21,5 +21,5 @@ func (h *FocusHandler) GetFocusTask(c *gin.Context) {
 		return
 	}
 
-	response.OK(c, gin.H{"focus": focus})
+	response.OK(c, focus)
 }

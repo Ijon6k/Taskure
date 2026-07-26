@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/Ijon6k/kanbanproject/apps/api/internal/focusengine"
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/models"
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/repository"
 	"gorm.io/datatypes"
@@ -41,7 +42,7 @@ type TaskService interface {
 	DeleteChecklistItem(id string) error
 
 	// Focus Engine
-	GetFocusTask() (*FocusScoreResult, error)
+	GetFocusTask() (*focusengine.FocusResult, error)
 }
 
 type taskService struct {
@@ -217,14 +218,10 @@ func (s *taskService) DeleteChecklistItem(id string) error {
 	return s.taskRepo.DeleteChecklistItem(id)
 }
 
-func (s *taskService) GetFocusTask() (*FocusScoreResult, error) {
+func (s *taskService) GetFocusTask() (*focusengine.FocusResult, error) {
 	pendingTasks, err := s.taskRepo.GetPendingTasks()
 	if err != nil {
 		return nil, err
-	}
-
-	if len(pendingTasks) == 0 {
-		return nil, nil
 	}
 
 	projects, err := s.projectRepo.GetAllProjects()
@@ -237,10 +234,6 @@ func (s *taskService) GetFocusTask() (*FocusScoreResult, error) {
 		projectMap[p.ID] = p
 	}
 
-	results := CalculateFocusTasks(pendingTasks, projectMap)
-	if len(results) == 0 {
-		return nil, nil
-	}
-
-	return &results[0], nil
+	result := focusengine.Evaluate(pendingTasks, projectMap, time.Now())
+	return &result, nil
 }

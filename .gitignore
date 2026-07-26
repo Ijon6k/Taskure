@@ -76,3 +76,5 @@ coverage/
 # Misc
 .turbo
 .eslintcache
+.codegraph/
+

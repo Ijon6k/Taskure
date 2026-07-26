@@ -98,14 +98,18 @@ export interface TaskData {
   attachments?: AttachmentData[];
 }
 
-export interface FocusResult {
+export interface FocusItem {
   task: TaskData;
-  project_name: string;
-  project_color: string;
+  project: ProjectData;
   score: number;
-  reason: string;
-  days_remaining?: number;
 }
+
+export interface FocusResponse {
+  hero: FocusItem | null;
+  recommendations: FocusItem[];
+}
+
+export type FocusResult = FocusResponse;
 
 // ─── Input / Mutation Types ───────────────────────────────────────────────────
 

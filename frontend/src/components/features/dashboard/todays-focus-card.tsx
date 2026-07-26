@@ -2,15 +2,16 @@
 
 import Link from "next/link";
 import { CheckSquare, Square, ArrowRight } from "lucide-react";
-import { FocusResult, ChecklistItemData } from "@/lib/api";
+import { FocusItem, ChecklistItemData } from "@/lib/api";
 import { PriorityBadge } from "@/components/ui/priority-badge";
+import { DueDateText } from "@/components/ui/due-date-text";
 
 interface TodaysFocusCardProps {
-  focusData: FocusResult | null;
+  hero: FocusItem | null;
   loading: boolean;
 }
 
-export function TodaysFocusCard({ focusData, loading }: TodaysFocusCardProps) {
+export function TodaysFocusCard({ hero, loading }: TodaysFocusCardProps) {
   if (loading) {
     return (
       <div className="w-full bg-theme-surface border border-theme-default rounded-md p-4 sm:p-5 animate-pulse space-y-4">
@@ -24,37 +25,42 @@ export function TodaysFocusCard({ focusData, loading }: TodaysFocusCardProps) {
     );
   }
 
-  if (!focusData || !focusData.task) {
+  if (!hero || !hero.task) {
     return (
       <div className="w-full bg-theme-surface border border-theme-default rounded-md p-6 text-center space-y-2">
         <h3 className="text-base font-medium text-theme-primary">All Tasks Completed! 🎉</h3>
         <p className="text-xs text-theme-secondary">
-          No urgent tasks pending for today. Great job!
+          No urgent tasks pending right now. Great job!
         </p>
       </div>
     );
   }
 
-  const { task, project_name, project_color, reason } = focusData;
+  const { task, project } = hero;
+  const projectName = project?.name || "Personal Project";
+  const projectColor = project?.color || "#7F9CF5";
   const checklist = task.checklist_items || [];
 
   return (
     <div className="w-full bg-surface-l3 border border-theme-subtle rounded-md p-4 sm:p-5 space-y-4 shadow-elevation-l3">
-      {/* Top Bar: Project Tag & Priority Badge */}
+      {/* Top Header: Project, Title, Due Date, Priority Badge */}
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+        <div className="min-w-0 space-y-1">
           <div className="flex items-center gap-2">
             <span
               className="w-2 h-2 rounded-full shrink-0"
-              style={{ backgroundColor: project_color || "#7F9CF5" }}
+              style={{ backgroundColor: projectColor }}
             />
             <span className="text-[12px] font-medium text-theme-secondary truncate">
-              {project_name}
+              {projectName}
             </span>
           </div>
-          <h2 className="text-[16px] sm:text-[18px] font-medium text-theme-primary mt-1.5 leading-snug">
+
+          <h2 className="text-[16px] sm:text-[18px] font-medium text-theme-primary leading-snug">
             {task.title}
           </h2>
+
+          <DueDateText dateStr={task.due_date} className="pt-0.5" />
         </div>
 
         <PriorityBadge priority={task.priority} />

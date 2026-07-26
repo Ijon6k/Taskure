@@ -1,5 +1,5 @@
 import { fetcher } from "../client";
-import { FocusResult } from "../types";
+import { FocusResponse } from "../types";
 
 export const workspaceService = {
   updateWorkspaceSettings: (settings: Record<string, unknown>) => {
@@ -10,7 +10,7 @@ export const workspaceService = {
   },
 
   getFocusTask: () => {
-    return fetcher<{ focus: FocusResult | null }>("/focus");
+    return fetcher<FocusResponse>("/focus");
   },
 
   seedDemoData: () => {

@@ -4,10 +4,11 @@ import { memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { TaskData, ChecklistItemData } from "@/lib/api";
-import { calculateProgress, formatDateShort } from "@/lib/helpers";
+import { calculateProgress } from "@/lib/helpers";
 import { extractTaskTags } from "@/lib/tags";
 import { PriorityBadge } from "@/components/ui/priority-badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { DueDateText } from "@/components/ui/due-date-text";
 import { TaskCardTagText } from "./task-card-tag-text";
 
 interface KanbanCardProps {
@@ -66,7 +67,7 @@ export const KanbanCard = memo(function KanbanCard({ task, onClick }: KanbanCard
               ? `${completedChecklist}/${checklistItems.length} subtasks`
               : ""}
           </span>
-          <span>{formatDateShort(task.due_date)}</span>
+          <DueDateText dateStr={task.due_date} />
         </div>
       )}
     </div>
