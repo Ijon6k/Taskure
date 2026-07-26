@@ -51,13 +51,18 @@ func (r *projectRepository) ListProjects(workspaceID string, status string, sear
 	}
 
 	var projects []models.Project
-	err := query.Preload("Columns").
-		Preload("Tasks").
+	err := query.Preload("Columns", func(db *gorm.DB) *gorm.DB {
+		return db.Order("position asc")
+	}).Preload("Columns.Tasks", func(db *gorm.DB) *gorm.DB {
+		return db.Order("position asc")
+	}).
 		Order("is_pinned desc, created_at desc").
 		Find(&projects).Error
 
 	return projects, err
 }
+
+
 
 func (r *projectRepository) CreateProject(project *models.Project) error {
 	return r.db.Create(project).Error

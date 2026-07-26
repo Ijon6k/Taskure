@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Settings } from "lucide-react";
 import { ProjectData, TaskData } from "@/lib/api";
+import { computeProjectUrgency } from "@/lib/utils/date";
 
 interface ProjectCardProps {
   project: ProjectData;
@@ -17,12 +18,16 @@ export function ProjectCard({
   className = "",
   onEdit,
 }: ProjectCardProps) {
-  const tasks = project.tasks || [];
-  const doneCount = tasks.filter((t: TaskData) => t.status === "done").length;
-  const totalCount = tasks.length;
-  const percent =
-    totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+  const allTasks: TaskData[] =
+    project.tasks && project.tasks.length > 0
+      ? project.tasks
+      : (project.columns || []).flatMap((col) => col.tasks || []);
+
   const projectColor = project.color || "#7F9CF5";
+  const { taskCountText, urgencyText, urgencyColorClass } = computeProjectUrgency(
+    allTasks,
+    project.updated_at
+  );
 
   if (variant === "compact") {
     return (
@@ -39,9 +44,11 @@ export function ProjectCard({
             {project.name}
           </span>
         </div>
-        <span className="text-[12px] font-mono text-theme-secondary shrink-0">
-          recently updated
-        </span>
+        <div className="flex items-center gap-1.5 text-[12px] font-mono shrink-0">
+          <span className="text-theme-secondary">{taskCountText}</span>
+          <span className="text-theme-tertiary">•</span>
+          <span className={urgencyColorClass}>{urgencyText}</span>
+        </div>
       </Link>
     );
   }
@@ -52,6 +59,7 @@ export function ProjectCard({
         href={`/projects/${project.id}/board`}
         className={`p-4 bg-surface-l3 border border-theme-subtle hover:border-theme-default hover:bg-surface-hover rounded-md flex flex-col justify-between h-full min-h-[140px] space-y-3 cursor-pointer transition-colors duration-150 active:scale-[0.99] group shadow-elevation-l3 ${className}`}
       >
+        {/* Top: Name & Description */}
         <div className="space-y-1.5">
           <div className="flex items-center gap-2 pr-6">
             <span
@@ -70,29 +78,21 @@ export function ProjectCard({
           </p>
         </div>
 
-        <div className="space-y-2 mt-auto">
-          {variant === "grid" && (
-            <div className="w-full h-1 bg-theme-elevated rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-300"
-                style={{
-                  width: `${percent}%`,
-                  backgroundColor: projectColor,
-                }}
-              />
-            </div>
-          )}
-
-          <div className="flex items-center justify-between text-[12px] text-theme-secondary">
-            <span>
-              {doneCount}/{totalCount} {variant === "grid" ? "done" : "tasks"}
+        {/* Footer: Metadata & Status (No Divider, No Badges) */}
+        <div className="flex items-center justify-between text-[12px] pt-1 mt-auto">
+          {/* Left Metadata: Task Count • Urgency */}
+          <div className="flex items-center gap-1.5 truncate">
+            <span className="text-theme-secondary font-normal">
+              {taskCountText}
             </span>
-            {variant === "grid" ? (
-              <span className="font-mono">{percent}%</span>
-            ) : (
-              <span className="capitalize">{project.status || "active"}</span>
-            )}
+            <span className="text-theme-tertiary">•</span>
+            <span className={urgencyColorClass}>{urgencyText}</span>
           </div>
+
+          {/* Right Status: Lightweight Muted Typography */}
+          <span className="text-theme-tertiary capitalize shrink-0 pl-2">
+            {project.status || "Active"}
+          </span>
         </div>
       </Link>
 
@@ -113,4 +113,5 @@ export function ProjectCard({
     </div>
   );
 }
+
 

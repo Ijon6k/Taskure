@@ -13,7 +13,7 @@ export interface ModalContainerProps {
 export function ModalContainer({
   isOpen,
   onClose,
-  maxWidth = "max-w-[440px]",
+  maxWidth = "max-w-[420px]",
   children,
   className = "",
 }: ModalContainerProps) {
@@ -29,13 +29,13 @@ export function ModalContainer({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 select-none">
+    <div className="fixed inset-0 z-50 bg-black/25 backdrop-blur-md flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
       {/* Backdrop click listener */}
       <div className="absolute inset-0" onClick={onClose} />
 
       {/* Dialog Shell */}
       <div
-        className={`relative z-10 w-full ${maxWidth} bg-surface-l5 border border-theme-default text-theme-primary rounded-md p-6 space-y-5 shadow-elevation-l5 animate-in fade-in zoom-in-95 duration-150 ${className}`}
+        className={`relative z-10 w-full ${maxWidth} bg-surface-l3 border border-white/10 text-theme-primary rounded-md p-6 space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200 ${className}`}
       >
         {children}
       </div>

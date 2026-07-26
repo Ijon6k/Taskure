@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { TaskData, ChecklistItemData } from "@/lib/api";
@@ -28,11 +28,19 @@ export const KanbanCard = memo(function KanbanCard({ task, onClick }: KanbanCard
     opacity: isDragging ? 0.3 : 1,
   };
 
-  const checklistItems = task.checklist_items || [];
-  const completedChecklist = checklistItems.filter((i: ChecklistItemData) => i.is_completed).length;
-  const checklistPercent = calculateProgress(completedChecklist, checklistItems.length);
+  const { checklistItems, completedChecklist, checklistPercent, tags } = useMemo(() => {
+    const items = task.checklist_items || [];
+    const completed = items.filter((i: ChecklistItemData) => i.is_completed).length;
+    const percent = calculateProgress(completed, items.length);
+    const extractedTags = extractTaskTags(task);
+    return {
+      checklistItems: items,
+      completedChecklist: completed,
+      checklistPercent: percent,
+      tags: extractedTags,
+    };
+  }, [task]);
 
-  const tags = extractTaskTags(task);
 
   return (
     <div

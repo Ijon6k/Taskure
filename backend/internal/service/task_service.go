@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"sync"
 	"time"
 
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/focusengine"
@@ -46,8 +47,11 @@ type TaskService interface {
 }
 
 type taskService struct {
-	taskRepo    repository.TaskRepository
-	projectRepo repository.ProjectRepository
+	taskRepo         repository.TaskRepository
+	projectRepo      repository.ProjectRepository
+	cacheMu          sync.RWMutex
+	focusCache       *focusengine.FocusResult
+	focusCacheExpiry time.Time
 }
 
 func NewTaskService(taskRepo repository.TaskRepository, projectRepo repository.ProjectRepository) TaskService {
@@ -56,6 +60,14 @@ func NewTaskService(taskRepo repository.TaskRepository, projectRepo repository.P
 		projectRepo: projectRepo,
 	}
 }
+
+func (s *taskService) invalidateFocusCache() {
+	s.cacheMu.Lock()
+	defer s.cacheMu.Unlock()
+	s.focusCache = nil
+	s.focusCacheExpiry = time.Time{}
+}
+
 
 func (s *taskService) CreateTask(projectIDOrPublicID string, input CreateTaskInput) (*models.Task, error) {
 	project, err := s.projectRepo.FindProject(projectIDOrPublicID)
@@ -93,7 +105,9 @@ func (s *taskService) CreateTask(projectIDOrPublicID string, input CreateTaskInp
 		return nil, err
 	}
 
+	s.invalidateFocusCache()
 	return s.taskRepo.FindTask(task.PublicID)
+
 }
 
 func (s *taskService) GetTask(idOrPublicID string) (*models.Task, error) {
@@ -219,6 +233,14 @@ func (s *taskService) DeleteChecklistItem(id string) error {
 }
 
 func (s *taskService) GetFocusTask() (*focusengine.FocusResult, error) {
+	s.cacheMu.RLock()
+	if s.focusCache != nil && time.Now().Before(s.focusCacheExpiry) {
+		cached := *s.focusCache
+		s.cacheMu.RUnlock()
+		return &cached, nil
+	}
+	s.cacheMu.RUnlock()
+
 	pendingTasks, err := s.taskRepo.GetPendingTasks()
 	if err != nil {
 		return nil, err
@@ -235,5 +257,12 @@ func (s *taskService) GetFocusTask() (*focusengine.FocusResult, error) {
 	}
 
 	result := focusengine.Evaluate(pendingTasks, projectMap, time.Now())
+
+	s.cacheMu.Lock()
+	s.focusCache = &result
+	s.focusCacheExpiry = time.Now().Add(30 * time.Second)
+	s.cacheMu.Unlock()
+
 	return &result, nil
 }
+

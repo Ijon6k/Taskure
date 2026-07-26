@@ -1,8 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
 import { X, Trash2, Edit3, Check, ArrowRightLeft } from "lucide-react";
-import { api, TaskData, ChecklistItemData, ColumnData, useProject } from "@/lib/api";
 import { ConfirmModal } from "@/components/modals/confirm-modal";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import { IconButton } from "@/components/ui/icon-button";
@@ -11,11 +9,9 @@ import { DatePickerPopover } from "@/components/ui/date-picker-popover";
 import { TaskPriorityPicker } from "./task-priority-picker";
 import { TaskSubtasksSection } from "./task-subtasks-section";
 import { TaskLabelsSection } from "./task-labels-section";
-import { TaskAttachmentsSection, AttachmentItem } from "./task-attachments-section";
-import { toast } from "sonner";
-import { useHotkeys } from "react-hotkeys-hook";
+import { TaskAttachmentsSection } from "./task-attachments-section";
+import { useTaskDrawer } from "./hooks/use-task-drawer";
 
-import { extractTaskTags } from "@/lib/tags";
 
 interface TaskDrawerProps {
   taskId: string | null;
@@ -24,183 +20,38 @@ interface TaskDrawerProps {
 }
 
 export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) {
-  const [task, setTask] = useState<TaskData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-
-  // Editable states
-  const [editTitle, setEditTitle] = useState("");
-  const [editDescription, setEditDescription] = useState("");
-  const [editPriority, setEditPriority] = useState("medium");
-  const [editDueDate, setEditDueDate] = useState<string | null>(null);
-
-  // Tags & Attachments state
-  const [taskTags, setTaskTags] = useState<string[]>([]);
-  const [taskAttachments, setTaskAttachments] = useState<AttachmentItem[]>([]);
-
-  // Project details for column switching
-  const { data: project } = useProject(task?.project_id ?? "");
-  const columns: ColumnData[] = project?.columns || [];
-
-  useHotkeys("esc", () => {
-    if (taskId) onClose();
-  }, { enabled: taskId !== null });
-
-  const fetchTaskDetails = useCallback(async (id: string) => {
-    setLoading(true);
-    try {
-      const data = await api.getTask(id);
-      setTask(data);
-      setEditTitle(data.title ?? "");
-      setEditDescription(data.description ?? "");
-      setEditPriority(data.priority ?? "medium");
-
-      const rawDue = data.due_date;
-      setEditDueDate(rawDue ? (rawDue.split("T")[0] ?? null) : null);
-      setTaskTags(extractTaskTags(data));
-    } catch {
-      toast.error("Failed to load task details.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (taskId) {
-      fetchTaskDetails(taskId);
-      setIsEditing(false);
-    } else {
-      setTask(null);
-    }
-  }, [taskId, fetchTaskDetails]);
+  const {
+    task,
+    loading,
+    isEditing,
+    setIsEditing,
+    isDeleteModalOpen,
+    setIsDeleteModalOpen,
+    editTitle,
+    setEditTitle,
+    editDescription,
+    setEditDescription,
+    editPriority,
+    setEditPriority,
+    editDueDate,
+    taskTags,
+    taskAttachments,
+    setTaskAttachments,
+    columns,
+    handleSaveEdit,
+    handleColumnChange,
+    handleDueDateChange,
+    handleTagsChange,
+    handleAddChecklist,
+    handleToggleChecklist,
+    handleDeleteChecklist,
+    handleDeleteTask,
+  } = useTaskDrawer({ taskId, onClose, onTaskUpdated });
 
   if (!taskId) return null;
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
-
-  const handleSaveEdit = async () => {
-    if (!task) return;
-    try {
-      const updated = await api.updateTask(task.id, {
-        title: editTitle.trim(),
-        description: editDescription.trim(),
-        priority: editPriority,
-        due_date: editDueDate ? new Date(editDueDate + "T00:00:00").toISOString() : null,
-      });
-      setTask(updated);
-      setIsEditing(false);
-      toast.success("Task details saved!");
-      onTaskUpdated?.();
-    } catch (e) {
-      toast.error("Failed to update task: " + (e as Error).message);
-    }
-  };
-
-  const handleColumnChange = async (newColumnId: string) => {
-    if (!task || task.column_id === newColumnId) return;
-    const targetCol = columns.find((c) => c.id === newColumnId);
-    const colNameLower = targetCol?.name.toLowerCase() || "";
-    let newStatus = "todo";
-    if (colNameLower.includes("done") || colNameLower.includes("selesai")) {
-      newStatus = "done";
-    } else if (colNameLower.includes("progress") || colNameLower.includes("doing")) {
-      newStatus = "in_progress";
-    }
-
-    try {
-      await api.moveTask(task.id, {
-        column_id: newColumnId,
-        position: 0,
-        status: newStatus,
-      });
-      await fetchTaskDetails(task.id);
-      toast.success(`Task moved to ${targetCol?.name || "new column"}`);
-      onTaskUpdated?.();
-    } catch (e) {
-      toast.error("Failed to move column: " + (e as Error).message);
-    }
-  };
-
-  const handleDueDateChange = async (iso: string | null) => {
-    setEditDueDate(iso);
-    if (!task) return;
-    if (!isEditing) {
-      try {
-        const updated = await api.updateTask(task.id, {
-          due_date: iso ? new Date(iso + "T00:00:00").toISOString() : null,
-        });
-        setTask(updated);
-        toast.success("Due date updated");
-        onTaskUpdated?.();
-      } catch (e) {
-        toast.error("Failed to update due date: " + (e as Error).message);
-      }
-    }
-  };
-
-  const handleTagsChange = async (newTags: string[]) => {
-    setTaskTags(newTags);
-    if (!task) return;
-    try {
-      const updated = await api.updateTask(task.id, { tags: newTags });
-      setTask(updated);
-      const refreshed = extractTaskTags(updated);
-      setTaskTags(refreshed.length > 0 ? refreshed : newTags);
-      onTaskUpdated?.();
-    } catch (e) {
-      toast.error("Failed to update tags: " + (e as Error).message);
-    }
-  };
-
-  const handleAddChecklist = async (title: string) => {
-    if (!task) return;
-    try {
-      await api.addChecklistItem(task.id, title);
-      toast.success("Subtask added");
-      fetchTaskDetails(task.id);
-      onTaskUpdated?.();
-    } catch (e) {
-      toast.error("Failed to add subtask: " + (e as Error).message);
-    }
-  };
-
-  const handleToggleChecklist = async (item: ChecklistItemData) => {
-    try {
-      await api.updateChecklistItem(item.id, { is_completed: !item.is_completed });
-      toast.success(item.is_completed ? "Marked incomplete" : "Subtask completed!");
-      if (task) fetchTaskDetails(task.id);
-      onTaskUpdated?.();
-    } catch (e) {
-      toast.error("Failed to update subtask: " + (e as Error).message);
-    }
-  };
-
-  const handleDeleteChecklist = async (itemId: string) => {
-    try {
-      await api.deleteChecklistItem(itemId);
-      toast.success("Subtask removed");
-      if (task) fetchTaskDetails(task.id);
-      onTaskUpdated?.();
-    } catch (e) {
-      toast.error("Failed to delete subtask: " + (e as Error).message);
-    }
-  };
-
-  const handleDeleteTask = async () => {
-    if (!task) return;
-    try {
-      await api.deleteTask(task.id);
-      toast.success("Task deleted");
-      setIsDeleteModalOpen(false);
-      onClose();
-      onTaskUpdated?.();
-    } catch (e) {
-      toast.error("Failed to delete task: " + (e as Error).message);
-    }
-  };
-
   // ── Render ────────────────────────────────────────────────────────────────
+
 
   return (
     <>

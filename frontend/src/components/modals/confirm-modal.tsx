@@ -1,9 +1,7 @@
 "use client";
 
-import { AlertTriangle, X } from "lucide-react";
+import { X } from "lucide-react";
 import { ModalContainer } from "@/components/ui/modal-container";
-import { IconButton } from "@/components/ui/icon-button";
-import { Button } from "@/components/ui/button";
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -28,42 +26,50 @@ export function ConfirmModal({
 }: ConfirmModalProps) {
   return (
     <ModalContainer isOpen={isOpen} onClose={onClose} maxWidth="max-w-[400px]">
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <div
-            className={`w-9 h-9 rounded-md flex items-center justify-center ${
-              isDanger
-                ? "bg-semantic-danger-subtle text-semantic-danger border border-semantic-danger/20"
-                : "bg-semantic-info-subtle text-semantic-info border border-semantic-info/20"
-            }`}
-          >
-            <AlertTriangle className="w-5 h-5" />
-          </div>
-          <h2 className="text-[16px] font-medium text-theme-primary tracking-tight">
+      <div className="space-y-3.5">
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <h2 className="text-base font-semibold text-theme-primary tracking-tight">
             {title}
           </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-6 h-6 rounded-lg text-theme-tertiary hover:text-theme-primary hover:bg-theme-elevated flex items-center justify-center transition-colors cursor-pointer -mr-1 -mt-1"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
-        <IconButton icon={X} variant="ghost" size="sm" onClick={onClose} />
-      </div>
 
-      <p className="text-[13px] text-theme-tertiary leading-relaxed">
-        {description}
-      </p>
+        {/* Description */}
+        <p className="text-xs text-theme-secondary leading-relaxed">
+          {description}
+        </p>
 
-      <div className="pt-2 flex items-center justify-end gap-2.5">
-        <Button variant="ghost" size="md" onClick={onClose}>
-          {cancelLabel}
-        </Button>
-        <Button
-          variant={isDanger ? "danger" : "primary"}
-          size="md"
-          onClick={() => {
-            onConfirm();
-            onClose();
-          }}
-        >
-          {confirmLabel}
-        </Button>
+        {/* Actions */}
+        <div className="pt-2 flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-xl text-xs font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated transition-colors cursor-pointer"
+          >
+            {cancelLabel}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onConfirm();
+              onClose();
+            }}
+            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer shadow-xs ${
+              isDanger
+                ? "bg-red-500/90 hover:bg-red-500 text-white"
+                : "bg-brand-accent hover:opacity-90 text-black"
+            }`}
+          >
+            {confirmLabel}
+          </button>
+        </div>
       </div>
     </ModalContainer>
   );

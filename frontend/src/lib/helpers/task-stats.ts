@@ -28,7 +28,7 @@ export interface TaskStats {
 
 export function computeTaskStats(columns: ColumnData[] = []): TaskStats {
   const safeColumns = Array.isArray(columns) ? columns : [];
-  
+
   const allTasks: TaskData[] = safeColumns.flatMap((col) =>
     (col.tasks || []).map((t) => ({
       ...t,
