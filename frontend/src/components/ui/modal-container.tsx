@@ -35,7 +35,7 @@ export function ModalContainer({
 
       {/* Dialog Shell */}
       <div
-        className={`relative z-10 w-full ${maxWidth} bg-surface-l3 border border-white/10 text-theme-primary rounded-md p-6 space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200 ${className}`}
+        className={`relative z-10 w-full ${maxWidth} bg-surface-l3 border border-white/10 text-theme-primary rounded-[12px] p-6 space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200 ${className}`}
       >
         {children}
       </div>

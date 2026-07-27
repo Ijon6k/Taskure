@@ -24,7 +24,7 @@ export function MobileHeader({ title = "My Kanban", onOpenCreateProject }: Mobil
         <button
           type="button"
           onClick={toggleMobileMenu}
-          className="w-10 h-10 rounded-md flex items-center justify-center text-theme-secondary hover:text-theme-primary active:bg-theme-hover transition-colors -ml-1"
+          className="w-9 h-9 rounded-[6px] flex items-center justify-center text-theme-secondary hover:text-theme-primary active:bg-theme-hover transition-colors -ml-1"
           aria-label="Open Workspace Navigation Menu"
           title="Open Menu"
         >
@@ -32,10 +32,10 @@ export function MobileHeader({ title = "My Kanban", onOpenCreateProject }: Mobil
         </button>
 
         <Link href="/" className="flex items-center gap-2 min-w-0 truncate">
-          <span className="w-6 h-6 bg-brand-accent rounded-md flex items-center justify-center text-black font-bold text-xs shrink-0 shadow-sm">
+          <span className="w-6 h-6 bg-brand-accent rounded-[6px] flex items-center justify-center text-black font-bold text-xs shrink-0 shadow-sm">
             K
           </span>
-          <span className="text-sm font-semibold text-theme-primary truncate tracking-tight">
+          <span className="text-[15px] font-semibold text-theme-primary truncate tracking-tight">
             {title}
           </span>
         </Link>
@@ -44,7 +44,7 @@ export function MobileHeader({ title = "My Kanban", onOpenCreateProject }: Mobil
       <div className="flex items-center gap-1.5 shrink-0">
         <Link
           href="/projects"
-          className="w-9 h-9 rounded-md flex items-center justify-center text-theme-secondary hover:text-theme-primary active:bg-theme-hover transition-colors"
+          className="w-9 h-9 rounded-[6px] flex items-center justify-center text-theme-secondary hover:text-theme-primary active:bg-theme-hover transition-colors"
           title="Browse Projects"
           aria-label="Browse Projects"
         >
@@ -54,7 +54,7 @@ export function MobileHeader({ title = "My Kanban", onOpenCreateProject }: Mobil
         <button
           type="button"
           onClick={handleCreate}
-          className="h-8 px-3 bg-brand-accent hover:opacity-90 active:scale-95 text-black text-xs font-semibold rounded-md flex items-center gap-1.5 transition-all shadow-sm"
+          className="h-8 px-3 bg-brand-accent hover:opacity-90 active:scale-95 text-black text-xs font-semibold rounded-[8px] flex items-center gap-1.5 transition-all shadow-sm"
         >
           <Plus className="w-4 h-4 stroke-[2.5]" />
           <span className="hidden sm:inline">New</span>

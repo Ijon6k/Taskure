@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { FileCode, Plus, Sparkles, BookOpen, Database, Code, Trash2, CheckCircle2 } from "lucide-react";
 import { ProjectContextData } from "@/lib/api";
+import { PageContainer } from "@/components/ui/page-container";
 
 interface ProjectContextTabProps {
   projectId: string;
@@ -22,7 +23,6 @@ export function ProjectContextTab({
   const [isIndexing, setIsIndexing] = useState(false);
   const [indexedSuccess, setIndexedSuccess] = useState(false);
 
-  // Mock initial demo contexts if none passed
   const initialDocs: ProjectContextData[] = contexts.length > 0
     ? contexts
     : [
@@ -89,107 +89,99 @@ export function ProjectContextTab({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-8 text-[14px]">
-      <div className="max-w-[840px] mx-auto space-y-8 font-sans">
-        {/* Header & Overview Banner */}
-        <div className="p-6 bg-theme-surface border border-theme-default rounded-md space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-[8px] bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-brand-accent" />
-              </div>
-              <div>
-                <h2 className="text-[16px] font-medium text-theme-primary">AI RAG Knowledge Context</h2>
-                <p className="text-[12px] text-theme-secondary">
-                  Dokumen konteks yang diindeks ke PgVector untuk mendukung kecerdasan buatan (AI assistant).
-                </p>
-              </div>
+    <div className="flex-1 overflow-y-auto flex flex-col items-center">
+      <PageContainer variant="default">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-md bg-brand-accent-subtle flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-brand-accent" />
             </div>
-
-            <button
-              onClick={() => setIsAdding(!isAdding)}
-              className="px-3.5 py-1.5 bg-brand-accent text-black text-[13px] font-medium rounded-[6px] hover:opacity-90 transition-opacity flex items-center gap-1.5"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Context Doc</span>
-            </button>
+            <div>
+              <h2 className="text-base font-medium text-theme-primary">AI Knowledge Context</h2>
+              <p className="text-xs text-theme-tertiary">
+                Documents indexed into PgVector for AI assistant context.
+              </p>
+            </div>
           </div>
 
-          {indexedSuccess && (
-            <div className="p-3 bg-semantic-success-subtle border border-semantic-success/30 rounded-[6px] text-[13px] text-semantic-success flex items-center gap-2 animate-in fade-in">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Dokumen berhasil diindeks ke dalam PgVector AI RAG pipeline!</span>
-            </div>
-          )}
+          <button
+            onClick={() => setIsAdding(!isAdding)}
+            className="px-3 py-1.5 bg-brand-accent text-on-accent text-[13px] font-medium rounded-md hover:opacity-90 transition-opacity flex items-center gap-1.5"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Context</span>
+          </button>
         </div>
+
+        {indexedSuccess && (
+          <div className="p-3 bg-semantic-success-subtle border border-semantic-success/30 rounded-md text-[13px] text-semantic-success flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4" />
+            <span>Document successfully indexed into the PgVector AI RAG pipeline!</span>
+          </div>
+        )}
 
         {/* Add Context Form */}
         {isAdding && (
-          <form onSubmit={handleCreateDoc} className="p-5 bg-theme-elevated border border-theme-default rounded-md space-y-4 animate-in fade-in">
-            <h3 className="text-[14px] font-medium text-theme-primary flex items-center gap-2">
+          <form onSubmit={handleCreateDoc} className="p-4 bg-surface-l3 border border-theme-subtle rounded-md space-y-4">
+            <div className="flex items-center gap-2">
               <FileCode className="w-4 h-4 text-brand-accent" />
-              <span>Tambah Dokumen Konteks Pengetahuan</span>
-            </h3>
+              <span className="text-sm font-medium text-theme-primary">Add knowledge context document</span>
+            </div>
 
             <div className="grid grid-cols-3 gap-3">
-              <div className="col-span-2 space-y-1">
-                <label className="text-[12px] text-theme-secondary">Judul Dokumen</label>
+              <div className="col-span-2">
                 <input
                   type="text"
                   value={docTitle}
                   onChange={(e) => setDocTitle(e.target.value)}
-                  placeholder="Misal: System Architecture Overview..."
-                  className="w-full bg-theme-surface border border-theme-default rounded-[6px] px-3 py-1.5 text-[13px] text-theme-primary outline-none focus:border-brand-accent"
+                  placeholder="Document title..."
+                  className="document-input text-sm"
                   required
                 />
               </div>
-
-              <div className="space-y-1">
-                <label className="text-[12px] text-theme-secondary">Tipe Konteks</label>
+              <div>
                 <select
                   value={docType}
                   onChange={(e) => setDocType(e.target.value)}
-                  className="w-full bg-theme-surface border border-theme-default rounded-[6px] px-3 py-1.5 text-[13px] text-theme-primary outline-none focus:border-brand-accent"
+                  className="document-input text-sm cursor-pointer"
                 >
                   <option value="api_spec">API Specification</option>
                   <option value="database_schema">Database Schema</option>
                   <option value="architecture">Architecture Note</option>
-                  <option value="requirement">Requirements Document</option>
+                  <option value="requirement">Requirements</option>
                 </select>
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-[12px] text-theme-secondary">Isi Konten Dokumen (Markdown / Plain Text)</label>
-              <textarea
-                rows={5}
-                value={docContent}
-                onChange={(e) => setDocContent(e.target.value)}
-                placeholder="Tuliskan detail OpenAPI spec, skema DB, atau instruksi arsitektur di sini..."
-                className="w-full bg-theme-surface border border-theme-default rounded-[6px] p-3 text-[13px] text-theme-primary outline-none focus:border-brand-accent resize-none font-mono"
-                required
-              />
-            </div>
+            <textarea
+              rows={5}
+              value={docContent}
+              onChange={(e) => setDocContent(e.target.value)}
+              placeholder="Write the document content here..."
+              className="document-textarea font-mono text-[13px]"
+              required
+            />
 
-            <div className="flex items-center justify-end gap-2 pt-1">
+            <div className="flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setIsAdding(false)}
                 className="px-3 py-1.5 text-[13px] text-theme-secondary hover:text-theme-primary rounded"
               >
-                Batal
+                Cancel
               </button>
               <button
                 type="submit"
                 disabled={isIndexing || !docTitle.trim() || !docContent.trim()}
-                className="px-4 py-1.5 bg-brand-accent text-black text-[13px] font-medium rounded-[6px] disabled:opacity-40 flex items-center gap-2"
+                className="px-4 py-1.5 bg-brand-accent text-on-accent text-[13px] font-medium rounded-md disabled:opacity-40 flex items-center gap-2"
               >
                 {isIndexing ? (
-                  <span>Mengindeks...</span>
+                  <span>Indexing...</span>
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4" />
-                    <span>Indeks ke AI RAG</span>
+                    <span>Index to AI RAG</span>
                   </>
                 )}
               </button>
@@ -197,47 +189,48 @@ export function ProjectContextTab({
           </form>
         )}
 
-        {/* Documents List */}
-        <div className="space-y-3">
-          <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.6px]">
-            Indexed Context Documents ({docList.length})
-          </div>
+        <hr className="section-divider" />
 
-          <div className="space-y-3">
+        {/* Documents List */}
+        <div className="space-y-2">
+          <p className="section-title">
+            Indexed documents ({docList.length})
+          </p>
+
+          <div className="space-y-0">
             {docList.map((doc) => (
               <div
                 key={doc.id}
-                className="p-5 bg-theme-surface border border-theme-default hover:border-theme-secondary rounded-md space-y-3 transition-colors group"
+                className="interactive-row px-3 py-3 group"
               >
-                <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0 space-y-1.5">
                   <div className="flex items-center gap-2.5">
                     {getTypeIcon(doc.context_type)}
-                    <h4 className="text-[15px] font-medium text-theme-primary group-hover:text-brand-accent transition-colors">
+                    <h4 className="text-[14px] font-medium text-theme-primary group-hover:text-brand-accent transition-colors truncate">
                       {doc.title}
                     </h4>
-                    <span className="px-2 py-0.5 bg-theme-elevated border border-theme-subtle rounded-[4px] text-[11px] text-theme-secondary uppercase tracking-[0.4px]">
+                    <span className="text-[10px] text-theme-tertiary uppercase tracking-wider shrink-0">
                       {doc.context_type.replace("_", " ")}
                     </span>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteDoc(doc.id)}
-                    className="p-1.5 text-theme-secondary hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity rounded"
-                    title="Hapus dokumen"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <p className="text-[12px] text-theme-secondary leading-relaxed line-clamp-2">
+                    {doc.content}
+                  </p>
                 </div>
 
-                <p className="text-[13px] text-theme-secondary leading-relaxed font-mono bg-theme-elevated/60 p-3 rounded-[6px] border border-theme-subtle whitespace-pre-wrap">
-                  {doc.content}
-                </p>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteDoc(doc.id)}
+                  className="p-1.5 text-theme-tertiary hover:text-semantic-danger opacity-0 group-hover:opacity-100 transition-all rounded shrink-0"
+                  title="Delete document"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
               </div>
             ))}
           </div>
         </div>
-      </div>
+      </PageContainer>
     </div>
   );
 }

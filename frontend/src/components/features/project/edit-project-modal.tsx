@@ -1,14 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Edit3, Pin } from "lucide-react";
+import { X, Pin, Trash2 } from "lucide-react";
 import { useUpdateProject, useDeleteProject, ProjectData } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Toggle } from "@/components/ui/toggle";
 import { ModalContainer } from "@/components/ui/modal-container";
 import { ColorSwatchPicker } from "@/components/ui/color-swatch-picker";
-import { FormTextarea } from "@/components/ui/form-input";
 import { ConfirmDeleteProjectModal } from "./confirm-delete-project-modal";
 
 interface EditProjectModalProps {
@@ -101,57 +100,81 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
     });
   };
 
+  const taskCount = (project.columns || []).reduce((acc, col) => acc + (col.tasks?.length || 0), 0);
+
   return (
     <>
-      <ModalContainer isOpen={isOpen && !isDeleteModalOpen} onClose={onClose} maxWidth="max-w-[460px]">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-theme-subtle pb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-md bg-brand-accent-subtle flex items-center justify-center text-brand-accent">
-              <Edit3 className="w-4 h-4" />
+      <ModalContainer isOpen={isOpen && !isDeleteModalOpen} onClose={onClose} maxWidth="max-w-[480px]">
+        {/* Header — Completely borderless */}
+        <div className="flex items-center justify-between pb-1">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-8 h-8 rounded-[8px] flex items-center justify-center text-[16px] shadow-xs shrink-0"
+              style={{ backgroundColor: `${color}25` }}
+            >
+              {icon}
             </div>
-            <h2 className="text-[18px] font-medium text-theme-primary tracking-tight">
-              Project settings
-            </h2>
+            <div>
+              <h2 className="text-[20px] font-semibold text-theme-primary tracking-tight leading-none">
+                Project settings
+              </h2>
+              <p className="text-[12px] text-theme-secondary mt-1">
+                {project.name} · {taskCount} {taskCount === 1 ? "task" : "tasks"}
+              </p>
+            </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="w-7 h-7 rounded-md text-theme-secondary hover:text-theme-primary hover:bg-surface-l3 flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-full text-theme-tertiary hover:text-theme-primary hover:bg-surface-l4 flex items-center justify-center transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} className="space-y-5 pt-3">
+          {/* Integrated Icon + Name Surface Bar */}
           <div className="space-y-1.5">
-            <label className="block text-[12px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
+            <label className="block text-[13px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
               Project Name *
             </label>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2 bg-surface-l4 focus-within:bg-surface-l4/90 focus-within:ring-2 focus-within:ring-brand-accent/20 rounded-[10px] px-3.5 py-1.5 transition-all">
               <input
                 type="text"
                 value={icon}
                 onChange={(e) => setIcon(e.target.value)}
-                className="w-10 h-[38px] text-center bg-surface-l4 border border-theme-subtle rounded-md text-[16px] outline-none"
+                maxLength={4}
+                className="w-7 text-center bg-transparent text-[18px] outline-none shrink-0"
+                title="Project icon / emoji"
               />
+              <span className="w-px h-5 bg-theme-subtle/60 shrink-0" />
               <input
                 type="text"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="flex-1 h-[38px] px-3 bg-surface-l4 border border-theme-subtle focus:border-brand-accent rounded-md text-[14px] text-theme-primary outline-none transition-colors"
+                placeholder="Project name"
+                className="flex-1 bg-transparent text-[15px] font-medium text-theme-primary placeholder-theme-tertiary outline-none py-1"
               />
             </div>
           </div>
 
-          <FormTextarea
-            label="Description"
-            rows={3}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
+          {/* Description Surface */}
+          <div className="space-y-1.5">
+            <label className="block text-[13px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
+              Description
+            </label>
+            <textarea
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Add a brief summary or goal for this project..."
+              className="w-full bg-surface-l4 focus:bg-surface-l4/90 focus:ring-2 focus:ring-brand-accent/20 rounded-[10px] p-3.5 text-[15px] text-theme-primary placeholder-theme-tertiary outline-none transition-all resize-none leading-relaxed"
+            />
+          </div>
 
+          {/* Color Swatch Picker */}
           <ColorSwatchPicker
             label="Accent Color"
             selectedColor={color}
@@ -159,35 +182,46 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
             onSelect={(selectedHex) => setColor(selectedHex)}
           />
 
+          {/* Status Segmented Control */}
           <div className="space-y-1.5">
-            <label className="block text-[12px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
-              Status
+            <label className="block text-[13px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
+              Project Status
             </label>
-            <div className="flex gap-2">
-              {STATUS_OPTIONS.map((st) => (
-                <button
-                  key={st.value}
-                  type="button"
-                  onClick={() => setStatus(st.value)}
-                  className={`flex-1 py-2 text-[12px] font-medium rounded-md border transition-colors capitalize ${
-                    status === st.value
-                      ? "bg-surface-l3 border-theme-strong text-theme-primary"
-                      : "bg-surface-l4 border-theme-subtle text-theme-secondary hover:text-theme-primary"
-                  }`}
-                >
-                  {st.label}
-                </button>
-              ))}
+            <div className="p-1 bg-surface-l4 rounded-[10px] flex gap-1">
+              {STATUS_OPTIONS.map((st) => {
+                const isActive = status === st.value;
+                return (
+                  <button
+                    key={st.value}
+                    type="button"
+                    onClick={() => setStatus(st.value)}
+                    className={`flex-1 py-2 text-[13px] font-medium rounded-[8px] transition-all capitalize cursor-pointer ${
+                      isActive
+                        ? "bg-surface-l2 text-theme-primary font-semibold shadow-xs"
+                        : "text-theme-secondary hover:text-theme-primary hover:bg-surface-l3/50"
+                    }`}
+                  >
+                    {st.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Pin Toggle */}
-          <div className="flex items-center justify-between py-1.5">
-            <div className="flex items-center gap-2.5">
-              <Pin className={`w-4 h-4 ${isPinned ? "text-brand-accent" : "text-theme-secondary"}`} />
-              <span className="text-[13px] font-medium text-theme-primary">
-                Pin to top
-              </span>
+          {/* Pin to Top — Modern Borderless Card */}
+          <div className="p-3.5 bg-surface-l4/60 hover:bg-surface-l4 rounded-[10px] flex items-center justify-between transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-[8px] bg-surface-l2 flex items-center justify-center shrink-0">
+                <Pin className={`w-4 h-4 ${isPinned ? "text-brand-accent" : "text-theme-tertiary"}`} />
+              </div>
+              <div>
+                <div className="text-[14px] font-semibold text-theme-primary">
+                  Pin to top of workspace
+                </div>
+                <div className="text-[12px] text-theme-secondary">
+                  Show at the top of your sidebar and dashboard.
+                </div>
+              </div>
             </div>
             <Toggle
               checked={isPinned}
@@ -196,45 +230,43 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
             />
           </div>
 
-          {/* Danger Zone */}
-          <div className="pt-4 border-t border-semantic-danger/20">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-[12px] font-medium text-semantic-danger uppercase tracking-[0.5px]">
-                Danger Zone
-              </span>
-            </div>
-            <div className="bg-semantic-danger-subtle border border-semantic-danger/15 rounded-md p-3 flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-[13px] font-medium text-theme-primary">
-                  Delete this project
-                </p>
-                <p className="text-[11px] text-theme-tertiary">
-                  All columns, tasks, and data will be permanently deleted.
-                </p>
+          {/* Destructive Action Row — Completely borderless, quiet red hover */}
+          <div className="p-3.5 bg-surface-l4/50 hover:bg-red-500/10 rounded-[10px] flex items-center justify-between gap-3 transition-all group">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-[8px] bg-red-500/10 group-hover:bg-red-500/20 flex items-center justify-center text-red-400 shrink-0 transition-colors">
+                <Trash2 className="w-4 h-4" />
               </div>
-              <button
-                type="button"
-                onClick={() => setIsDeleteModalOpen(true)}
-                className="px-3 py-1.5 bg-semantic-danger hover:bg-red-600 text-white text-[12px] font-medium rounded-md transition-colors shrink-0"
-              >
-                Delete
-              </button>
+              <div className="min-w-0">
+                <div className="text-[14px] font-semibold text-theme-primary group-hover:text-red-400 transition-colors truncate">
+                  Delete project
+                </div>
+                <div className="text-[12px] text-theme-tertiary truncate">
+                  Permanently remove board and all tasks
+                </div>
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="px-3.5 py-1.5 text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500 text-[13px] font-semibold rounded-[6px] transition-all shrink-0 cursor-pointer"
+            >
+              Delete...
+            </button>
           </div>
 
-          {/* Action Buttons */}
-          <div className="pt-4 border-t border-theme-subtle flex items-center justify-end gap-2.5">
+          {/* Footer Action Buttons */}
+          <div className="pt-2 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 py-2 rounded-md text-[14px] font-medium text-theme-secondary hover:text-theme-primary transition-colors"
+              className="px-4 py-2 rounded-[8px] text-[14px] font-medium text-theme-secondary hover:text-theme-primary transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={updateProjectMutation.isPending || !name.trim()}
-              className="px-4 py-2 bg-brand-accent hover:bg-brand-accent-hover text-black text-[14px] font-medium rounded-md transition-colors disabled:opacity-40"
+              className="px-5 py-2.5 bg-brand-accent hover:bg-brand-accent-hover text-black text-[14px] font-semibold rounded-[8px] transition-all shadow-sm active:scale-[0.98] disabled:opacity-40 cursor-pointer"
             >
               {updateProjectMutation.isPending ? "Saving..." : "Save changes"}
             </button>

@@ -172,14 +172,14 @@ function KanbanColumnInner({
         ...style,
         borderColor: showOver ? "var(--brand-accent)" : "transparent",
       }}
-      className={`relative w-full md:w-80 md:min-w-80 shrink-0 flex flex-col max-h-full rounded-md bg-surface-l2 shadow-xs group/col ${
+      className={`relative w-full md:w-80 md:min-w-80 shrink-0 flex flex-col max-h-full rounded-[10px] bg-surface-l2 overflow-hidden group/col ${
         showOver ? "ring-2 ring-brand-accent/20 bg-surface-hover" : ""
       }`}
     >
-      {/* Top border accent */}
+      {/* Top border accent — clipped by outer column overflow-hidden */}
       <div
-        className={`absolute top-0 left-3 right-3 h-0.5 rounded-t-lg transition-opacity duration-200 ${
-          isDragging || isOver ? "" : "opacity-40 md:opacity-25 group-hover/col:opacity-60"
+        className={`absolute top-0 left-0 right-0 h-[3px] transition-opacity duration-200 ${
+          isDragging || isOver ? "" : "opacity-60 md:opacity-40 group-hover/col:opacity-90"
         }`}
         style={{
           backgroundColor: columnColor,
@@ -193,7 +193,7 @@ function KanbanColumnInner({
           <button
             {...attributes}
             {...listeners}
-            className="w-7 h-7 md:w-5 md:h-5 rounded flex items-center justify-center text-theme-tertiary opacity-100 md:opacity-0 md:group-hover/col:opacity-100 hover:text-theme-primary hover:bg-theme-elevated cursor-grab active:cursor-grabbing transition-all duration-200 touch-none shrink-0"
+            className="w-7 h-7 md:w-5 md:h-5 rounded-[6px] flex items-center justify-center text-theme-tertiary opacity-100 md:opacity-0 md:group-hover/col:opacity-100 hover:text-theme-primary hover:bg-theme-elevated cursor-grab active:cursor-grabbing transition-all duration-200 touch-none shrink-0"
             tabIndex={0}
             aria-label="Drag to reorder column"
           >
@@ -211,12 +211,12 @@ function KanbanColumnInner({
               onBlur={handleRenameSubmit}
               onKeyDown={handleRenameKeyDown}
               maxLength={50}
-              className="w-full max-w-[140px] bg-theme-elevated border border-brand-accent rounded px-2 py-0.5 text-base font-medium text-theme-primary outline-none"
+              className="w-full max-w-[140px] bg-theme-elevated border border-brand-accent rounded-[6px] px-2 py-0.5 text-base font-medium text-theme-primary outline-none"
             />
           ) : (
             <h3 className="text-base font-medium text-theme-primary truncate">{column.name}</h3>
           )}
-          <span className="px-2 py-0.5 bg-theme-elevated text-theme-secondary font-mono text-[13px] rounded border border-theme-subtle shrink-0 leading-none">
+          <span className="px-2 py-0.5 bg-theme-elevated text-theme-secondary font-mono text-[11px] rounded-full border border-theme-subtle shrink-0 leading-none">
             {filteredTasks.length}
           </span>
         </div>

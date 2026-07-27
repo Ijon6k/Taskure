@@ -30,96 +30,101 @@ export function ProjectResourcesSection({
 }: ProjectResourcesSectionProps) {
   return (
     <div className="space-y-3">
-      {/* Existing Resources List */}
-      <div className="space-y-2">
-        {resources.map((res, index) => (
-          <div
-            key={res.id || res.url || `res-${index}`}
-            className="px-3 py-2.5 bg-surface-l4 border border-theme-default rounded-md flex items-center justify-between text-[14px] text-theme-primary/90 hover:text-theme-primary hover:border-brand-accent/40 transition-colors group"
-          >
+      {/* Resources List — flat rows, hover reveal */}
+      {resources.length > 0 && (
+        <div className="space-y-0">
+          {resources.map((res, index) => (
             <a
+              key={res.id || res.url || `res-${index}`}
               href={res.url.startsWith("http") ? res.url : `https://${res.url}`}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-2.5 truncate flex-1 min-w-0"
+              className="subtle-row group"
             >
-              <LinkIcon className="w-3.5 h-3.5 text-theme-secondary group-hover:text-brand-accent transition-colors shrink-0" />
+              <LinkIcon className="w-3.5 h-3.5 text-theme-tertiary group-hover:text-brand-accent transition-colors shrink-0" />
               <span className="font-medium truncate">{res.title}</span>
-              <span className="text-[12px] text-theme-secondary font-mono truncate opacity-60">
-                ({res.url})
+              <span className="text-[12px] text-theme-tertiary font-mono truncate hidden sm:inline">
+                {res.url}
               </span>
+              {isEditingInline ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleRemoveResource(res.id);
+                  }}
+                  className="p-1 text-theme-tertiary hover:text-semantic-danger rounded transition-colors shrink-0 ml-auto opacity-0 group-hover:opacity-100"
+                  title="Remove resource"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              ) : (
+                <ExternalLink className="w-3.5 h-3.5 text-theme-tertiary shrink-0 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+              )}
             </a>
+          ))}
+        </div>
+      )}
 
-            {isEditingInline ? (
-              <button
-                type="button"
-                onClick={() => handleRemoveResource(res.id)}
-                className="p-1 text-semantic-danger hover:text-red-300 hover:bg-semantic-danger-subtle rounded-md transition-colors shrink-0 ml-2"
-                title="Remove resource"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            ) : (
-              <ExternalLink className="w-3.5 h-3.5 text-theme-secondary opacity-60 group-hover:opacity-100 shrink-0 ml-2" />
-            )}
-          </div>
-        ))}
-      </div>
+      {resources.length === 0 && (
+        <p className="text-[13px] text-theme-tertiary py-1">
+          No resources added yet.
+        </p>
+      )}
 
-      {/* Inline Form to Add New Custom Resource Link (Only in Edit Mode) */}
+      {/* Inline Add Resource Form (only in edit mode) */}
       {isEditingInline && (
-        <div className="p-3 bg-surface-l3 border border-theme-default rounded-md space-y-2.5 animate-in fade-in duration-150">
-          <span className="text-[11px] text-theme-secondary font-mono block uppercase tracking-[0.5px]">
-            Add Custom Link
-          </span>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="space-y-2 pt-1">
+          <div className="flex gap-2">
             <input
               type="text"
               value={newResTitle}
               onChange={(e) => setNewResTitle(e.target.value)}
-              placeholder="Title (e.g. Figma Specs)"
-              className="px-2.5 py-1.5 bg-surface-l4 border border-theme-default rounded-md text-[13px] text-theme-primary placeholder:text-theme-tertiary outline-none focus:border-brand-accent"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleAddResource();
+              }}
+              placeholder="Link title"
+              className="flex-1 document-input text-sm"
             />
             <input
               type="text"
               value={newResUrl}
               onChange={(e) => setNewResUrl(e.target.value)}
-              placeholder="URL (e.g. https://...)"
-              className="px-2.5 py-1.5 bg-surface-l4 border border-theme-default rounded-md text-[13px] text-theme-primary placeholder:text-theme-tertiary outline-none focus:border-brand-accent font-mono"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleAddResource();
+              }}
+              placeholder="https://..."
+              className="flex-1 document-input text-sm font-mono"
             />
+            <button
+              type="button"
+              onClick={handleAddResource}
+              disabled={!newResTitle.trim() || !newResUrl.trim()}
+              className="px-3 py-1.5 text-brand-accent text-[12px] font-medium rounded-md hover:bg-brand-accent-subtle transition-colors disabled:opacity-30 shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={handleAddResource}
-            disabled={!newResTitle.trim() || !newResUrl.trim()}
-            className="px-3 py-1 bg-brand-accent-subtle hover:bg-brand-accent/20 text-brand-accent text-[12px] font-semibold rounded-md transition-colors flex items-center gap-1 disabled:opacity-40"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Add Link</span>
-          </button>
         </div>
       )}
 
-      {/* Strategy Notes (In-Place Transformation) */}
+      {/* Strategy Notes */}
+      <hr className="section-divider" />
       {isEditingInline ? (
-        <div className="space-y-1 pt-1">
-          <label className="text-[11px] font-mono text-theme-secondary uppercase tracking-[0.5px]">
-            Strategy Notes
-          </label>
-          <textarea
-            rows={2}
-            value={strategyNotes}
-            onChange={(e) => setStrategyNotes(e.target.value)}
-            placeholder="Add strategy notes..."
-            className="w-full bg-surface-l3 hover:bg-surface-l4 focus:bg-surface-l4 border border-theme-default focus:border-brand-accent rounded-md p-3 text-[14px] text-theme-primary outline-none transition-colors resize-none leading-[22.75px]"
-          />
-        </div>
+        <textarea
+          rows={3}
+          value={strategyNotes}
+          onChange={(e) => setStrategyNotes(e.target.value)}
+          placeholder="Strategy notes..."
+          className="document-textarea"
+        />
       ) : (
-        strategyNotes && (
-          <div className="p-3 bg-surface-l2 border border-theme-default rounded-md text-[14px] text-theme-primary/80 leading-[22.75px]">
+        strategyNotes ? (
+          <p className="text-[14px] text-theme-primary/80 leading-relaxed whitespace-pre-wrap">
             {strategyNotes}
-          </div>
-        )
+          </p>
+        ) : null
       )}
     </div>
   );

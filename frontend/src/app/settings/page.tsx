@@ -44,62 +44,54 @@ export default function SettingsPage() {
           <PageContainer variant="default">
             {/* Title */}
             <div>
-              <h1 className="text-xl sm:text-2xl font-normal text-theme-primary tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-normal text-theme-primary tracking-tight">
                 Settings
               </h1>
             </div>
 
             {/* Account Section */}
-            <div className="space-y-3">
-              <div className="text-xs font-medium text-theme-secondary uppercase tracking-wider">
-                Account
-              </div>
-              <div className="py-3.5 border-b border-theme-default flex items-center justify-between">
+            <div className="space-y-2">
+              <p className="section-title">Account</p>
+              <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-normal text-theme-primary">
-                    Developer
-                  </div>
-                  <div className="text-xs font-normal text-theme-secondary">
-                    developer@kanban.local
-                  </div>
+                  <div className="text-[15px] text-theme-primary">Developer</div>
+                  <div className="text-[13px] text-theme-tertiary">developer@kanban.local</div>
                 </div>
                 <button
                   onClick={() => alert("Single-user local profile for Kanban workspace.")}
-                  className="px-3 py-1.5 rounded-md border border-theme-default text-xs font-medium text-theme-secondary hover:text-theme-primary hover:bg-surface-hover transition-colors"
+                  className="px-3 py-1.5 text-[12px] font-medium text-theme-secondary hover:text-theme-primary hover:bg-surface-hover rounded-md transition-colors"
                 >
                   Edit
                 </button>
               </div>
             </div>
 
+            <hr className="section-divider" />
+
             {/* Appearance Section */}
             <div className="space-y-6">
-              <div className="text-xs font-medium text-theme-secondary uppercase tracking-wider">
-                Appearance
-              </div>
+              <p className="section-title">Appearance</p>
 
               {/* Theme Picker */}
-              <div className="py-3.5 border-b border-theme-default space-y-3">
+              <div className="space-y-3">
                 <div>
-                  <div className="text-sm font-normal text-theme-primary">
-                    Theme
-                  </div>
-                  <p className="text-xs text-theme-secondary">
+                  <div className="text-[15px] text-theme-primary">Theme</div>
+                  <p className="text-[13px] text-theme-tertiary">
                     Choose the surface tone for your workspace.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {/* Dark OLED Card */}
+                  {/* Dark OLED */}
                   <button
                     onClick={() => handleThemeChange("dark")}
-                    className={`p-3 rounded-md border text-left flex flex-col justify-between h-24 sm:h-20 transition-colors ${
+                    className={`p-3 rounded-[8px] border text-left flex flex-col justify-between h-24 sm:h-20 transition-colors ${
                       currentTheme === "dark"
-                        ? "border-brand-accent bg-surface-l3"
-                        : "border-theme-default hover:border-theme-secondary"
+                        ? "border-brand-accent bg-surface-hover"
+                        : "border-theme-subtle hover:border-theme-default"
                     }`}
                   >
-                    <div className="w-full h-10 bg-black rounded border border-white/10" />
+                    <div className="w-full h-10 bg-black rounded-[6px] border border-white/10" />
                     <div className="flex items-center justify-between pt-2">
                       <span className="text-xs font-medium text-theme-primary">Dark OLED</span>
                       {currentTheme === "dark" && (
@@ -108,16 +100,16 @@ export default function SettingsPage() {
                     </div>
                   </button>
 
-                  {/* Dim Card */}
+                  {/* Dim */}
                   <button
                     onClick={() => handleThemeChange("dim")}
-                    className={`p-3 rounded-md border text-left flex flex-col justify-between h-24 sm:h-20 transition-colors ${
+                    className={`p-3 rounded-[8px] border text-left flex flex-col justify-between h-24 sm:h-20 transition-colors ${
                       currentTheme === "dim"
-                        ? "border-brand-accent bg-surface-l3"
-                        : "border-theme-default hover:border-theme-secondary"
+                        ? "border-brand-accent bg-surface-hover"
+                        : "border-theme-subtle hover:border-theme-default"
                     }`}
                   >
-                    <div className="w-full h-10 bg-[#0e1015] rounded border border-white/10" />
+                    <div className="w-full h-10 bg-[#0e1015] rounded-[6px] border border-white/10" />
                     <div className="flex items-center justify-between pt-2">
                       <span className="text-xs font-medium text-theme-primary">Dim</span>
                       {currentTheme === "dim" && (
@@ -126,16 +118,16 @@ export default function SettingsPage() {
                     </div>
                   </button>
 
-                  {/* Light Card */}
+                  {/* Light */}
                   <button
                     onClick={() => handleThemeChange("light")}
-                    className={`p-3 rounded-md border text-left flex flex-col justify-between h-24 sm:h-20 transition-colors ${
+                    className={`p-3 rounded-[8px] border text-left flex flex-col justify-between h-24 sm:h-20 transition-colors ${
                       currentTheme === "light"
-                        ? "border-brand-accent bg-surface-l3"
-                        : "border-theme-default hover:border-theme-secondary"
+                        ? "border-brand-accent bg-surface-hover"
+                        : "border-theme-subtle hover:border-theme-default"
                     }`}
                   >
-                    <div className="w-full h-10 bg-white rounded border border-black/10" />
+                    <div className="w-full h-10 bg-white rounded-[6px] border border-black/10" />
                     <div className="flex items-center justify-between pt-2">
                       <span className="text-xs font-medium text-theme-primary">Light</span>
                       {currentTheme === "light" && (
@@ -147,13 +139,11 @@ export default function SettingsPage() {
               </div>
 
               {/* Accent Color */}
-              <div className="py-3.5 border-b border-theme-default space-y-3">
+              <div className="space-y-3">
                 <div>
-                  <div className="text-sm font-normal text-theme-primary">
-                    Accent color
-                  </div>
-                  <p className="text-xs text-theme-secondary">
-                    Applies to buttons, active navigation, links, progress bars, and focus rings.
+                  <div className="text-[15px] text-theme-primary">Accent color</div>
+                  <p className="text-[13px] text-theme-tertiary">
+                    Applies to buttons, navigation, links, progress bars, and focus rings.
                   </p>
                 </div>
 
@@ -164,7 +154,7 @@ export default function SettingsPage() {
                       onClick={() => setAccentColor(acc.hex)}
                       className={`w-9 h-9 sm:w-7 sm:h-7 rounded-full flex items-center justify-center transition-transform shrink-0 ${
                         currentAccent === acc.hex
-                          ? "ring-2 ring-white ring-offset-2 ring-offset-black scale-110"
+                          ? "ring-2 ring-offset-2 ring-brand-accent ring-offset-surface-l0 scale-110"
                           : "hover:scale-105"
                       }`}
                       style={{ backgroundColor: acc.hex }}
@@ -172,7 +162,7 @@ export default function SettingsPage() {
                       aria-label={`Select accent color ${acc.name}`}
                     >
                       {currentAccent === acc.hex && (
-                        <Check className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-black" />
+                        <Check className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-white" />
                       )}
                     </button>
                   ))}
@@ -180,26 +170,25 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Global Tag Templates & Categories Section (Decomposed Component) */}
+            <hr className="section-divider" />
+
+            {/* Global Tag Templates */}
             <GlobalTagsManager onOpenJsonModal={() => setIsTagsJsonModalOpen(true)} />
 
-            {/* Workspace Options Section */}
-            <div className="space-y-4">
-              <div className="text-xs font-medium text-theme-secondary uppercase tracking-wider">
-                Workspace
-              </div>
+            <hr className="section-divider" />
+
+            {/* Workspace Options */}
+            <div className="space-y-3">
+              <p className="section-title">Workspace</p>
 
               {/* Focus reminders */}
-              <div className="py-3.5 border-b border-theme-default flex items-center justify-between">
+              <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-normal text-theme-primary">
-                    Focus reminders
-                  </div>
-                  <p className="text-xs text-theme-secondary">
+                  <div className="text-[15px] text-theme-primary">Focus reminders</div>
+                  <p className="text-[13px] text-theme-tertiary">
                     Gentle nudges to return to your current focus task.
                   </p>
                 </div>
-
                 <button
                   onClick={() => setFocusReminders(!focusReminders)}
                   className={`w-11 sm:w-9 h-6 sm:h-5 rounded-full transition-colors relative ${
@@ -215,16 +204,13 @@ export default function SettingsPage() {
               </div>
 
               {/* Compact density */}
-              <div className="py-3.5 border-b border-theme-default flex items-center justify-between">
+              <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-normal text-theme-primary">
-                    Compact density
-                  </div>
-                  <p className="text-xs text-theme-secondary">
+                  <div className="text-[15px] text-theme-primary">Compact density</div>
+                  <p className="text-[13px] text-theme-tertiary">
                     Reduce spacing across lists and boards.
                   </p>
                 </div>
-
                 <button
                   onClick={() => setCompactDensity(!compactDensity)}
                   className={`w-11 sm:w-9 h-6 sm:h-5 rounded-full transition-colors relative ${
@@ -240,16 +226,13 @@ export default function SettingsPage() {
               </div>
 
               {/* Reduced motion */}
-              <div className="py-3.5 border-b border-theme-default flex items-center justify-between">
+              <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-normal text-theme-primary">
-                    Reduced motion
-                  </div>
-                  <p className="text-xs text-theme-secondary">
+                  <div className="text-[15px] text-theme-primary">Reduced motion</div>
+                  <p className="text-[13px] text-theme-tertiary">
                     Minimize transitions and animated effects.
                   </p>
                 </div>
-
                 <button
                   onClick={() => setReducedMotion(!reducedMotion)}
                   className={`w-11 sm:w-9 h-6 sm:h-5 rounded-full transition-colors relative ${

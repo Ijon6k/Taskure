@@ -24,7 +24,7 @@ export function PageContainer({
 }: PageContainerProps) {
   return (
     <div
-      className={`w-full ${VARIANT_MAP[variant]} px-3.5 sm:px-8 py-4 sm:py-10 md:py-12 space-y-6 sm:space-y-10 ${className}`}
+      className={`w-full ${VARIANT_MAP[variant]} px-3.5 sm:px-8 py-6 sm:py-12 md:py-14 space-y-6 sm:space-y-10 ${className}`}
     >
       {children}
     </div>

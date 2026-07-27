@@ -29,15 +29,15 @@ export function BoardFilterToolbar({
   };
 
   return (
-    <div className="w-full shrink-0 border-b border-theme-subtle bg-surface-l1/90 backdrop-blur-xs select-none">
-      <div className="px-3.5 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2.5">
+    <div className="w-full shrink-0 border-b border-theme-subtle select-none">
+      <div className="px-3.5 sm:px-6 py-2 flex flex-wrap items-center justify-between gap-2">
         {/* Left Controls: Search + Filter Popover + Sort Dropdown + Reset */}
-        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
           <SearchInput
             value={filters.searchQuery}
             onChange={(q) => onChangeFilters({ ...filters, searchQuery: q })}
             placeholder="Search tasks..."
-            className="!h-[32px] bg-surface-l3 w-full sm:w-[220px]"
+            className="w-full sm:w-[200px]"
           />
 
           {/* Unified Filter Popover Button */}

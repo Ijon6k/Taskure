@@ -64,7 +64,7 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
 
         <div className="absolute inset-x-0 bottom-0 md:inset-y-0 md:right-0 md:left-auto max-w-full flex md:pl-10">
           {/* Drawer / Bottom Sheet Container */}
-          <div className="w-full md:w-[540px] max-h-[88vh] md:max-h-full bg-surface-l4 border-t md:border-t-0 md:border-l border-theme-subtle text-theme-primary shadow-elevation-l4 flex flex-col h-full rounded-t-2xl md:rounded-none animate-in slide-in-from-bottom md:slide-in-from-right duration-200">
+          <div className="w-full md:w-[540px] max-h-[88vh] md:max-h-full bg-surface-l4 border-t md:border-t-0 md:border-l border-theme-subtle text-theme-primary shadow-elevation-l4 flex flex-col h-full rounded-t-2xl md:rounded-tl-[12px] md:rounded-bl-[12px] md:rounded-r-none animate-in slide-in-from-bottom md:slide-in-from-right duration-200">
 
             {/* Mobile Drag Indicator Bar */}
             <div className="md:hidden pt-2 pb-1 flex justify-center shrink-0">
@@ -73,7 +73,7 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
 
             {/* ── Header ── */}
             <div className="px-4 md:px-6 py-3 md:py-4 border-b border-theme-subtle flex items-center justify-between bg-surface-l4 shrink-0">
-              <span className="text-xs font-medium text-theme-secondary uppercase tracking-wider">
+              <span className="text-[13px] font-medium text-theme-secondary uppercase tracking-wider">
                 Task Details
               </span>
               <div className="flex items-center gap-2">
@@ -117,7 +117,7 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
 
                 {/* Column Location & Move Selector */}
                 {columns.length > 0 && (
-                  <div className="flex items-center justify-between gap-3 p-3 rounded-md bg-theme-elevated border border-theme-default text-sm">
+                  <div className="flex items-center justify-between gap-3 p-3 rounded-[8px] bg-theme-elevated border border-theme-default text-[15px]">
                     <span className="text-theme-secondary font-medium flex items-center gap-1.5">
                       <ArrowRightLeft className="w-4 h-4 text-brand-accent" />
                       <span>Column:</span>
@@ -125,7 +125,7 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
                     <select
                       value={task.column_id}
                       onChange={(e) => handleColumnChange(e.target.value)}
-                      className="bg-theme-surface border border-theme-default rounded-md px-3 py-1.5 text-theme-primary font-medium focus:outline-none focus:border-brand-accent cursor-pointer"
+                      className="bg-theme-surface border border-theme-default rounded-[8px] px-3 py-1.5 text-theme-primary font-medium focus:outline-none focus:border-brand-accent cursor-pointer"
                     >
                       {columns.map((col) => (
                         <option key={col.id} value={col.id}>
@@ -143,10 +143,10 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
                       type="text"
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
-                      className="w-full text-base md:text-lg font-medium bg-theme-elevated text-theme-primary border border-theme-default rounded-md p-2.5 focus:border-brand-accent focus:outline-none transition-colors"
+                      className="w-full text-lg md:text-xl font-medium bg-theme-elevated text-theme-primary border border-theme-default rounded-[8px] p-2.5 focus:border-brand-accent focus:outline-none transition-colors"
                     />
                   ) : (
-                    <h1 className="text-base md:text-lg font-medium text-theme-primary leading-snug">
+                    <h1 className="text-lg md:text-xl font-medium text-theme-primary leading-snug">
                       {task.title}
                     </h1>
                   )}
@@ -161,7 +161,7 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
 
                 {/* Due Date Row — DatePickerPopover */}
                 <div className="pt-1 space-y-1.5">
-                  <div className="text-xs font-medium text-theme-secondary uppercase tracking-wider">
+                  <div className="text-[13px] font-medium text-theme-secondary uppercase tracking-wider">
                     Due Date
                   </div>
                   <DatePickerPopover
@@ -173,7 +173,7 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
 
                 {/* Description */}
                 <div className="space-y-1.5 pt-1">
-                  <div className="text-xs font-medium text-theme-secondary uppercase tracking-wider">
+                  <div className="text-[13px] font-medium text-theme-secondary uppercase tracking-wider">
                     Description
                   </div>
                   {isEditing ? (
@@ -182,10 +182,10 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
                       value={editDescription}
                       onChange={(e) => setEditDescription(e.target.value)}
                       placeholder="What needs to happen?"
-                      className="w-full bg-theme-elevated border border-theme-default rounded-md p-3 text-sm text-theme-primary placeholder-theme-tertiary focus:outline-none focus:border-brand-accent transition-colors resize-none"
+                      className="w-full bg-theme-elevated border border-theme-default rounded-[8px] p-3 text-[15px] text-theme-primary placeholder-theme-tertiary focus:outline-none focus:border-brand-accent transition-colors resize-none"
                     />
                   ) : (
-                    <div className="p-3 bg-theme-elevated border border-theme-default rounded-md text-sm text-theme-secondary min-h-[80px] whitespace-pre-wrap leading-relaxed">
+                    <div className="p-3 bg-theme-elevated border border-theme-default rounded-[8px] text-[15px] text-theme-secondary min-h-[80px] whitespace-pre-wrap leading-relaxed">
                       {task.description || "No description provided."}
                     </div>
                   )}

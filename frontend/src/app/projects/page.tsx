@@ -37,7 +37,6 @@ export default function ProjectsPage() {
 
   const { data: projects = [], isLoading } = useProjects();
 
-  // Filter projects by search & status
   const filteredProjects = projects.filter((p) => {
     const matchesSearch =
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -70,24 +69,24 @@ export default function ProjectsPage() {
           <PageContainer variant="wide">
             {/* Header: Title & New Project Button */}
             <div className="flex items-center justify-between">
-              <h1 className="text-xl sm:text-2xl font-normal text-theme-primary tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-normal text-theme-primary tracking-tight">
                 Projects
               </h1>
               <button
                 onClick={openCreateProject}
-                className="h-10 sm:h-9 px-3.5 bg-brand-accent hover:opacity-90 active:scale-95 text-black text-xs sm:text-sm font-semibold rounded-md flex items-center gap-2 transition-all shadow-sm"
+                className="h-10 sm:h-9 px-3.5 bg-brand-accent hover:opacity-90 active:scale-95 text-on-accent text-xs sm:text-sm font-semibold rounded-[8px] flex items-center gap-2 transition-all"
               >
                 <Plus className="w-4 h-4" />
                 <span>New project</span>
               </button>
             </div>
 
-            {/* Toolbar: Search input & Status filter pills */}
+            {/* Toolbar */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <SearchInput
                 value={searchQuery}
                 onChange={setSearchQuery}
-                placeholder="Search projects…"
+                placeholder="Search projects..."
                 className="flex-1"
               />
               <div className="overflow-x-auto pb-1 sm:pb-0">
@@ -104,14 +103,12 @@ export default function ProjectsPage() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Pin className="w-3.5 h-3.5 text-theme-secondary" />
-                  <span className="text-xs font-medium text-theme-secondary uppercase tracking-wider">
-                    Pinned
-                  </span>
+                  <span className="section-title !mb-0">Pinned</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-stretch">
                   {pinnedProjects.map((proj) => (
-                    <ProjectCard key={proj.id} project={proj} variant="detailed" onEdit={openEditProject} />
+                    <ProjectCard key={proj.id} project={proj} variant="grid" />
                   ))}
                 </div>
               </div>
@@ -120,35 +117,33 @@ export default function ProjectsPage() {
             {/* All Projects Section */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-theme-secondary uppercase tracking-wider">
-                  All projects
-                </span>
-                <span className="px-1.5 py-0.5 bg-theme-surface text-theme-secondary font-mono text-xs rounded border border-theme-default">
+                <span className="section-title !mb-0">All projects</span>
+                <span className="text-[11px] text-theme-tertiary font-mono">
                   {unpinnedProjects.length}
                 </span>
               </div>
 
               {isLoading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 animate-pulse">
-                  <div className="h-32 bg-theme-surface border border-theme-default rounded-md" />
-                  <div className="h-32 bg-theme-surface border border-theme-default rounded-md" />
+                  <div className="h-32 bg-surface-hover rounded-[8px]" />
+                  <div className="h-32 bg-surface-hover rounded-[8px]" />
                 </div>
               ) : filteredProjects.length === 0 ? (
-                <div className="p-8 border border-theme-default rounded-md bg-theme-surface text-center space-y-2">
-                  <FolderKanban className="w-8 h-8 text-theme-secondary mx-auto" />
-                  <p className="text-sm text-theme-primary">No projects found</p>
-                  <p className="text-xs text-theme-secondary">
+                <div className="py-8 text-center space-y-2">
+                  <FolderKanban className="w-8 h-8 text-theme-tertiary mx-auto" />
+                  <p className="text-sm text-theme-secondary">No projects found</p>
+                  <p className="text-xs text-theme-tertiary">
                     Try adjusting your search query or status filter.
                   </p>
                 </div>
               ) : unpinnedProjects.length === 0 ? (
-                <div className="p-4 border border-dashed border-theme-subtle rounded-md bg-theme-surface/30 text-center text-xs text-theme-tertiary">
+                <p className="text-[13px] text-theme-tertiary py-2">
                   All matching projects are pinned above.
-                </div>
+                </p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-stretch">
                   {unpinnedProjects.map((proj) => (
-                    <ProjectCard key={proj.id} project={proj} variant="detailed" onEdit={openEditProject} />
+                    <ProjectCard key={proj.id} project={proj} variant="grid" />
                   ))}
                 </div>
               )}

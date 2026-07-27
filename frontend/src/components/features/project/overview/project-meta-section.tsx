@@ -58,103 +58,104 @@ export function ProjectMetaSection({
   };
 
   return (
-    <div className="space-y-4 pt-1">
-      {/* Project Name (Inline Editable when isEditingInline is true) */}
-      {isEditingInline && (
-        <div className="space-y-1">
-          <label className="text-[11px] font-mono text-theme-secondary uppercase tracking-[0.5px]">
-            Project Name
-          </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Project Name..."
-            className="w-full bg-surface-l3 hover:bg-surface-l4 focus:bg-surface-l4 border border-theme-default focus:border-brand-accent rounded-md px-3 py-1.5 text-[16px] font-semibold text-theme-primary outline-none transition-colors"
-          />
-        </div>
-      )}
+    <div className="space-y-5 pt-1">
+      {/* Project Name */}
+      {isEditingInline ? (
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Project name"
+          className="document-input"
+          style={{ fontSize: "22px", fontWeight: 600 }}
+        />
+      ) : null}
 
       {/* Description */}
       {isEditingInline ? (
-        <div className="space-y-1">
-          <label className="text-[11px] font-mono text-theme-secondary uppercase tracking-[0.5px]">
-            Description
-          </label>
-          <textarea
-            rows={2}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Add project description..."
-            className="w-full bg-surface-l3 hover:bg-surface-l4 focus:bg-surface-l4 border border-theme-default focus:border-brand-accent rounded-md p-2.5 text-[14px] text-theme-primary outline-none transition-colors resize-none leading-[22.75px]"
-          />
-        </div>
+        <textarea
+          rows={2}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Add a brief description..."
+          className="document-textarea"
+        />
       ) : (
-        <p className="text-[14px] text-theme-primary/80 leading-[22.75px] font-normal">
+        <p className="text-[14px] text-theme-primary/80 leading-relaxed">
           {project.description || "Project overview and key objectives."}
         </p>
       )}
 
       {/* Target Goal */}
       {isEditingInline ? (
-        <div className="space-y-1">
-          <label className="text-[11px] font-mono text-theme-secondary uppercase tracking-[0.5px]">
-            Target Goal / Objective
-          </label>
-          <div className="flex items-start gap-2.5">
-            <Target className="w-4 h-4 text-theme-secondary shrink-0 mt-2.5" />
-            <textarea
-              rows={2}
-              value={targetGoal}
-              onChange={(e) => setTargetGoal(e.target.value)}
-              placeholder="Add target goal or objective..."
-              className="w-full bg-surface-l3 hover:bg-surface-l4 focus:bg-surface-l4 border border-theme-default focus:border-brand-accent rounded-md p-2.5 text-[14px] text-theme-primary outline-none transition-colors resize-none leading-[22.75px]"
-            />
-          </div>
+        <div className="flex items-start gap-3">
+          <Target className="w-4 h-4 text-theme-tertiary shrink-0 mt-0.5" />
+          <textarea
+            rows={2}
+            value={targetGoal}
+            onChange={(e) => setTargetGoal(e.target.value)}
+            placeholder="What are you trying to achieve?"
+            className="document-textarea flex-1"
+          />
         </div>
       ) : (
         targetGoal && (
-          <div className="flex items-start gap-2.5 pt-1">
-            <Target className="w-4 h-4 text-theme-secondary shrink-0 mt-1" />
-            <p className="text-[14px] text-theme-primary/80 leading-[22.75px]">
+          <div className="flex items-start gap-3 pt-0.5">
+            <Target className="w-4 h-4 text-theme-tertiary shrink-0 mt-0.5" />
+            <p className="text-[14px] text-theme-primary/80 leading-relaxed">
               {targetGoal}
             </p>
           </div>
         )
       )}
 
-      {/* Metadata Bar: Target Date & Created Date */}
-      <div className="flex items-center gap-5 text-[12px] flex-wrap pt-1">
-        {/* Target Date */}
+      {/* Metadata Row: Target Date & Created Date */}
+      <div className="flex items-center gap-6 text-[13px] flex-wrap">
         {isEditingInline ? (
-          <div className="flex items-center gap-1.5 bg-surface-l3 border border-theme-default rounded-md px-2.5 py-1 font-mono text-theme-secondary">
-            <Calendar className="w-3.5 h-3.5 shrink-0" />
+          <div className="flex items-center gap-1.5 text-theme-secondary">
+            <Calendar className="w-3.5 h-3.5 text-theme-tertiary shrink-0" />
             <input
               type="date"
               value={targetDate}
               onChange={(e) => setTargetDate(e.target.value)}
-              className="bg-transparent text-theme-primary text-[12px] font-mono outline-none cursor-pointer"
+              className="bg-transparent text-theme-primary text-[13px] font-mono outline-none cursor-pointer border-b border-theme-subtle hover:border-theme-default focus:border-brand-accent pb-0.5"
             />
           </div>
         ) : (
           targetDate && (
             <div className="flex items-center gap-1.5 text-theme-secondary font-mono">
-              <Calendar className="w-3.5 h-3.5 shrink-0 text-theme-tertiary" />
+              <Calendar className="w-3.5 h-3.5 text-theme-tertiary shrink-0" />
               <span>Target: {formatDateShort(targetDate)}</span>
             </div>
           )
         )}
 
-        {/* Created Date */}
         {project.created_at && (
           <div className="flex items-center gap-1.5 text-theme-secondary font-mono">
-            <Clock className="w-3.5 h-3.5 shrink-0 text-theme-tertiary" />
+            <Clock className="w-3.5 h-3.5 text-theme-tertiary shrink-0" />
             <span>Created {formatDateShort(project.created_at)}</span>
           </div>
         )}
       </div>
 
-      {/* Project Tags Editor (Modular Component) */}
+      {/* Status Selector (edit mode only) */}
+      {isEditingInline && (
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-medium text-theme-secondary uppercase tracking-wider">Status</span>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="bg-transparent border-b border-theme-subtle text-[13px] text-theme-primary outline-none cursor-pointer hover:border-theme-default focus:border-brand-accent py-0.5"
+          >
+            <option value="active">Active</option>
+            <option value="paused">Paused</option>
+            <option value="completed">Completed</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+      )}
+
+      {/* Project Tags Editor */}
       <ProjectTagsEditor
         isEditingInline={isEditingInline}
         tagsList={parsedTagsList}

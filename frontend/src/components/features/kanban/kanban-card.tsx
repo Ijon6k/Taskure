@@ -49,7 +49,7 @@ export const KanbanCard = memo(function KanbanCard({ task, onClick }: KanbanCard
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className="w-full p-3 bg-surface-l3 border border-theme-subtle hover:border-theme-default hover:bg-surface-hover rounded-md cursor-grab active:cursor-grabbing transition-all duration-150 active:scale-[0.99] space-y-2.5 select-none group shadow-elevation-l3"
+      className="w-full p-4 bg-surface-l3 rounded-[8px] shadow-elevation-l3 hover:shadow-elevation-hover hover:bg-surface-hover cursor-grab active:cursor-grabbing transition-all duration-150 active:scale-[0.99] space-y-3 select-none group"
     >
       {/* Top Header: Priority Badge (Left) vs Text-Only Tag (Right) */}
       <div className="flex items-center justify-between gap-2 min-h-[22px]">
@@ -58,7 +58,7 @@ export const KanbanCard = memo(function KanbanCard({ task, onClick }: KanbanCard
       </div>
 
       {/* Task Title (Visually Dominant) */}
-      <h4 className="text-sm font-normal text-theme-primary group-hover:text-brand-accent transition-colors leading-snug line-clamp-2">
+      <h4 className="text-[15px] font-normal text-theme-primary transition-colors leading-snug line-clamp-2">
         {task.title}
       </h4>
 
@@ -69,7 +69,7 @@ export const KanbanCard = memo(function KanbanCard({ task, onClick }: KanbanCard
 
       {/* Card Footer Details */}
       {(checklistItems.length > 0 || task.due_date) && (
-        <div className="flex items-center justify-between text-xs font-mono text-theme-tertiary pt-0.5">
+        <div className="flex items-center justify-between text-[13px] font-mono text-theme-tertiary pt-0.5">
           <span>
             {checklistItems.length > 0
               ? `${completedChecklist}/${checklistItems.length} subtasks`

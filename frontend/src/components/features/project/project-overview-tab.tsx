@@ -3,12 +3,10 @@
 import { useState } from "react";
 import { Edit3, CheckCircle2, LayoutGrid, Plus, Check, X } from "lucide-react";
 import { api, ProjectData, TaskData, ResourceLinkItem } from "@/lib/api";
-import { computeTaskStats, formatDateShort } from "@/lib/helpers";
+import { computeTaskStats } from "@/lib/helpers";
 import { ColumnDistributionBar } from "@/components/ui/column-distribution-bar";
-import { StatCard } from "@/components/ui/stat-card";
 import { PriorityBadge } from "@/components/ui/priority-badge";
 import { DueDateText } from "@/components/ui/due-date-text";
-import { Card, CardHeader } from "@/components/ui/card";
 import { sortBy } from "es-toolkit";
 import { toast } from "sonner";
 import { useUIStore } from "@/store/use-ui-store";
@@ -125,17 +123,19 @@ export function ProjectOverviewTab({
 
   return (
     <div className="flex-1 overflow-y-auto text-theme-primary font-sans flex flex-col items-center">
-      <PageContainer variant="default" className="!space-y-9">
+      <PageContainer variant="default" className="!space-y-10">
         {/* Header & Edit Action Toggle */}
         <div className="flex items-center justify-between">
-          <CardHeader>Overview</CardHeader>
+          <h2 className="text-[11px] font-medium text-theme-secondary uppercase tracking-[0.06em]">
+            Overview
+          </h2>
 
           {isEditingInline ? (
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setIsEditingInline(false)}
-                className="px-2.5 py-1 bg-surface-l3 hover:bg-surface-l4 border border-theme-default rounded-md text-[12px] text-theme-secondary hover:text-theme-primary flex items-center gap-1 transition-colors cursor-pointer"
+                className="px-2.5 py-1 text-[12px] text-theme-secondary hover:text-theme-primary flex items-center gap-1 transition-colors cursor-pointer font-medium"
               >
                 <X className="w-3.5 h-3.5" />
                 <span>Cancel</span>
@@ -144,7 +144,7 @@ export function ProjectOverviewTab({
                 type="button"
                 onClick={handleSaveInline}
                 disabled={saving}
-                className="px-3 py-1 bg-brand-accent hover:bg-brand-accent-hover text-black font-medium rounded-md text-[12px] hover:opacity-90 flex items-center gap-1 transition-opacity cursor-pointer disabled:opacity-50"
+                className="px-3 py-1 bg-brand-accent hover:bg-brand-accent-hover text-on-accent font-medium rounded-md text-[12px] hover:opacity-90 flex items-center gap-1 transition-opacity cursor-pointer disabled:opacity-50"
               >
                 <Check className="w-3.5 h-3.5 font-bold" />
                 <span>{saving ? "Saving..." : "Save Changes"}</span>
@@ -154,7 +154,7 @@ export function ProjectOverviewTab({
             <button
               type="button"
               onClick={handleStartEdit}
-              className="px-2.5 py-1 bg-surface-l3 hover:bg-surface-l4 border border-theme-default rounded-md text-[12px] text-theme-secondary hover:text-theme-primary flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+              className="px-2.5 py-1 text-[12px] text-theme-secondary hover:text-theme-primary flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
             >
               <Edit3 className="w-3.5 h-3.5 text-brand-accent" />
               <span>Edit</span>
@@ -162,7 +162,7 @@ export function ProjectOverviewTab({
           )}
         </div>
 
-        {/* Project Meta Section */}
+        {/* Project Meta Section (document-style) */}
         <ProjectMetaSection
           project={project}
           isEditingInline={isEditingInline}
@@ -181,21 +181,19 @@ export function ProjectOverviewTab({
           parsedTagsList={parsedTagsList}
         />
 
-        {/* Task Distribution Section */}
-        <div className="pt-2">
-          <ColumnDistributionBar
-            columnStats={stats.columnStats}
-            totalTasks={stats.allTasks.length}
-          />
-        </div>
+        {/* Task Distribution Bar */}
+        <hr className="section-divider" />
+        <ColumnDistributionBar
+          columnStats={stats.columnStats}
+          totalTasks={stats.allTasks.length}
+        />
 
-        {/* Today's Focus Section */}
-        <div className="space-y-3">
-          <CardHeader>Today's focus</CardHeader>
-
+        {/* Today's Focus */}
+        <div className="space-y-2">
+          <p className="section-title">Today&apos;s focus</p>
           <div
             onClick={() => focusTask && setSelectedTaskId(focusTask.id)}
-            className="p-4 bg-surface-l2 border border-theme-default rounded-md flex items-center justify-between cursor-pointer hover:bg-surface-l4 transition-colors shadow-elevation-l3"
+            className="interactive-row px-3 py-2 flex items-center justify-between cursor-pointer"
           >
             {focusTask ? (
               <>
@@ -205,68 +203,71 @@ export function ProjectOverviewTab({
                 <PriorityBadge priority={focusTask.priority} />
               </>
             ) : (
-              <span className="text-[13px] text-theme-secondary">
+              <span className="text-[13px] text-theme-tertiary">
                 All tasks completed or no active tasks available.
               </span>
             )}
           </div>
         </div>
 
-        {/* Upcoming Deadlines & Recently Completed Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div className="space-y-3">
-            <CardHeader>Upcoming deadlines</CardHeader>
-            <div className="space-y-1">
-              {upcomingTasks.length === 0 ? (
-                <div className="text-[12px] text-theme-secondary p-2">
-                  No upcoming deadlines set.
-                </div>
-              ) : (
-                upcomingTasks.map((item: TaskData) => (
+        <hr className="section-divider" />
+
+        {/* Upcoming Deadlines & Recently Completed */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
+          <div className="space-y-2">
+            <p className="section-title">Upcoming deadlines</p>
+            {upcomingTasks.length === 0 ? (
+              <p className="text-[13px] text-theme-tertiary py-1">
+                No upcoming deadlines set.
+              </p>
+            ) : (
+              <div>
+                {upcomingTasks.map((item: TaskData) => (
                   <div
                     key={item.id}
                     onClick={() => setSelectedTaskId(item.id)}
-                    className="flex items-center justify-between px-2.5 py-1.5 rounded-md hover:bg-surface-l4 transition-colors cursor-pointer text-[14px]"
+                    className="subtle-row"
                   >
-                    <span className="text-theme-primary/80 font-medium truncate pr-2">
+                    <span className="text-theme-primary/80 font-medium truncate flex-1">
                       {item.title}
                     </span>
                     <DueDateText dateStr={item.due_date} />
                   </div>
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="space-y-3">
-            <CardHeader>Recently completed</CardHeader>
-            <div className="space-y-1">
-              {completedTasks.length === 0 ? (
-                <div className="text-[12px] text-theme-secondary p-2">
-                  No completed tasks yet.
-                </div>
-              ) : (
-                completedTasks.map((item: TaskData) => (
+          <div className="space-y-2">
+            <p className="section-title">Recently completed</p>
+            {completedTasks.length === 0 ? (
+              <p className="text-[13px] text-theme-tertiary py-1">
+                No completed tasks yet.
+              </p>
+            ) : (
+              <div>
+                {completedTasks.map((item: TaskData) => (
                   <div
                     key={item.id}
                     onClick={() => setSelectedTaskId(item.id)}
-                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-md hover:bg-surface-l4 transition-colors cursor-pointer text-[14px]"
+                    className="subtle-row"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5 text-semantic-success shrink-0" />
                     <span className="text-theme-secondary font-normal truncate">
                       {item.title}
                     </span>
                   </div>
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Dynamic Resources Section */}
-        <div className="space-y-3">
-          <CardHeader>Resources & Links</CardHeader>
+        <hr className="section-divider" />
 
+        {/* Resources & Links */}
+        <div className="space-y-2">
+          <p className="section-title">Resources &amp; Links</p>
           <ProjectResourcesSection
             isEditingInline={isEditingInline}
             resources={resources}
@@ -281,35 +282,36 @@ export function ProjectOverviewTab({
           />
         </div>
 
-        {/* Quick Actions Section */}
-        <div className="space-y-3">
-          <CardHeader>Quick actions</CardHeader>
+        <hr className="section-divider" />
 
-          <div className="grid grid-cols-3 gap-3">
+        {/* Quick Actions */}
+        <div className="space-y-2">
+          <p className="section-title">Quick actions</p>
+          <div className="flex gap-3">
             <button
               type="button"
               onClick={() => onSwitchTab && onSwitchTab("board")}
-              className="h-[42px] px-3 bg-surface-l3 hover:bg-surface-l4 border border-theme-default rounded-md flex items-center justify-start gap-2.5 text-theme-secondary hover:text-theme-primary text-[14px] font-medium transition-colors cursor-pointer"
+              className="interactive-row px-3 py-2 text-[13px] text-theme-secondary hover:text-theme-primary flex items-center gap-2 font-medium transition-colors cursor-pointer"
             >
-              <LayoutGrid className="w-3.5 h-3.5 text-theme-secondary" />
+              <LayoutGrid className="w-3.5 h-3.5" />
               <span>Open board</span>
             </button>
 
             <button
               type="button"
               onClick={() => onSwitchTab && onSwitchTab("board")}
-              className="h-[42px] px-3 bg-surface-l3 hover:bg-surface-l4 border border-theme-default rounded-md flex items-center justify-start gap-2.5 text-theme-secondary hover:text-theme-primary text-[14px] font-medium transition-colors cursor-pointer"
+              className="interactive-row px-3 py-2 text-[13px] text-theme-secondary hover:text-theme-primary flex items-center gap-2 font-medium transition-colors cursor-pointer"
             >
-              <Plus className="w-3.5 h-3.5 text-theme-secondary" />
+              <Plus className="w-3.5 h-3.5" />
               <span>Add task</span>
             </button>
 
             <button
               type="button"
               onClick={handleStartEdit}
-              className="h-[42px] px-3 bg-surface-l3 hover:bg-surface-l4 border border-theme-default rounded-md flex items-center justify-start gap-2.5 text-theme-secondary hover:text-theme-primary text-[14px] font-medium transition-colors cursor-pointer"
+              className="interactive-row px-3 py-2 text-[13px] text-theme-secondary hover:text-theme-primary flex items-center gap-2 font-medium transition-colors cursor-pointer"
             >
-              <Edit3 className="w-3.5 h-3.5 text-theme-secondary" />
+              <Edit3 className="w-3.5 h-3.5" />
               <span>Edit details</span>
             </button>
           </div>

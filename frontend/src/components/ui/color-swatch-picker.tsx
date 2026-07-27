@@ -16,17 +16,17 @@ export function ColorSwatchPicker({
   selectedColor,
   onSelect,
   colors = TAG_COLOR_PALETTE,
-  label = "Select Accent Color",
+  label = "Accent Color",
   className = "",
 }: ColorSwatchPickerProps) {
   return (
-    <div className={`space-y-1.5 ${className}`}>
+    <div className={`space-y-2 ${className}`}>
       {label && (
-        <span className="text-[11px] text-theme-tertiary font-mono uppercase tracking-[0.5px]">
-          {label}:
+        <span className="block text-[13px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
+          {label}
         </span>
       )}
-      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+      <div className="flex items-center gap-3 pt-0.5 overflow-x-auto">
         {colors.map((hex) => {
           const isSelected = selectedColor.toLowerCase() === hex.toLowerCase();
           return (
@@ -34,14 +34,19 @@ export function ColorSwatchPicker({
               key={hex}
               type="button"
               onClick={() => onSelect(hex)}
-              className={`w-5 h-5 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+              className={`w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 ${
                 isSelected
-                  ? "ring-2 ring-white ring-offset-1 ring-offset-surface-l3 scale-110"
-                  : "hover:scale-105 opacity-80 hover:opacity-100"
+                  ? "scale-110"
+                  : "hover:scale-105 opacity-75 hover:opacity-100"
               }`}
-              style={{ backgroundColor: hex }}
+              style={{
+                backgroundColor: hex,
+                boxShadow: isSelected ? `0 0 0 2px var(--surface-l3), 0 0 0 4px ${hex}` : undefined,
+              }}
+              title={`Color ${hex}`}
+              aria-label={`Select color ${hex}`}
             >
-              {isSelected && <Check className="w-3 h-3 text-white font-bold" />}
+              {isSelected && <Check className="w-3.5 h-3.5 text-slate-950 stroke-[3]" />}
             </button>
           );
         })}

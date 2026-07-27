@@ -20,7 +20,7 @@ export function FilterPills<T extends string = string>({
 }: FilterPillsProps<T>) {
   return (
     <div
-      className={`h-9 p-1 bg-theme-surface border border-theme-default rounded-md flex items-center gap-1 ${className}`}
+      className={`flex items-center gap-1 ${className}`}
     >
       {options.map((opt) => {
         const key = typeof opt === "string" ? opt : opt.key;
@@ -34,8 +34,8 @@ export function FilterPills<T extends string = string>({
             onClick={() => onChange(key as T)}
             className={`px-2.5 py-1 rounded text-xs font-medium capitalize cursor-pointer transition-all duration-150 active:scale-[0.97] ${
               isActive
-                ? "bg-theme-elevated text-theme-primary shadow-xs"
-                : "text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated/60"
+                ? "bg-theme-elevated text-theme-primary"
+                : "text-theme-secondary hover:text-theme-primary hover:bg-theme-hover"
             }`}
           >
             {label}

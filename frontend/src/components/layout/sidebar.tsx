@@ -83,14 +83,14 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
             onClick={toggleSidebar}
             onMouseEnter={() => setIsLogoHovered(true)}
             onMouseLeave={() => setIsLogoHovered(false)}
-            className="w-[32px] h-[32px] rounded-md flex items-center justify-center hover:bg-theme-hover transition-colors"
+            className="w-[32px] h-[32px] rounded-[6px] flex items-center justify-center hover:bg-theme-hover transition-colors"
             aria-label="Expand sidebar"
             title="Expand sidebar"
           >
             {isLogoHovered ? (
               <PanelLeftOpen className="w-[18px] h-[18px] text-theme-primary" />
             ) : (
-              <span className="w-[28px] h-[28px] bg-brand-accent rounded-md flex items-center justify-center text-black font-bold text-sm">
+              <span className="w-[28px] h-[28px] bg-brand-accent rounded-[6px] flex items-center justify-center text-black font-bold text-sm">
                 K
               </span>
             )}
@@ -98,10 +98,10 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
         ) : (
           <>
             <Link href="/" onClick={() => isMobileView && closeMobileMenu()} className="flex items-center gap-2.5 min-w-0">
-              <span className="w-[28px] h-[28px] bg-brand-accent rounded-md flex items-center justify-center text-black font-bold text-sm shrink-0">
+              <span className="w-[28px] h-[28px] bg-brand-accent rounded-[6px] flex items-center justify-center text-black font-bold text-sm shrink-0">
                 K
               </span>
-              <span className="text-[15px] font-medium text-theme-primary whitespace-nowrap">
+              <span className="text-[15px] font-medium tracking-tight text-theme-primary whitespace-nowrap">
                 My Kanban
               </span>
             </Link>
@@ -110,7 +110,7 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
               <button
                 type="button"
                 onClick={closeMobileMenu}
-                className="w-[32px] h-[32px] rounded-md flex items-center justify-center text-theme-secondary hover:text-theme-primary hover:bg-theme-hover transition-colors shrink-0"
+                className="w-[32px] h-[32px] rounded-[6px] flex items-center justify-center text-theme-secondary hover:text-theme-primary hover:bg-theme-hover transition-colors shrink-0"
                 aria-label="Close Mobile Navigation"
               >
                 <X className="w-5 h-5" />
@@ -119,7 +119,7 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
               <button
                 type="button"
                 onClick={toggleSidebar}
-                className="w-[28px] h-[28px] rounded-md flex items-center justify-center text-theme-secondary hover:text-theme-primary hover:bg-theme-hover transition-colors shrink-0"
+                className="w-[28px] h-[28px] rounded-[6px] flex items-center justify-center text-theme-secondary hover:text-theme-primary hover:bg-theme-hover transition-colors shrink-0"
                 aria-label="Collapse sidebar"
                 title="Collapse sidebar"
               >
@@ -145,11 +145,11 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
               onClick={() => isMobileView && closeMobileMenu()}
               title={!isMobileView && isSidebarCollapsed ? item.label : undefined}
               aria-label={!isMobileView && isSidebarCollapsed ? item.label : undefined}
-              className={`h-[40px] rounded-md flex items-center text-[14px] font-medium transition-colors ${
+              className={`h-[40px] rounded-[6px] flex items-center text-[14px] font-medium transition-colors ${
                 !isMobileView && isSidebarCollapsed ? "w-[40px] justify-center" : "w-full px-3 gap-3"
               } ${
                 isActive
-                  ? "bg-theme-elevated text-theme-primary font-semibold"
+                  ? "bg-theme-elevated text-theme-primary font-semibold border-l-2 border-brand-accent"
                   : "text-theme-secondary hover:text-theme-primary hover:bg-theme-hover"
               }`}
             >
@@ -165,7 +165,7 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
 
         {(isMobileView || !isSidebarCollapsed) && projects.length > 0 && (
           <div className="pt-5 px-3">
-            <div className="text-[11px] font-medium text-theme-secondary uppercase tracking-wider mb-2.5">
+            <div className="text-[12px] font-mono text-theme-secondary uppercase tracking-widest mb-2.5">
               Projects ({projects.length})
             </div>
             <div className="space-y-1">
@@ -177,14 +177,14 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
                     key={project.id}
                     href={`/projects/${project.id}/board`}
                     onClick={() => isMobileView && closeMobileMenu()}
-                    className={`flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] truncate transition-colors ${
+                    className={`flex items-center gap-2.5 px-2.5 py-2 rounded-[6px] text-[13px] truncate transition-colors ${
                       isProjectActive
                         ? "bg-theme-elevated text-theme-primary font-medium"
                         : "text-theme-secondary hover:text-theme-primary hover:bg-theme-hover"
                     }`}
                   >
                     <span
-                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      className="w-2 h-2 rounded-full shrink-0"
                       style={{ backgroundColor: project.color || "#7F9CF5" }}
                     />
                     <span className="truncate">{project.name}</span>
@@ -206,7 +206,7 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
           }}
           title={!isMobileView && isSidebarCollapsed ? "Shortcuts" : undefined}
           aria-label={!isMobileView && isSidebarCollapsed ? "Shortcuts" : undefined}
-          className={`h-[36px] rounded-md flex items-center text-[13px] font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated transition-colors ${
+          className={`h-[36px] rounded-[6px] flex items-center text-[13px] font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated transition-colors ${
             !isMobileView && isSidebarCollapsed ? "w-[40px] justify-center" : "w-full px-3 justify-between"
           }`}
         >
@@ -215,7 +215,7 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
             {(isMobileView || !isSidebarCollapsed) && <span>Shortcuts</span>}
           </span>
           {(isMobileView || !isSidebarCollapsed) && (
-            <kbd className="px-1.5 py-0.5 bg-theme-elevated border border-white/10 rounded text-[10px] font-mono text-brand-accent font-semibold">
+            <kbd className="px-1.5 py-0.5 bg-theme-elevated border border-white/10 rounded-[4px] text-[10px] font-mono text-brand-accent font-semibold">
               ?
             </kbd>
           )}
@@ -227,7 +227,7 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
           disabled={seedDemoMutation.isPending}
           title={!isMobileView && isSidebarCollapsed ? "Seed Demo Data" : undefined}
           aria-label={!isMobileView && isSidebarCollapsed ? "Seed Demo Data" : undefined}
-          className={`h-[36px] rounded-md flex items-center text-[13px] font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated transition-colors disabled:opacity-50 ${
+          className={`h-[36px] rounded-[6px] flex items-center text-[13px] font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated transition-colors disabled:opacity-50 ${
             !isMobileView && isSidebarCollapsed ? "w-[40px] justify-center" : "w-full px-3 gap-2.5"
           }`}
         >

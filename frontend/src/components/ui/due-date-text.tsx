@@ -14,7 +14,7 @@ export function DueDateText({ dateStr, className = "" }: DueDateTextProps) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1 text-[12px] font-normal leading-none shrink-0 ${formatted.colorClass} ${className}`}
+      className={`inline-flex items-center gap-1 text-[13px] font-normal leading-none shrink-0 ${formatted.colorClass} ${className}`}
     >
       <Calendar className="w-3 h-3 shrink-0 opacity-85" />
       <span>{formatted.text}</span>
