@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { ProjectData, TaskData } from "@/lib/api";
+import { useTheme } from "@/components/providers/theme-provider";
 
 interface ProjectCardProps {
   project: ProjectData;
@@ -23,6 +24,7 @@ export function ProjectCard({
   variant = "grid",
   className = "",
 }: ProjectCardProps) {
+  const { getProjectNavUrl } = useTheme();
   const columns = project.columns || [];
   const columnsWithCounts = columns.map((col) => ({
     id: col.id,
@@ -38,7 +40,7 @@ export function ProjectCard({
   if (variant === "compact") {
     return (
       <Link
-        href={`/projects/${project.id}/board`}
+        href={getProjectNavUrl(project.id)}
         className="flex items-center justify-between py-2.5 hover:bg-surface-hover/40 transition-colors group"
       >
         <div className="flex items-center gap-2.5 truncate">
@@ -59,8 +61,8 @@ export function ProjectCard({
 
   return (
     <Link
-      href={`/projects/${project.id}/board`}
-      className={`group/card block p-5 bg-surface-l2 rounded-[8px] shadow-elevation-l3 hover:shadow-elevation-hover hover:bg-surface-hover transition-all duration-150 ${className}`}
+      href={getProjectNavUrl(project.id)}
+      className={`group/card block p-5 bg-surface-l2 rounded-md shadow-elevation-l3 hover:shadow-elevation-hover hover:bg-surface-hover transition-all duration-150 ${className}`}
     >
       {/* Title with color dot */}
       <div className="flex items-center gap-2.5 mb-2.5">

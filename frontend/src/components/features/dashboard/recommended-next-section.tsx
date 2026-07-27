@@ -32,10 +32,14 @@ export function RecommendedNextSection({ recommendations, loading }: Recommended
     );
   }
 
-  if (!recommendations || recommendations.length === 0) return null;
+  const validRecommendations = (recommendations || []).filter(
+    (r) => r && r.task && r.project && r.project.id && r.project.name
+  );
 
-  const displayedItems = isExpanded ? recommendations.slice(0, 10) : recommendations.slice(0, 3);
-  const canExpand = recommendations.length > 3;
+  if (!validRecommendations || validRecommendations.length === 0) return null;
+
+  const displayedItems = isExpanded ? validRecommendations.slice(0, 10) : validRecommendations.slice(0, 3);
+  const canExpand = validRecommendations.length > 3;
 
   return (
     <div>

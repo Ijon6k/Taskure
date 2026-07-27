@@ -34,8 +34,13 @@ func Evaluate(tasks []models.Task, projectMap map[string]models.Project, now tim
 			continue
 		}
 
+		proj, exists := projectMap[task.ProjectID]
+		if !exists || proj.ID == "" {
+			// Skip orphan tasks whose project was deleted or does not exist
+			continue
+		}
+
 		score := EvaluateScore(task, now)
-		proj := projectMap[task.ProjectID]
 
 		items = append(items, FocusItem{
 			Task:    task,

@@ -56,7 +56,7 @@ export function ConfirmDeleteProjectModal({
         </div>
 
         {/* Warning Details */}
-        <p className="text-xs text-theme-secondary leading-relaxed bg-surface-l3/60 p-3 rounded-lg border border-theme-subtle/50">
+        <p className="text-xs text-theme-secondary leading-relaxed bg-surface-l3/60 p-3 rounded-md border border-theme-subtle/50">
           This will permanently delete <strong className="text-theme-primary font-medium">{projectName}</strong> and all of its columns, tasks, and attachments.
         </p>
 

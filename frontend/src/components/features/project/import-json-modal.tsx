@@ -5,6 +5,8 @@ import { X, FileCode, Upload, ArrowRight, Clipboard, Sparkles, Trash2, Layers, L
 import { useCreateProject, ProjectData } from "@/lib/api";
 import { ModalContainer } from "@/components/ui/modal-container";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { importSingleProjectJSON } from "@/lib/workspace-backup";
 
 interface ImportJsonModalProps {
   isOpen: boolean;
@@ -13,9 +15,11 @@ interface ImportJsonModalProps {
 }
 
 export function ImportJsonModal({ isOpen, onClose, onSuccess }: ImportJsonModalProps) {
+  const queryClient = useQueryClient();
   const [scope, setScope] = useState<"project" | "board">("project");
   const [mode, setMode] = useState<"paste" | "upload">("paste");
   const [jsonText, setJsonText] = useState("");
+  const [isImporting, setIsImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const createProjectMutation = useCreateProject();
@@ -70,42 +74,28 @@ export function ImportJsonModal({ isOpen, onClose, onSuccess }: ImportJsonModalP
     reader.readAsText(file);
   };
 
-  const handleImport = () => {
+  const handleImport = async () => {
     if (!jsonText.trim()) {
       setError("Please paste JSON content or upload a JSON file.");
       return;
     }
 
-    try {
-      const parsed = JSON.parse(jsonText);
-      const projectName = parsed.name || parsed.title || "Imported Board";
-      const projectDesc = parsed.description || "Board imported from JSON";
+    setIsImporting(true);
+    setError(null);
 
-      createProjectMutation.mutate(
-        {
-          name: projectName,
-          description: projectDesc,
-          color: parsed.color || "#B794F6",
-          icon: parsed.icon || "📥",
-        },
-        {
-          onSuccess: (created) => {
-            toast.success(`Project "${created.name}" imported successfully!`);
-            setJsonText("");
-            setError(null);
-            if (onSuccess) onSuccess(created);
-            onClose();
-          },
-          onError: (err) => {
-            const msg = (err as Error).message || "Failed to import board.";
-            setError(msg);
-            toast.error(msg);
-          },
-        }
-      );
-    } catch {
-      setError("Invalid JSON syntax. Please check your JSON structure.");
-      toast.error("Invalid JSON syntax.");
+    try {
+      const created = await importSingleProjectJSON(jsonText);
+      await queryClient.invalidateQueries();
+      toast.success(`Project "${created.name}" imported with columns & tasks!`);
+      setJsonText("");
+      if (onSuccess) onSuccess(created);
+      onClose();
+    } catch (err: any) {
+      const msg = err.message || "Failed to import board.";
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -117,7 +107,7 @@ export function ImportJsonModal({ isOpen, onClose, onSuccess }: ImportJsonModalP
       {/* Header — Borderless */}
       <div className="flex items-center justify-between pb-1">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-[8px] bg-brand-accent/15 flex items-center justify-center text-brand-accent shrink-0">
+          <div className="w-8 h-8 rounded-md bg-brand-accent/15 flex items-center justify-center text-brand-accent shrink-0">
             <FileCode className="w-4 h-4" />
           </div>
           <div>
@@ -144,11 +134,11 @@ export function ImportJsonModal({ isOpen, onClose, onSuccess }: ImportJsonModalP
           <label className="block text-[13px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
             Target Scope
           </label>
-          <div className="p-1 bg-surface-l4 rounded-[10px] flex gap-1">
+          <div className="p-1 bg-surface-l4 rounded-md flex gap-1">
             <button
               type="button"
               onClick={() => setScope("project")}
-              className={`flex-1 py-2 px-3 rounded-[8px] text-left transition-all flex items-center gap-2.5 cursor-pointer ${
+              className={`flex-1 py-2 px-3 rounded-md text-left transition-all flex items-center gap-2.5 cursor-pointer ${
                 scope === "project"
                   ? "bg-surface-l2 text-theme-primary font-semibold shadow-xs"
                   : "text-theme-secondary hover:text-theme-primary hover:bg-surface-l3/50"
@@ -164,7 +154,7 @@ export function ImportJsonModal({ isOpen, onClose, onSuccess }: ImportJsonModalP
             <button
               type="button"
               onClick={() => setScope("board")}
-              className={`flex-1 py-2 px-3 rounded-[8px] text-left transition-all flex items-center gap-2.5 cursor-pointer ${
+              className={`flex-1 py-2 px-3 rounded-md text-left transition-all flex items-center gap-2.5 cursor-pointer ${
                 scope === "board"
                   ? "bg-surface-l2 text-theme-primary font-semibold shadow-xs"
                   : "text-theme-secondary hover:text-theme-primary hover:bg-surface-l3/50"
@@ -181,7 +171,7 @@ export function ImportJsonModal({ isOpen, onClose, onSuccess }: ImportJsonModalP
 
         {/* Input Mode Selector Bar (Paste vs Upload) */}
         <div className="flex items-center justify-between pt-1">
-          <div className="p-1 bg-surface-l4 rounded-[10px] flex gap-1 text-[13px]">
+          <div className="p-1 bg-surface-l4 rounded-md flex gap-1 text-[13px]">
             <button
               type="button"
               onClick={() => setMode("paste")}
@@ -258,7 +248,7 @@ export function ImportJsonModal({ isOpen, onClose, onSuccess }: ImportJsonModalP
                 setError(null);
               }}
               placeholder={`{\n  "name": "My Project",\n  "description": "JSON spec from ChatGPT / Claude",\n  "columns": [\n    { "name": "Todo", "tasks": [] }\n  ]\n}`}
-              className="w-full font-mono text-[12px] bg-surface-l4/80 focus:bg-surface-l4 focus:ring-2 focus:ring-brand-accent/20 rounded-[10px] p-4 text-theme-primary placeholder-theme-tertiary outline-none transition-all resize-none leading-relaxed"
+              className="w-full font-mono text-[12px] bg-surface-l4/80 focus:bg-surface-l4 focus:ring-2 focus:ring-brand-accent/20 rounded-md p-4 text-theme-primary placeholder-theme-tertiary outline-none transition-all resize-none leading-relaxed"
             />
             {jsonText && (
               <div className="text-[11px] font-mono text-theme-tertiary text-right pr-1">
@@ -267,7 +257,7 @@ export function ImportJsonModal({ isOpen, onClose, onSuccess }: ImportJsonModalP
             )}
           </div>
         ) : (
-          <div className="p-8 rounded-[10px] text-center bg-surface-l4/60 hover:bg-surface-l4 transition-colors cursor-pointer relative group">
+          <div className="p-8 rounded-md text-center bg-surface-l4/60 hover:bg-surface-l4 transition-colors cursor-pointer relative group">
             <input
               type="file"
               accept=".json"
@@ -285,7 +275,7 @@ export function ImportJsonModal({ isOpen, onClose, onSuccess }: ImportJsonModalP
         )}
 
         {error && (
-          <div className="text-[13px] text-semantic-danger bg-semantic-danger-subtle/30 p-3 rounded-[8px] font-medium">
+          <div className="text-[13px] text-semantic-danger bg-semantic-danger-subtle/30 p-3 rounded-md font-medium">
             {error}
           </div>
         )}
@@ -295,17 +285,17 @@ export function ImportJsonModal({ isOpen, onClose, onSuccess }: ImportJsonModalP
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-[8px] text-[14px] font-medium text-theme-secondary hover:text-theme-primary transition-colors cursor-pointer"
+            className="px-4 py-2 rounded-md text-[14px] font-medium text-theme-secondary hover:text-theme-primary transition-colors cursor-pointer"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={handleImport}
-            disabled={createProjectMutation.isPending || !jsonText.trim()}
-            className="px-5 py-2.5 bg-brand-accent hover:bg-brand-accent-hover text-black text-[14px] font-semibold rounded-[8px] transition-all shadow-sm active:scale-[0.98] flex items-center gap-2 disabled:opacity-40 cursor-pointer"
+            disabled={isImporting || !jsonText.trim()}
+            className="px-5 py-2.5 bg-brand-accent hover:bg-brand-accent-hover text-black text-[14px] font-semibold rounded-md transition-all shadow-sm active:scale-[0.98] flex items-center gap-2 disabled:opacity-40 cursor-pointer"
           >
-            <span>{createProjectMutation.isPending ? "Importing..." : "Import JSON"}</span>
+            <span>{isImporting ? "Importing..." : "Import JSON"}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>

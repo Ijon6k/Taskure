@@ -140,7 +140,7 @@ export function saveProjectTag(projectId: string, tag: CustomTag): CustomTag[] {
   if (!projectId) return [];
   const existing = getProjectTags(projectId);
   const index = existing.findIndex((t) => t.id === tag.id || t.name.toLowerCase() === tag.name.toLowerCase());
-  
+
   let updated: CustomTag[];
   if (index >= 0) {
     updated = [...existing];
@@ -148,7 +148,7 @@ export function saveProjectTag(projectId: string, tag: CustomTag): CustomTag[] {
   } else {
     updated = [...existing, tag];
   }
-  
+
   setStorage(`${PROJECT_TAGS_PREFIX}${projectId}`, updated);
   return updated;
 }

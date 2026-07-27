@@ -102,7 +102,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
             <label className="block text-[13px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
               Project Name *
             </label>
-            <div className="flex items-center gap-2 bg-surface-l4 border border-transparent focus-within:border-brand-accent/40 focus-within:ring-2 focus-within:ring-brand-accent/15 rounded-[10px] px-3 py-1 transition-all">
+            <div className="flex items-center gap-2 bg-surface-l4 border border-transparent focus-within:border-brand-accent/40 focus-within:ring-2 focus-within:ring-brand-accent/15 rounded-md px-3 py-1 transition-all">
               <input
                 type="text"
                 value={iconValue}
@@ -138,7 +138,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
             <button
               type="submit"
               disabled={createProjectMutation.isPending}
-              className="p-4 bg-surface-l4 hover:bg-surface-hover rounded-[10px] text-left transition-all space-y-1.5 group disabled:opacity-40 cursor-pointer"
+              className="p-4 bg-surface-l4 hover:bg-surface-hover rounded-md text-left transition-all space-y-1.5 group disabled:opacity-40 cursor-pointer"
             >
               <div className="flex items-center gap-2 text-[14px] font-semibold text-theme-primary">
                 <FolderPlus className="w-4 h-4 text-brand-accent" />
@@ -152,7 +152,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
             <button
               type="button"
               onClick={() => setIsImportJsonOpen(true)}
-              className="p-4 bg-surface-l4 hover:bg-surface-hover rounded-[10px] text-left transition-all space-y-1.5 group cursor-pointer"
+              className="p-4 bg-surface-l4 hover:bg-surface-hover rounded-md text-left transition-all space-y-1.5 group cursor-pointer"
             >
               <div className="flex items-center justify-between text-[14px] font-semibold text-theme-primary">
                 <div className="flex items-center gap-2">

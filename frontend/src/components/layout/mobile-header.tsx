@@ -54,7 +54,7 @@ export function MobileHeader({ title = "My Kanban", onOpenCreateProject }: Mobil
         <button
           type="button"
           onClick={handleCreate}
-          className="h-8 px-3 bg-brand-accent hover:opacity-90 active:scale-95 text-black text-xs font-semibold rounded-[8px] flex items-center gap-1.5 transition-all shadow-sm"
+          className="h-8 px-3 bg-brand-accent hover:opacity-90 active:scale-95 text-black text-xs font-semibold rounded-md flex items-center gap-1.5 transition-all shadow-sm"
         >
           <Plus className="w-4 h-4 stroke-[2.5]" />
           <span className="hidden sm:inline">New</span>

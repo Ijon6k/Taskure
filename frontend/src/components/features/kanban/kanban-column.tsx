@@ -172,7 +172,7 @@ function KanbanColumnInner({
         ...style,
         borderColor: showOver ? "var(--brand-accent)" : "transparent",
       }}
-      className={`relative w-full md:w-80 md:min-w-80 shrink-0 flex flex-col max-h-full rounded-[10px] bg-surface-l2 overflow-hidden group/col ${
+      className={`relative w-full md:w-80 md:min-w-80 shrink-0 flex flex-col max-h-full rounded-md bg-surface-l2 overflow-hidden group/col ${
         showOver ? "ring-2 ring-brand-accent/20 bg-surface-hover" : ""
       }`}
     >

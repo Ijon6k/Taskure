@@ -74,7 +74,7 @@ export default function ProjectsPage() {
               </h1>
               <button
                 onClick={openCreateProject}
-                className="h-10 sm:h-9 px-3.5 bg-brand-accent hover:opacity-90 active:scale-95 text-on-accent text-xs sm:text-sm font-semibold rounded-[8px] flex items-center gap-2 transition-all"
+                className="h-10 sm:h-9 px-3.5 bg-brand-accent hover:opacity-90 active:scale-95 text-on-accent text-xs sm:text-sm font-semibold rounded-md flex items-center gap-2 transition-all"
               >
                 <Plus className="w-4 h-4" />
                 <span>New project</span>
@@ -125,8 +125,8 @@ export default function ProjectsPage() {
 
               {isLoading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 animate-pulse">
-                  <div className="h-32 bg-surface-hover rounded-[8px]" />
-                  <div className="h-32 bg-surface-hover rounded-[8px]" />
+                  <div className="h-32 bg-surface-hover rounded-md" />
+                  <div className="h-32 bg-surface-hover rounded-md" />
                 </div>
               ) : filteredProjects.length === 0 ? (
                 <div className="py-8 text-center space-y-2">

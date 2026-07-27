@@ -84,15 +84,15 @@ export function DatePickerPopover({
           type="button"
           disabled={disabled}
           className={`
-            group flex items-center gap-2 w-full px-3 py-2
-            bg-theme-elevated border border-theme-default rounded-md
-            text-[13px] transition-colors cursor-pointer
-            hover:border-brand-accent/50 focus:outline-none focus:border-brand-accent
+            group flex items-center gap-2.5 w-full px-3.5 py-2
+            bg-surface-l3 border border-theme-subtle rounded-md
+            text-[14px] font-medium transition-all cursor-pointer
+            hover:border-brand-accent/40 focus:outline-none focus:ring-2 focus:ring-brand-accent/20
             disabled:opacity-50 disabled:cursor-not-allowed
-            ${open ? "border-brand-accent" : ""}
+            ${open ? "ring-2 ring-brand-accent/20 border-brand-accent" : ""}
           `}
         >
-          <Calendar className="w-3.5 h-3.5 text-theme-tertiary flex-shrink-0 group-hover:text-brand-accent transition-colors" />
+          <Calendar className="w-4 h-4 text-theme-tertiary flex-shrink-0 group-hover:text-brand-accent transition-colors" />
           <span className={displayLabel ? "text-theme-primary flex-1 text-left" : "text-theme-tertiary flex-1 text-left"}>
             {displayLabel ?? placeholder}
           </span>
@@ -100,7 +100,7 @@ export function DatePickerPopover({
             <span
               role="button"
               onClick={handleClear}
-              className="text-theme-tertiary hover:text-semantic-danger transition-colors"
+              className="text-theme-tertiary hover:text-red-400 transition-colors"
               title="Clear date"
             >
               <X className="w-3.5 h-3.5" />
@@ -116,8 +116,8 @@ export function DatePickerPopover({
           sideOffset={6}
           className="
             z-[200] w-[280px] rounded-md
-            bg-surface-l4 border border-theme-default
-            shadow-elevation-l4
+            bg-surface-l4 border border-theme-subtle
+            shadow-elevation-l4 p-1
             animate-in fade-in-0 zoom-in-95 duration-150
             data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95
           "

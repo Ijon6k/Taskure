@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { ShortcutsModal } from "@/components/modals/shortcuts-modal";
 import { useProjects, useSeedDemo } from "@/lib/api";
 import { useUIStore } from "@/store/use-ui-store";
+import { useTheme } from "@/components/providers/theme-provider";
 
 interface SidebarProps {
   onOpenCreateProject?: () => void;
@@ -26,6 +27,7 @@ interface SidebarProps {
 
 export function Sidebar({ onOpenCreateProject }: SidebarProps) {
   const pathname = usePathname();
+  const { getProjectNavUrl } = useTheme();
   const { data: projects = [] } = useProjects();
   const seedDemoMutation = useSeedDemo();
   const [isLogoHovered, setIsLogoHovered] = useState(false);
@@ -149,7 +151,7 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
                 !isMobileView && isSidebarCollapsed ? "w-[40px] justify-center" : "w-full px-3 gap-3"
               } ${
                 isActive
-                  ? "bg-theme-elevated text-theme-primary font-semibold border-l-2 border-brand-accent"
+                  ? "bg-theme-elevated text-theme-primary font-semibold"
                   : "text-theme-secondary hover:text-theme-primary hover:bg-theme-hover"
               }`}
             >
@@ -175,7 +177,7 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
                 return (
                   <Link
                     key={project.id}
-                    href={`/projects/${project.id}/board`}
+                    href={getProjectNavUrl(project.id)}
                     onClick={() => isMobileView && closeMobileMenu()}
                     className={`flex items-center gap-2.5 px-2.5 py-2 rounded-[6px] text-[13px] truncate transition-colors ${
                       isProjectActive

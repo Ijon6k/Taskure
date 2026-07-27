@@ -13,10 +13,10 @@ export function TaskPriorityPicker({ priority, isEditing, onChange }: TaskPriori
 
   return (
     <div className="space-y-1.5">
-      <div className="text-[12px] font-medium text-theme-secondary uppercase tracking-[0.6px]">
+      <div className="text-[12px] font-mono font-medium text-theme-tertiary uppercase tracking-wider">
         Priority
       </div>
-      <div className="flex items-center gap-1.5 pt-1">
+      <div className="flex items-center gap-2 pt-1">
         {priorityList.map((p) => {
           const isSelected = (priority || "medium").toLowerCase() === p.id;
           return (
@@ -25,10 +25,10 @@ export function TaskPriorityPicker({ priority, isEditing, onChange }: TaskPriori
               type="button"
               disabled={!isEditing}
               onClick={() => isEditing && onChange(p.id)}
-              className={`px-3 py-1 rounded-[6px] text-[13px] font-normal transition-all ${
+              className={`px-3 py-1.5 rounded-md text-[13px] font-medium transition-all cursor-pointer ${
                 isSelected
-                  ? "text-slate-900 border border-black/10 shadow-sm"
-                  : "bg-theme-surface/50 border border-transparent opacity-60 hover:opacity-100 text-theme-secondary"
+                  ? "text-slate-950 font-semibold shadow-xs"
+                  : "bg-surface-l3 hover:bg-surface-l4 text-theme-secondary opacity-75 hover:opacity-100"
               }`}
               style={{
                 backgroundColor: isSelected ? p.bgPastel : undefined,

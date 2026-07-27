@@ -80,7 +80,7 @@ export function ExportJsonModal({ isOpen, project, onClose }: ExportJsonModalPro
       {/* Header — Clean & Borderless */}
       <div className="flex items-center justify-between pb-1">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-[8px] bg-brand-accent/15 flex items-center justify-center text-brand-accent shrink-0">
+          <div className="w-8 h-8 rounded-md bg-brand-accent/15 flex items-center justify-center text-brand-accent shrink-0">
             <FileCode className="w-4 h-4" />
           </div>
           <div>
@@ -107,11 +107,11 @@ export function ExportJsonModal({ isOpen, project, onClose }: ExportJsonModalPro
           <label className="block text-[13px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
             Export Scope
           </label>
-          <div className="p-1 bg-surface-l4 rounded-[10px] flex gap-1">
+          <div className="p-1 bg-surface-l4 rounded-md flex gap-1">
             <button
               type="button"
               onClick={() => setScope("project")}
-              className={`flex-1 py-2 px-3 rounded-[8px] text-left transition-all flex items-center gap-2.5 cursor-pointer ${
+              className={`flex-1 py-2 px-3 rounded-md text-left transition-all flex items-center gap-2.5 cursor-pointer ${
                 scope === "project"
                   ? "bg-surface-l2 text-theme-primary font-semibold shadow-xs"
                   : "text-theme-secondary hover:text-theme-primary hover:bg-surface-l3/50"
@@ -127,7 +127,7 @@ export function ExportJsonModal({ isOpen, project, onClose }: ExportJsonModalPro
             <button
               type="button"
               onClick={() => setScope("board")}
-              className={`flex-1 py-2 px-3 rounded-[8px] text-left transition-all flex items-center gap-2.5 cursor-pointer ${
+              className={`flex-1 py-2 px-3 rounded-md text-left transition-all flex items-center gap-2.5 cursor-pointer ${
                 scope === "board"
                   ? "bg-surface-l2 text-theme-primary font-semibold shadow-xs"
                   : "text-theme-secondary hover:text-theme-primary hover:bg-surface-l3/50"
@@ -157,7 +157,7 @@ export function ExportJsonModal({ isOpen, project, onClose }: ExportJsonModalPro
           </div>
 
           {/* Borderless Code preview surface */}
-          <div className="p-4 bg-surface-l4/80 rounded-[10px] max-h-[240px] overflow-y-auto font-mono text-[12px] text-theme-primary leading-relaxed whitespace-pre selection:bg-brand-accent/30">
+          <div className="p-4 bg-surface-l4/80 rounded-md max-h-[240px] overflow-y-auto font-mono text-[12px] text-theme-primary leading-relaxed whitespace-pre selection:bg-brand-accent/30">
             {jsonString}
           </div>
         </div>
@@ -167,14 +167,14 @@ export function ExportJsonModal({ isOpen, project, onClose }: ExportJsonModalPro
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-[8px] text-[14px] font-medium text-theme-secondary hover:text-theme-primary transition-colors cursor-pointer"
+            className="px-4 py-2 rounded-md text-[14px] font-medium text-theme-secondary hover:text-theme-primary transition-colors cursor-pointer"
           >
             Close
           </button>
           <button
             type="button"
             onClick={handleCopy}
-            className="px-4 py-2.5 bg-surface-l3 hover:bg-surface-l4 text-theme-primary text-[14px] font-medium rounded-[8px] flex items-center gap-2 transition-colors cursor-pointer"
+            className="px-4 py-2.5 bg-surface-l3 hover:bg-surface-l4 text-theme-primary text-[14px] font-medium rounded-md flex items-center gap-2 transition-colors cursor-pointer"
           >
             <Copy className="w-4 h-4" />
             <span>Copy JSON</span>
@@ -182,7 +182,7 @@ export function ExportJsonModal({ isOpen, project, onClose }: ExportJsonModalPro
           <button
             type="button"
             onClick={handleDownload}
-            className="px-5 py-2.5 bg-brand-accent hover:bg-brand-accent-hover text-black text-[14px] font-semibold rounded-[8px] flex items-center gap-2 transition-all shadow-sm active:scale-[0.98] cursor-pointer"
+            className="px-5 py-2.5 bg-brand-accent hover:bg-brand-accent-hover text-black text-[14px] font-semibold rounded-md flex items-center gap-2 transition-all shadow-sm active:scale-[0.98] cursor-pointer"
           >
             <Download className="w-4 h-4" />
             <span>Download .json</span>

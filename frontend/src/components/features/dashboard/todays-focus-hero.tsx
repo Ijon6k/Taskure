@@ -1,27 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, CheckSquare, Square } from "lucide-react";
+import { ArrowRight, CheckSquare, Square, Sparkles, FolderPlus, HardDrive } from "lucide-react";
 import { FocusItem, ChecklistItemData } from "@/lib/api";
 import { PriorityBadge } from "@/components/ui/priority-badge";
 import { DueDateText } from "@/components/ui/due-date-text";
 import { getFormattedDueDate } from "@/lib/utils/date";
+import { useTheme } from "@/components/providers/theme-provider";
 
 interface TodaysFocusHeroProps {
   hero: FocusItem | null;
   loading: boolean;
+  onOpenCreateProject?: () => void;
 }
 
 function deriveReasons(task: FocusItem["task"]): string[] {
   const reasons: string[] = [];
-  const due = getFormattedDueDate(task.due_date);
-  const priority = task.priority || "medium";
 
-  if (due) {
-    if (due.text.startsWith("Overdue")) reasons.push("Overdue — needs immediate attention");
-    else if (due.text === "Today") reasons.push("Due today");
-    else if (due.text === "Tomorrow") reasons.push("Due tomorrow");
-    else if (due.text.startsWith("In")) reasons.push(`Due ${due.text.toLowerCase()}`);
+  const priority = task.priority?.toLowerCase() || "";
+  const dueDateStr = task.due_date;
+
+  if (dueDateStr) {
+    const parsed = new Date(dueDateStr);
+    const now = new Date();
+    if (!isNaN(parsed.getTime())) {
+      const isOverdue = parsed < now && parsed.toDateString() !== now.toDateString();
+      const isToday = parsed.toDateString() === now.toDateString();
+
+      if (isOverdue) reasons.push("Overdue — needs immediate attention");
+      else if (isToday) reasons.push("Due today — high priority completion");
+    }
   }
 
   if (priority === "urgent") reasons.push("Highest priority across all projects");
@@ -32,35 +40,61 @@ function deriveReasons(task: FocusItem["task"]): string[] {
   return reasons;
 }
 
-export function TodaysFocusHero({ hero, loading }: TodaysFocusHeroProps) {
+export function TodaysFocusHero({ hero, loading, onOpenCreateProject }: TodaysFocusHeroProps) {
+  const { getProjectNavUrl } = useTheme();
+
   if (loading) {
     return (
-      <div className="w-full bg-surface-l2 rounded-[12px] shadow-elevation-l3 p-8 lg:p-10 animate-pulse space-y-5 min-h-[260px]">
+      <div className="w-full bg-surface-l2 rounded-md shadow-elevation-l3 p-8 lg:p-10 animate-pulse space-y-5 min-h-[260px]">
         <div className="w-24 h-3.5 bg-surface-l4 rounded" />
         <div className="w-3/4 h-8 bg-surface-l4 rounded" />
         <div className="w-1/2 h-4 bg-surface-l4 rounded" />
-        <div className="w-36 h-11 bg-surface-l4 rounded-[8px] mt-4" />
+        <div className="w-36 h-11 bg-surface-l4 rounded-md mt-4" />
       </div>
     );
   }
 
-  if (!hero || !hero.task) {
+  if (!hero || !hero.task || !hero.project || !hero.project.id || !hero.project.name) {
     return (
-      <div className="w-full bg-surface-l2 rounded-[12px] shadow-elevation-l3 p-8 lg:p-10 flex flex-col items-center justify-center text-center min-h-[260px] relative overflow-hidden">
-        {/* Ambient gradient */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: "radial-gradient(ellipse 60% 80% at 85% 50%, var(--brand-accent) 0%, transparent 70%)",
-            opacity: 0.05,
-          }}
-        />
-        <h2 className="text-[20px] font-semibold text-theme-primary tracking-tight relative">
-          All caught up
-        </h2>
-        <p className="text-[15px] text-theme-secondary mt-3 max-w-[400px] leading-relaxed relative">
-          No urgent tasks need your attention. Take a moment to plan ahead or review your projects.
-        </p>
+      <div className="w-full bg-surface-l2 rounded-md shadow-elevation-l3 p-8 sm:p-10 flex flex-col justify-center min-h-[260px] relative overflow-hidden space-y-5">
+        {/* Aurora Atmospheric Glow Mesh */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+          <div
+            className="absolute -top-[30%] -right-[10%] w-[500px] h-[340px] rounded-full blur-[70px] opacity-[0.14]"
+            style={{
+              background: "radial-gradient(circle, var(--brand-accent) 0%, rgba(168, 85, 247, 0.3) 50%, transparent 80%)",
+            }}
+          />
+        </div>
+
+        <div className="space-y-1.5 relative z-10 max-w-[540px]">
+          <h2 className="text-[24px] sm:text-[28px] font-medium text-theme-primary tracking-tight leading-snug">
+            Your canvas is wide open
+          </h2>
+          <p className="text-[14px] text-theme-secondary leading-relaxed">
+            Create your first project to start organizing tasks, columns, and focus priorities.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 relative z-10 pt-1">
+          {onOpenCreateProject && (
+            <button
+              type="button"
+              onClick={onOpenCreateProject}
+              className="px-4 py-2.5 bg-brand-accent hover:bg-brand-accent-hover text-slate-950 font-semibold text-[13px] rounded-md flex items-center gap-2 transition-colors cursor-pointer"
+            >
+              <FolderPlus className="w-4 h-4" />
+              <span>Create first project</span>
+            </button>
+          )}
+          <Link
+            href="/settings"
+            className="px-4 py-2.5 bg-surface-l3 hover:bg-surface-l4 text-theme-primary font-medium text-[13px] rounded-md border border-theme-subtle flex items-center gap-2 transition-colors cursor-pointer"
+          >
+            <HardDrive className="w-4 h-4 text-theme-tertiary" />
+            <span>Workspace settings</span>
+          </Link>
+        </div>
       </div>
     );
   }
@@ -72,61 +106,66 @@ export function TodaysFocusHero({ hero, loading }: TodaysFocusHeroProps) {
   const reasons = deriveReasons(task);
 
   return (
-    <div className="w-full bg-surface-l2 rounded-[12px] shadow-elevation-l3 p-8 lg:p-10 min-h-[260px] relative overflow-hidden">
-      {/* Ambient gradient on the right side */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: "radial-gradient(ellipse 60% 80% at 85% 50%, var(--brand-accent) 0%, transparent 70%)",
-          opacity: 0.05,
-        }}
-      />
+    <div className="w-full bg-surface-l2 rounded-md shadow-elevation-l3 p-8 lg:p-10 min-h-[260px] relative overflow-hidden">
+      {/* Aurora Atmospheric Glow Mesh Layer */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+        {/* Aurora Primary Wave — Accent Glow */}
+        <div
+          className="absolute -top-[35%] -right-[10%] w-[550px] h-[380px] rounded-full blur-[70px] opacity-[0.15] transition-opacity duration-700"
+          style={{
+            background: "radial-gradient(circle, var(--brand-accent) 0%, rgba(168, 85, 247, 0.4) 50%, transparent 80%)",
+          }}
+        />
+        {/* Aurora Secondary Wave — Cyan Sky Under-Glow */}
+        <div
+          className="absolute -bottom-[40%] right-[15%] w-[420px] h-[320px] rounded-full blur-[80px] opacity-[0.10] transition-opacity duration-700"
+          style={{
+            background: "radial-gradient(circle, #38BDF8 0%, rgba(59, 130, 246, 0.3) 50%, transparent 80%)",
+          }}
+        />
+      </div>
 
-      <div className="flex flex-col gap-6 relative">
-        {/* Project breadcrumb + priority + due date */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <span
-            className="w-2.5 h-2.5 rounded-full shrink-0"
-            style={{ backgroundColor: projectColor }}
-          />
-          <Link
-            href={`/projects/${task.project_id}/board`}
-            className="text-[14px] font-medium text-theme-secondary hover:text-theme-primary transition-colors"
-          >
-            {projectName}
-          </Link>
-          <span className="text-theme-tertiary">·</span>
-          <PriorityBadge priority={task.priority} />
-          {task.due_date && (
-            <>
-              <span className="text-theme-tertiary">·</span>
-              <DueDateText dateStr={task.due_date} className="!text-[13px]" />
-            </>
-          )}
+      <div className="relative z-10 space-y-6">
+        {/* Top Header Row */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-[13px] font-medium text-theme-secondary">
+            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: projectColor }} />
+            <span>{projectName}</span>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <PriorityBadge priority={task.priority} />
+            <DueDateText dateStr={task.due_date} />
+          </div>
         </div>
 
-        {/* Task title — Hero scale */}
-        <h2 className="text-[28px] sm:text-[34px] font-semibold text-theme-primary leading-[1.2] tracking-tight max-w-[640px]">
+        {/* Task Title */}
+        <h2 className="text-[26px] sm:text-[32px] font-medium text-theme-primary tracking-tight leading-tight max-w-[760px]">
           {task.title}
         </h2>
 
-        {/* Reasons as bullet list */}
-        <ul className="space-y-1.5">
-          {reasons.map((reason, i) => (
-            <li key={i} className="flex items-start gap-2 text-[14px] text-theme-secondary leading-relaxed">
-              <span className="text-theme-tertiary mt-[2px]">—</span>
-              <span>{reason}</span>
-            </li>
-          ))}
-        </ul>
+        {/* Derive Reasons */}
+        {reasons.length > 0 && (
+          <div className="space-y-1.5 pt-1">
+            {reasons.map((reason, i) => (
+              <p key={i} className="text-[14px] text-theme-secondary flex items-center gap-2">
+                <span className="w-3 h-0.5 bg-theme-tertiary/40 rounded-full" />
+                <span>{reason}</span>
+              </p>
+            ))}
+          </div>
+        )}
 
-        {/* Checklist preview */}
+        {/* Subtasks Checklist Preview */}
         {checklist.length > 0 && (
-          <div className="space-y-2 pt-4 border-t border-theme-subtle">
-            {checklist.slice(0, 4).map((item: ChecklistItemData) => (
+          <div className="pt-2 space-y-2 max-w-[500px]">
+            <div className="text-[12px] font-mono text-theme-tertiary uppercase tracking-wider">
+              Checklist ({checklist.filter((c) => c.is_completed).length}/{checklist.length})
+            </div>
+            {checklist.slice(0, 3).map((item) => (
               <div key={item.id} className="flex items-center gap-2.5 text-[14px]">
                 {item.is_completed ? (
-                  <CheckSquare className="w-4 h-4 text-semantic-success shrink-0" />
+                  <CheckSquare className="w-4 h-4 text-brand-accent shrink-0" />
                 ) : (
                   <Square className="w-4 h-4 text-theme-tertiary shrink-0" />
                 )}
@@ -140,8 +179,8 @@ export function TodaysFocusHero({ hero, loading }: TodaysFocusHeroProps) {
 
         {/* CTA */}
         <Link
-          href={`/projects/${task.project_id}/board`}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-accent hover:bg-brand-accent-hover text-on-accent text-[14px] font-medium rounded-[8px] transition-colors w-fit"
+          href={getProjectNavUrl(task.project_id)}
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-accent hover:bg-brand-accent-hover text-slate-950 text-[14px] font-semibold rounded-md transition-colors w-fit shadow-xs"
         >
           <span>Continue</span>
           <ArrowRight className="w-4 h-4" />

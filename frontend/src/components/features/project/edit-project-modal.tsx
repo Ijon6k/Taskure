@@ -109,7 +109,7 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
         <div className="flex items-center justify-between pb-1">
           <div className="flex items-center gap-3">
             <div
-              className="w-8 h-8 rounded-[8px] flex items-center justify-center text-[16px] shadow-xs shrink-0"
+              className="w-8 h-8 rounded-md flex items-center justify-center text-[16px] shadow-xs shrink-0"
               style={{ backgroundColor: `${color}25` }}
             >
               {icon}
@@ -139,7 +139,7 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
             <label className="block text-[13px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
               Project Name *
             </label>
-            <div className="flex items-center gap-2 bg-surface-l4 focus-within:bg-surface-l4/90 focus-within:ring-2 focus-within:ring-brand-accent/20 rounded-[10px] px-3.5 py-1.5 transition-all">
+            <div className="flex items-center gap-2 bg-surface-l4 focus-within:bg-surface-l4/90 focus-within:ring-2 focus-within:ring-brand-accent/20 rounded-md px-3.5 py-1.5 transition-all">
               <input
                 type="text"
                 value={icon}
@@ -170,7 +170,7 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Add a brief summary or goal for this project..."
-              className="w-full bg-surface-l4 focus:bg-surface-l4/90 focus:ring-2 focus:ring-brand-accent/20 rounded-[10px] p-3.5 text-[15px] text-theme-primary placeholder-theme-tertiary outline-none transition-all resize-none leading-relaxed"
+              className="w-full bg-surface-l4 focus:bg-surface-l4/90 focus:ring-2 focus:ring-brand-accent/20 rounded-md p-3.5 text-[15px] text-theme-primary placeholder-theme-tertiary outline-none transition-all resize-none leading-relaxed"
             />
           </div>
 
@@ -187,7 +187,7 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
             <label className="block text-[13px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
               Project Status
             </label>
-            <div className="p-1 bg-surface-l4 rounded-[10px] flex gap-1">
+            <div className="p-1 bg-surface-l4 rounded-md flex gap-1">
               {STATUS_OPTIONS.map((st) => {
                 const isActive = status === st.value;
                 return (
@@ -195,7 +195,7 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
                     key={st.value}
                     type="button"
                     onClick={() => setStatus(st.value)}
-                    className={`flex-1 py-2 text-[13px] font-medium rounded-[8px] transition-all capitalize cursor-pointer ${
+                    className={`flex-1 py-2 text-[13px] font-medium rounded-md transition-all capitalize cursor-pointer ${
                       isActive
                         ? "bg-surface-l2 text-theme-primary font-semibold shadow-xs"
                         : "text-theme-secondary hover:text-theme-primary hover:bg-surface-l3/50"
@@ -209,9 +209,9 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
           </div>
 
           {/* Pin to Top — Modern Borderless Card */}
-          <div className="p-3.5 bg-surface-l4/60 hover:bg-surface-l4 rounded-[10px] flex items-center justify-between transition-colors">
+          <div className="p-3.5 bg-surface-l4/60 hover:bg-surface-l4 rounded-md flex items-center justify-between transition-colors">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-[8px] bg-surface-l2 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-md bg-surface-l2 flex items-center justify-center shrink-0">
                 <Pin className={`w-4 h-4 ${isPinned ? "text-brand-accent" : "text-theme-tertiary"}`} />
               </div>
               <div>
@@ -231,9 +231,9 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
           </div>
 
           {/* Destructive Action Row — Completely borderless, quiet red hover */}
-          <div className="p-3.5 bg-surface-l4/50 hover:bg-red-500/10 rounded-[10px] flex items-center justify-between gap-3 transition-all group">
+          <div className="p-3.5 bg-surface-l4/50 hover:bg-red-500/10 rounded-md flex items-center justify-between gap-3 transition-all group">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-8 h-8 rounded-[8px] bg-red-500/10 group-hover:bg-red-500/20 flex items-center justify-center text-red-400 shrink-0 transition-colors">
+              <div className="w-8 h-8 rounded-md bg-red-500/10 group-hover:bg-red-500/20 flex items-center justify-center text-red-400 shrink-0 transition-colors">
                 <Trash2 className="w-4 h-4" />
               </div>
               <div className="min-w-0">
@@ -259,14 +259,14 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-[8px] text-[14px] font-medium text-theme-secondary hover:text-theme-primary transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-md text-[14px] font-medium text-theme-secondary hover:text-theme-primary transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={updateProjectMutation.isPending || !name.trim()}
-              className="px-5 py-2.5 bg-brand-accent hover:bg-brand-accent-hover text-black text-[14px] font-semibold rounded-[8px] transition-all shadow-sm active:scale-[0.98] disabled:opacity-40 cursor-pointer"
+              className="px-5 py-2.5 bg-brand-accent hover:bg-brand-accent-hover text-black text-[14px] font-semibold rounded-md transition-all shadow-sm active:scale-[0.98] disabled:opacity-40 cursor-pointer"
             >
               {updateProjectMutation.isPending ? "Saving..." : "Save changes"}
             </button>

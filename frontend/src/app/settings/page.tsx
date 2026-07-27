@@ -1,34 +1,93 @@
 "use client";
 
 import { useState } from "react";
-import { Check } from "lucide-react";
+import {
+  User,
+  Layout,
+  Palette,
+  Sliders,
+  FolderKanban,
+  Shield,
+  RotateCcw,
+  Check,
+  ChevronRight,
+  HardDrive,
+  Keyboard,
+  Download,
+  Upload,
+  Kanban,
+  FileText,
+  Trash2,
+} from "lucide-react";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileHeader } from "@/components/layout/mobile-header";
 import { CreateProjectModal } from "@/components/features/project/create-project-modal";
 import { ImportExportTagsModal } from "@/components/modals/import-export-tags-modal";
+import { ImportExportWorkspaceModal } from "@/components/modals/import-export-workspace-modal";
+import { ShortcutsModal } from "@/components/modals/shortcuts-modal";
 import { GlobalTagsManager } from "@/components/features/settings/global-tags-manager";
 import { useTheme } from "@/components/providers/theme-provider";
 import { PageContainer } from "@/components/ui/page-container";
+import { ThemePreviewCard } from "@/components/features/settings/theme-preview-card";
+import { DeleteWorkspaceModal } from "@/components/modals/delete-workspace-modal";
+import { useProjects, useSeedDemo } from "@/lib/api";
+import { exportFullWorkspaceJSON, deleteAllWorkspaceData } from "@/lib/workspace-backup";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export default function SettingsPage() {
-  const { theme: currentTheme, accentColor: currentAccent, setTheme, setAccentColor } = useTheme();
-  const [focusReminders, setFocusReminders] = useState(true);
-  const [compactDensity, setCompactDensity] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
+  const queryClient = useQueryClient();
+  const {
+    theme: currentTheme,
+    accentColor: currentAccent,
+    defaultProjectView,
+    setTheme,
+    setAccentColor,
+    setDefaultProjectView,
+  } = useTheme();
+
+  const { data: projects = [] } = useProjects();
+  const seedDemoMutation = useSeedDemo();
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isTagsJsonModalOpen, setIsTagsJsonModalOpen] = useState(false);
-
-  const handleThemeChange = (t: "dim" | "dark" | "light") => {
-    setTheme(t);
-  };
+  const [isWorkspaceBackupModalOpen, setIsWorkspaceBackupModalOpen] = useState(false);
+  const [isDeleteWorkspaceModalOpen, setIsDeleteWorkspaceModalOpen] = useState(false);
+  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
 
   const accents = [
-    { name: "Lavender", hex: "#B794F6" },
     { name: "Pastel Blue", hex: "#7F9CF5" },
+    { name: "Lavender", hex: "#B794F6" },
     { name: "Pastel Green", hex: "#68D391" },
     { name: "Pastel Orange", hex: "#F6AD8A" },
     { name: "Pastel Pink", hex: "#F6A5C0" },
   ];
+
+  const handleResetData = () => {
+    seedDemoMutation.mutate(undefined, {
+      onSuccess: () => toast.success("Workspace reset to demo data!"),
+      onError: (err) => toast.error("Failed to reset demo data: " + err.message),
+    });
+  };
+
+  const handleConfirmDeleteWorkspace = async () => {
+    try {
+      await deleteAllWorkspaceData();
+      await queryClient.invalidateQueries();
+      toast.success("All workspace data deleted!");
+    } catch (err: any) {
+      toast.error("Failed to delete workspace: " + err.message);
+    }
+  };
+
+  const handleQuickExportWorkspace = async () => {
+    try {
+      await exportFullWorkspaceJSON();
+      toast.success("Workspace backup downloaded!");
+    } catch (err: any) {
+      toast.error("Export failed: " + err.message);
+    }
+  };
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-surface-l0 text-theme-primary font-sans select-none overflow-hidden">
@@ -41,228 +100,365 @@ export default function SettingsPage() {
       {/* Main Settings Area */}
       <main className="flex-1 overflow-y-auto">
         <div className="flex flex-col items-center">
-          <PageContainer variant="default">
-            {/* Title */}
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-normal text-theme-primary tracking-tight">
+          <PageContainer variant="default" className="!py-10 sm:!py-16 space-y-14 sm:space-y-18">
+            {/* Page Header — Editorial Scale & Whitespace */}
+            <div className="space-y-2">
+              <p className="text-[13px] font-semibold text-theme-tertiary uppercase tracking-widest">
+                Workspace Personalization
+              </p>
+              <h1 className="text-[34px] sm:text-[42px] font-normal text-theme-primary tracking-tight leading-none">
                 Settings
               </h1>
+              <p className="text-[15px] text-theme-secondary leading-relaxed max-w-[620px]">
+                Customize your surface theme, default project view, and workspace backup engine.
+              </p>
             </div>
 
-            {/* Account Section */}
-            <div className="space-y-2">
-              <p className="section-title">Account</p>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-[15px] text-theme-primary">Developer</div>
-                  <div className="text-[13px] text-theme-tertiary">developer@kanban.local</div>
+            {/* ── 1. PROFILE SECTION ── */}
+            <section className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-theme-subtle">
+                <User className="w-4 h-4 text-brand-accent" />
+                <h2 className="text-[13px] font-semibold text-theme-tertiary uppercase tracking-wider">
+                  Profile
+                </h2>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-surface-l2 rounded-md hover:bg-surface-hover/50 transition-colors">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-full bg-brand-accent/15 flex items-center justify-center text-brand-accent font-semibold text-[16px]">
+                    DEV
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[16px] font-semibold text-theme-primary">Developer</span>
+                      <span className="px-2 py-0.5 text-[11px] font-mono rounded-full bg-surface-l3 text-theme-secondary">
+                        Admin
+                      </span>
+                    </div>
+                    <p className="text-[13px] text-theme-secondary mt-0.5">
+                      developer@kanban.local · Single-user local workspace
+                    </p>
+                  </div>
                 </div>
                 <button
-                  onClick={() => alert("Single-user local profile for Kanban workspace.")}
-                  className="px-3 py-1.5 text-[12px] font-medium text-theme-secondary hover:text-theme-primary hover:bg-surface-hover rounded-md transition-colors"
+                  type="button"
+                  onClick={() => toast.info("Single-user local profile for Kanban workspace.")}
+                  className="px-3.5 py-1.5 text-[13px] font-medium text-theme-secondary hover:text-theme-primary bg-surface-l3 hover:bg-surface-l4 rounded-md transition-colors cursor-pointer"
                 >
-                  Edit
+                  Profile details
                 </button>
               </div>
-            </div>
+            </section>
 
-            <hr className="section-divider" />
+            {/* ── 2. WORKSPACE SECTION ── */}
+            <section className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-theme-subtle">
+                <Layout className="w-4 h-4 text-brand-accent" />
+                <h2 className="text-[13px] font-semibold text-theme-tertiary uppercase tracking-wider">
+                  Workspace
+                </h2>
+              </div>
 
-            {/* Appearance Section */}
-            <div className="space-y-6">
-              <p className="section-title">Appearance</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <div className="p-4 bg-surface-l2 rounded-md space-y-1">
+                  <div className="text-[12px] font-mono text-theme-tertiary uppercase">Workspace Name</div>
+                  <div className="text-[16px] font-semibold text-theme-primary">My Kanban</div>
+                </div>
 
-              {/* Theme Picker */}
-              <div className="space-y-3">
+                <div className="p-4 bg-surface-l2 rounded-md space-y-1">
+                  <div className="text-[12px] font-mono text-theme-tertiary uppercase">Active Projects</div>
+                  <div className="text-[16px] font-semibold text-theme-primary">{projects.length} Projects</div>
+                </div>
+
+                <div className="p-4 bg-surface-l2 rounded-md space-y-1">
+                  <div className="text-[12px] font-mono text-theme-tertiary uppercase">Storage Engine</div>
+                  <div className="text-[16px] font-semibold text-theme-primary flex items-center gap-1.5">
+                    <HardDrive className="w-4 h-4 text-brand-accent" />
+                    <span>IndexedDB Local</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* ── 3. APPEARANCE SECTION ── */}
+            <section className="space-y-7">
+              <div className="flex items-center gap-2 pb-2 border-b border-theme-subtle">
+                <Palette className="w-4 h-4 text-brand-accent" />
+                <h2 className="text-[13px] font-semibold text-theme-tertiary uppercase tracking-wider">
+                  Appearance
+                </h2>
+              </div>
+
+              {/* Surface Themes */}
+              <div className="space-y-3.5">
                 <div>
-                  <div className="text-[15px] text-theme-primary">Theme</div>
-                  <p className="text-[13px] text-theme-tertiary">
-                    Choose the surface tone for your workspace.
+                  <h3 className="text-[16px] font-semibold text-theme-primary">Surface Theme</h3>
+                  <p className="text-[14px] text-theme-secondary mt-0.5">
+                    Choose the baseline surface tone. Graphite is the recommended default with a neutral charcoal gray palette.
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {/* Dark OLED */}
-                  <button
-                    onClick={() => handleThemeChange("dark")}
-                    className={`p-3 rounded-[8px] border text-left flex flex-col justify-between h-24 sm:h-20 transition-colors ${
-                      currentTheme === "dark"
-                        ? "border-brand-accent bg-surface-hover"
-                        : "border-theme-subtle hover:border-theme-default"
-                    }`}
-                  >
-                    <div className="w-full h-10 bg-black rounded-[6px] border border-white/10" />
-                    <div className="flex items-center justify-between pt-2">
-                      <span className="text-xs font-medium text-theme-primary">Dark OLED</span>
-                      {currentTheme === "dark" && (
-                        <Check className="w-3.5 h-3.5 text-brand-accent" />
-                      )}
-                    </div>
-                  </button>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-1">
+                  <ThemePreviewCard
+                    mode="graphite"
+                    title="Graphite"
+                    subtitle="Neutral charcoal gray"
+                    badge="Recommended"
+                    isSelected={currentTheme === "graphite"}
+                    onSelect={() => setTheme("graphite")}
+                    accentColor={currentAccent}
+                  />
 
-                  {/* Dim */}
-                  <button
-                    onClick={() => handleThemeChange("dim")}
-                    className={`p-3 rounded-[8px] border text-left flex flex-col justify-between h-24 sm:h-20 transition-colors ${
-                      currentTheme === "dim"
-                        ? "border-brand-accent bg-surface-hover"
-                        : "border-theme-subtle hover:border-theme-default"
-                    }`}
-                  >
-                    <div className="w-full h-10 bg-[#0e1015] rounded-[6px] border border-white/10" />
-                    <div className="flex items-center justify-between pt-2">
-                      <span className="text-xs font-medium text-theme-primary">Dim</span>
-                      {currentTheme === "dim" && (
-                        <Check className="w-3.5 h-3.5 text-brand-accent" />
-                      )}
-                    </div>
-                  </button>
+                  <ThemePreviewCard
+                    mode="dark"
+                    title="OLED Black"
+                    subtitle="Pure pitch black"
+                    isSelected={currentTheme === "dark"}
+                    onSelect={() => setTheme("dark")}
+                    accentColor={currentAccent}
+                  />
 
-                  {/* Light */}
-                  <button
-                    onClick={() => handleThemeChange("light")}
-                    className={`p-3 rounded-[8px] border text-left flex flex-col justify-between h-24 sm:h-20 transition-colors ${
-                      currentTheme === "light"
-                        ? "border-brand-accent bg-surface-hover"
-                        : "border-theme-subtle hover:border-theme-default"
-                    }`}
-                  >
-                    <div className="w-full h-10 bg-white rounded-[6px] border border-black/10" />
-                    <div className="flex items-center justify-between pt-2">
-                      <span className="text-xs font-medium text-theme-primary">Light</span>
-                      {currentTheme === "light" && (
-                        <Check className="w-3.5 h-3.5 text-brand-accent" />
-                      )}
-                    </div>
-                  </button>
+                  <ThemePreviewCard
+                    mode="light"
+                    title="Light"
+                    subtitle="Warm paper off-white"
+                    isSelected={currentTheme === "light"}
+                    onSelect={() => setTheme("light")}
+                    accentColor={currentAccent}
+                  />
                 </div>
               </div>
 
-              {/* Accent Color */}
-              <div className="space-y-3">
+              {/* Accent Color Picker */}
+              <div className="space-y-3.5 pt-2">
                 <div>
-                  <div className="text-[15px] text-theme-primary">Accent color</div>
-                  <p className="text-[13px] text-theme-tertiary">
-                    Applies to buttons, navigation, links, progress bars, and focus rings.
+                  <h3 className="text-[16px] font-semibold text-theme-primary">Accent Color</h3>
+                  <p className="text-[14px] text-theme-secondary mt-0.5">
+                    Applies to buttons, active navigation text, progress bars, and highlights.
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3 py-1 overflow-x-auto">
-                  {accents.map((acc) => (
+                <div className="flex items-center gap-4 py-3 px-1 overflow-x-auto">
+                  {accents.map((acc) => {
+                    const isSelected = currentAccent.toLowerCase() === acc.hex.toLowerCase();
+                    return (
+                      <button
+                        key={acc.hex}
+                        type="button"
+                        onClick={() => setAccentColor(acc.hex)}
+                        className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+                          isSelected ? "scale-110" : "hover:scale-105 opacity-75 hover:opacity-100"
+                        }`}
+                        style={{
+                          backgroundColor: acc.hex,
+                          boxShadow: isSelected ? `0 0 0 2px var(--surface-l0), 0 0 0 4px ${acc.hex}` : undefined,
+                        }}
+                        title={acc.name}
+                        aria-label={`Select accent color ${acc.name}`}
+                      >
+                        {isSelected && <Check className="w-4 h-4 text-slate-950 stroke-[3]" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+
+            {/* ── 4. PRODUCTIVITY & PREFERENCES SECTION ── */}
+            <section className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-theme-subtle">
+                <Sliders className="w-4 h-4 text-brand-accent" />
+                <h2 className="text-[13px] font-semibold text-theme-tertiary uppercase tracking-wider">
+                  Preferences
+                </h2>
+              </div>
+
+              <div className="space-y-3">
+                {/* Default Project Target View */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-surface-l2 rounded-md">
+                  <div>
+                    <div className="text-[15px] font-semibold text-theme-primary">Default Project View</div>
+                    <p className="text-[13px] text-theme-secondary mt-0.5">
+                      Choose which view opens when clicking a project in navigation or dashboard.
+                    </p>
+                  </div>
+
+                  <div className="flex bg-surface-l3 p-1 rounded-md shrink-0 border border-theme-subtle">
                     <button
-                      key={acc.hex}
-                      onClick={() => setAccentColor(acc.hex)}
-                      className={`w-9 h-9 sm:w-7 sm:h-7 rounded-full flex items-center justify-center transition-transform shrink-0 ${
-                        currentAccent === acc.hex
-                          ? "ring-2 ring-offset-2 ring-brand-accent ring-offset-surface-l0 scale-110"
-                          : "hover:scale-105"
+                      type="button"
+                      onClick={() => setDefaultProjectView("board")}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold rounded-md transition-all cursor-pointer ${
+                        defaultProjectView === "board"
+                          ? "bg-brand-accent text-slate-950 shadow-xs"
+                          : "text-theme-secondary hover:text-theme-primary"
                       }`}
-                      style={{ backgroundColor: acc.hex }}
-                      title={acc.name}
-                      aria-label={`Select accent color ${acc.name}`}
                     >
-                      {currentAccent === acc.hex && (
-                        <Check className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-white" />
-                      )}
+                      <Kanban className="w-3.5 h-3.5" />
+                      <span>Kanban Board</span>
                     </button>
-                  ))}
+
+                    <button
+                      type="button"
+                      onClick={() => setDefaultProjectView("overview")}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold rounded-md transition-all cursor-pointer ${
+                        defaultProjectView === "overview"
+                          ? "bg-brand-accent text-slate-950 shadow-xs"
+                          : "text-theme-secondary hover:text-theme-primary"
+                      }`}
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>Project Overview</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Keyboard Shortcuts Trigger Link */}
+                <div
+                  onClick={() => setIsShortcutsModalOpen(true)}
+                  className="flex items-center justify-between p-4 bg-surface-l2 hover:bg-surface-hover rounded-md transition-colors cursor-pointer group"
+                >
+                  <div className="flex items-center gap-3">
+                    <Keyboard className="w-4 h-4 text-brand-accent" />
+                    <div>
+                      <div className="text-[15px] font-semibold text-theme-primary">Keyboard shortcuts guide</div>
+                      <p className="text-[13px] text-theme-secondary mt-0.5">View fast navigation hotkeys.</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-theme-tertiary group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </div>
-            </div>
+            </section>
 
-            <hr className="section-divider" />
+            {/* ── 5. FULL WORKSPACE BACKUP SECTION ── */}
+            <section className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-theme-subtle">
+                <HardDrive className="w-4 h-4 text-brand-accent" />
+                <h2 className="text-[13px] font-semibold text-theme-tertiary uppercase tracking-wider">
+                  Full Workspace Backup
+                </h2>
+              </div>
 
-            {/* Global Tag Templates */}
-            <GlobalTagsManager onOpenJsonModal={() => setIsTagsJsonModalOpen(true)} />
-
-            <hr className="section-divider" />
-
-            {/* Workspace Options */}
-            <div className="space-y-3">
-              <p className="section-title">Workspace</p>
-
-              {/* Focus reminders */}
-              <div className="flex items-center justify-between">
+              <div className="p-4 bg-surface-l2 rounded-md space-y-4">
                 <div>
-                  <div className="text-[15px] text-theme-primary">Focus reminders</div>
-                  <p className="text-[13px] text-theme-tertiary">
-                    Gentle nudges to return to your current focus task.
+                  <div className="text-[15px] font-semibold text-theme-primary">Export & Restore Workspace JSON</div>
+                  <p className="text-[13px] text-theme-secondary mt-0.5">
+                    Backup all projects, columns, task cards, descriptions, checklists, and global tags in a single portable JSON file.
                   </p>
                 </div>
-                <button
-                  onClick={() => setFocusReminders(!focusReminders)}
-                  className={`w-11 sm:w-9 h-6 sm:h-5 rounded-full transition-colors relative ${
-                    focusReminders ? "bg-brand-accent" : "bg-surface-l3"
-                  }`}
-                >
-                  <span
-                    className={`w-4.5 sm:w-4 h-4.5 sm:h-4 bg-white rounded-full absolute top-[3px] sm:top-[2px] transition-all ${
-                      focusReminders ? "left-[23px] sm:left-[18px]" : "left-[3px] sm:left-[2px]"
-                    }`}
-                  />
-                </button>
+
+                <div className="flex flex-wrap items-center gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleQuickExportWorkspace}
+                    className="px-4 py-2 bg-brand-accent hover:bg-brand-accent-hover text-slate-950 font-semibold text-[13px] rounded-md flex items-center gap-2 transition-all cursor-pointer"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Export Full Workspace (JSON)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsWorkspaceBackupModalOpen(true)}
+                    className="px-4 py-2 bg-surface-l3 hover:bg-surface-l4 text-theme-primary font-medium text-[13px] rounded-md flex items-center gap-2 border border-theme-subtle transition-all cursor-pointer"
+                  >
+                    <Upload className="w-4 h-4 text-brand-accent" />
+                    <span>Restore Workspace Backup</span>
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            {/* ── 6. WORKSPACE TAG LIBRARY SECTION ── */}
+            <section className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-theme-subtle">
+                <FolderKanban className="w-4 h-4 text-brand-accent" />
+                <h2 className="text-[13px] font-semibold text-theme-tertiary uppercase tracking-wider">
+                  Workspace Tag Library
+                </h2>
               </div>
 
-              {/* Compact density */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-[15px] text-theme-primary">Compact density</div>
-                  <p className="text-[13px] text-theme-tertiary">
-                    Reduce spacing across lists and boards.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setCompactDensity(!compactDensity)}
-                  className={`w-11 sm:w-9 h-6 sm:h-5 rounded-full transition-colors relative ${
-                    compactDensity ? "bg-brand-accent" : "bg-surface-l3"
-                  }`}
-                >
-                  <span
-                    className={`w-4.5 sm:w-4 h-4.5 sm:h-4 bg-white rounded-full absolute top-[3px] sm:top-[2px] transition-all ${
-                      compactDensity ? "left-[23px] sm:left-[18px]" : "left-[3px] sm:left-[2px]"
-                    }`}
-                  />
-                </button>
+              <GlobalTagsManager onOpenJsonModal={() => setIsTagsJsonModalOpen(true)} />
+            </section>
+
+            {/* ── 7. ADVANCED & DIAGNOSTICS SECTION ── */}
+            <section className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-theme-subtle">
+                <Shield className="w-4 h-4 text-brand-accent" />
+                <h2 className="text-[13px] font-semibold text-theme-tertiary uppercase tracking-wider">
+                  Advanced & Diagnostics
+                </h2>
               </div>
 
-              {/* Reduced motion */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-[15px] text-theme-primary">Reduced motion</div>
-                  <p className="text-[13px] text-theme-tertiary">
-                    Minimize transitions and animated effects.
-                  </p>
+              <div className="space-y-3">
+                {/* Reset Demo Data */}
+                <div className="flex items-center justify-between p-4 bg-surface-l2 rounded-md">
+                  <div>
+                    <div className="text-[15px] font-semibold text-theme-primary">Reset workspace to demo state</div>
+                    <p className="text-[13px] text-theme-secondary mt-0.5">
+                      Restore default demo projects, columns, tasks, and tags.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleResetData}
+                    disabled={seedDemoMutation.isPending}
+                    className="px-4 py-2 bg-surface-l3 hover:bg-surface-l4 text-theme-primary text-[13px] font-medium rounded-md flex items-center gap-1.5 transition-colors disabled:opacity-40 cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-brand-accent" />
+                    <span>{seedDemoMutation.isPending ? "Resetting..." : "Reset Data"}</span>
+                  </button>
                 </div>
-                <button
-                  onClick={() => setReducedMotion(!reducedMotion)}
-                  className={`w-11 sm:w-9 h-6 sm:h-5 rounded-full transition-colors relative ${
-                    reducedMotion ? "bg-brand-accent" : "bg-surface-l3"
-                  }`}
-                >
-                  <span
-                    className={`w-4.5 sm:w-4 h-4.5 sm:h-4 bg-white rounded-full absolute top-[3px] sm:top-[2px] transition-all ${
-                      reducedMotion ? "left-[23px] sm:left-[18px]" : "left-[3px] sm:left-[2px]"
-                    }`}
-                  />
-                </button>
+
+                {/* Permanent Delete Workspace Data */}
+                <div className="flex items-center justify-between p-4 bg-red-500/5 border border-red-500/15 rounded-md">
+                  <div>
+                    <div className="text-[15px] font-semibold text-red-400">Delete all workspace data</div>
+                    <p className="text-[13px] text-theme-secondary mt-0.5">
+                      Permanently wipe all projects, columns, task cards, and custom tags.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsDeleteWorkspaceModalOpen(true)}
+                    className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-[13px] font-semibold rounded-md flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                    <span>Delete All Data</span>
+                  </button>
+                </div>
               </div>
-            </div>
+            </section>
           </PageContainer>
         </div>
       </main>
 
-      {/* Create Project Modal */}
+      {/* Modals */}
       <CreateProjectModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={() => {}}
       />
 
-      {/* Import/Export Tag Templates Modal */}
       <ImportExportTagsModal
         isOpen={isTagsJsonModalOpen}
         onClose={() => setIsTagsJsonModalOpen(false)}
         onSuccess={() => {}}
+      />
+
+      <ImportExportWorkspaceModal
+        isOpen={isWorkspaceBackupModalOpen}
+        onClose={() => setIsWorkspaceBackupModalOpen(false)}
+      />
+
+      <DeleteWorkspaceModal
+        isOpen={isDeleteWorkspaceModalOpen}
+        onClose={() => setIsDeleteWorkspaceModalOpen(false)}
+        onConfirmDelete={handleConfirmDeleteWorkspace}
+      />
+
+      <ShortcutsModal
+        isOpen={isShortcutsModalOpen}
+        onClose={() => setIsShortcutsModalOpen(false)}
       />
     </div>
   );

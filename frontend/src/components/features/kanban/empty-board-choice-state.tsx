@@ -32,7 +32,7 @@ export function EmptyBoardChoiceState({
           type="button"
           onClick={onApplyStarterTemplate}
           disabled={isSubmittingTemplate}
-          className="w-full p-5 sm:p-6 rounded-2xl bg-theme-surface/50 hover:bg-theme-elevated text-left transition-all duration-200 group cursor-pointer disabled:opacity-40"
+          className="w-full p-5 sm:p-6 rounded-md bg-theme-surface/50 hover:bg-theme-elevated text-left transition-all duration-200 group cursor-pointer disabled:opacity-40"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -67,7 +67,7 @@ export function EmptyBoardChoiceState({
         <button
           type="button"
           onClick={onSelectCreateBlank}
-          className="w-full p-5 sm:p-6 rounded-2xl bg-theme-surface/50 hover:bg-theme-elevated text-left transition-all duration-200 group cursor-pointer flex flex-col justify-between"
+          className="w-full p-5 sm:p-6 rounded-md bg-theme-surface/50 hover:bg-theme-elevated text-left transition-all duration-200 group cursor-pointer flex flex-col justify-between"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">

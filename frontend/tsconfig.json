@@ -27,6 +27,13 @@
       }
     ],
     "paths": {
+      "@/components/ui/*": [
+        "./src/components/ui/inputs/*",
+        "./src/components/ui/display/*",
+        "./src/components/ui/overlays/*",
+        "./src/components/ui/layout/*",
+        "./src/components/ui/*"
+      ],
       "@/*": [
         "./src/*"
       ]

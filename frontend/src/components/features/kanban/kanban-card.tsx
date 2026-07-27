@@ -49,7 +49,7 @@ export const KanbanCard = memo(function KanbanCard({ task, onClick }: KanbanCard
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className="w-full p-4 bg-surface-l3 rounded-[8px] shadow-elevation-l3 hover:shadow-elevation-hover hover:bg-surface-hover cursor-grab active:cursor-grabbing transition-all duration-150 active:scale-[0.99] space-y-3 select-none group"
+      className="w-full p-4 bg-surface-l3 rounded-md shadow-elevation-l3 hover:shadow-elevation-hover hover:bg-surface-hover cursor-grab active:cursor-grabbing transition-all duration-150 active:scale-[0.99] space-y-3 select-none group"
     >
       {/* Top Header: Priority Badge (Left) vs Text-Only Tag (Right) */}
       <div className="flex items-center justify-between gap-2 min-h-[22px]">

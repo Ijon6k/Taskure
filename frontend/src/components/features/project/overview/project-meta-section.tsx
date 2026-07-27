@@ -1,9 +1,10 @@
 "use client";
 
-import { Target, Calendar, Clock } from "lucide-react";
+import { Target, Calendar, Clock, ChevronDown } from "lucide-react";
 import { ProjectData } from "@/lib/api";
 import { formatDateShort } from "@/lib/helpers";
 import { ProjectTagsEditor } from "./project-tags-editor";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 interface ProjectMetaSectionProps {
   project: ProjectData;
@@ -142,16 +143,17 @@ export function ProjectMetaSection({
       {isEditingInline && (
         <div className="flex items-center gap-2">
           <span className="text-[11px] font-medium text-theme-secondary uppercase tracking-wider">Status</span>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="bg-transparent border-b border-theme-subtle text-[13px] text-theme-primary outline-none cursor-pointer hover:border-theme-default focus:border-brand-accent py-0.5"
-          >
-            <option value="active">Active</option>
-            <option value="paused">Paused</option>
-            <option value="completed">Completed</option>
-            <option value="archived">Archived</option>
-          </select>
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger className="w-[130px] h-8 text-[13px] bg-surface-l3 border border-theme-subtle">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="paused">Paused</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="archived">Archived</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       )}
 

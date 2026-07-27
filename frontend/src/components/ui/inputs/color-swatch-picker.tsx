@@ -26,7 +26,7 @@ export function ColorSwatchPicker({
           {label}
         </span>
       )}
-      <div className="flex items-center gap-3 pt-0.5 overflow-x-auto">
+      <div className="flex items-center gap-3 py-3 px-1 overflow-x-auto">
         {colors.map((hex) => {
           const isSelected = selectedColor.toLowerCase() === hex.toLowerCase();
           return (

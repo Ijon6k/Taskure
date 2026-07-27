@@ -21,16 +21,21 @@ export default function HomePage() {
   const openCreateProject = useUIStore((s) => s.openCreateProject);
   const closeCreateProject = useUIStore((s) => s.closeCreateProject);
 
-  const hero = focusResp?.hero || null;
-  const recommendations = focusResp?.recommendations || [];
+  const hero = (focusResp?.hero?.project?.id && focusResp?.hero?.project?.name && projects.length > 0) ? focusResp.hero : null;
+  const recommendations = useMemo(() => {
+    if (projects.length === 0) return [];
+    return (focusResp?.recommendations || []).filter(
+      (r) => r && r.task && r.project && r.project.id && r.project.name
+    );
+  }, [focusResp, projects]);
   const isLoading = isProjectsLoading || isFocusLoading;
 
   const pinnedProjects = useMemo(() => projects.filter((p) => p.is_pinned), [projects]);
 
   const contextualSubtext = useMemo(() => {
-    if (hero?.task) {
+    if (hero?.task && hero?.project?.name) {
       const title = hero.task.title.length > 60 ? hero.task.title.slice(0, 60) + "…" : hero.task.title;
-      return `Your focus today is on "${title}" from ${hero.project?.name || "a project"}.`;
+      return `Your focus today is on "${title}" from ${hero.project.name}.`;
     }
     const activeCount = projects.filter((p) => p.status === "active").length;
     if (activeCount > 0) return `${activeCount} active ${activeCount === 1 ? "project" : "projects"} in your workspace.`;
@@ -63,14 +68,14 @@ export default function HomePage() {
               <div className="flex items-center gap-3 shrink-0">
                 <button
                   onClick={openCreateProject}
-                  className="px-4 py-2.5 text-[14px] font-medium text-on-accent bg-brand-accent hover:bg-brand-accent-hover rounded-[8px] transition-colors flex items-center gap-2"
+                  className="px-4 py-2.5 text-[14px] font-medium text-on-accent bg-brand-accent hover:bg-brand-accent-hover rounded-md transition-colors flex items-center gap-2"
                 >
                   <FolderPlus className="w-4 h-4 shrink-0" />
                   <span>New project</span>
                 </button>
                 <Link
                   href="/projects"
-                  className="px-4 py-2.5 text-[14px] font-medium text-theme-secondary bg-surface-l2 hover:bg-surface-l3 rounded-[8px] transition-colors flex items-center gap-2"
+                  className="px-4 py-2.5 text-[14px] font-medium text-theme-secondary bg-surface-l2 hover:bg-surface-l3 rounded-md transition-colors flex items-center gap-2"
                 >
                   <FolderKanban className="w-4 h-4 shrink-0" />
                   <span>All projects</span>
@@ -86,7 +91,7 @@ export default function HomePage() {
               <h2 className="text-[13px] font-semibold uppercase tracking-wide text-theme-tertiary">
                 Today&apos;s focus
               </h2>
-              <TodaysFocusHero hero={hero} loading={isLoading} />
+              <TodaysFocusHero hero={hero} loading={isLoading} onOpenCreateProject={openCreateProject} />
             </div>
 
             {/* Recommended Next */}
@@ -108,7 +113,7 @@ export default function HomePage() {
               </div>
 
               {pinnedProjects.length === 0 ? (
-                <div className="py-10 border border-dashed border-theme-subtle rounded-[8px] text-center">
+                <div className="py-10 border border-dashed border-theme-subtle rounded-md text-center">
                   <p className="text-[15px] text-theme-tertiary">
                     No pinned projects yet. Pin projects from the workspace to show them here.
                   </p>

@@ -24,7 +24,7 @@ export function TagChip({
   return (
     <span
       onClick={onClick}
-      className={`px-2.5 py-1 rounded-[8px] text-[12px] font-medium border inline-flex items-center gap-1.5 transition-colors group cursor-pointer ${className}`}
+      className={`px-2.5 py-1 rounded-md text-[12px] font-medium border inline-flex items-center gap-1.5 transition-colors group cursor-pointer ${className}`}
       style={{
         backgroundColor: tagCfg.bgSubtle,
         color: tagCfg.color,
