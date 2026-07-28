@@ -9,9 +9,10 @@ export const tasksService = {
     });
   },
 
-  getTask: (id: string) => {
-    return fetcher<TaskData>(`/tasks/${id}`);
+  getTask: (id: string, init?: { signal?: AbortSignal }) => {
+    return fetcher<TaskData>(`/tasks/${id}`, init?.signal ? { signal: init.signal } : undefined);
   },
+
 
   updateTask: (id: string, data: UpdateTaskInput) => {
     return fetcher<TaskData>(`/tasks/${id}`, {

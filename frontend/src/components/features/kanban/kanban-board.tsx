@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { ColumnData, TaskData, api } from "@/lib/api";
@@ -82,7 +82,7 @@ export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, o
     }
   };
 
-  const handleMoveColumn = async (colId: string, direction: "left" | "right") => {
+  const handleMoveColumn = useCallback(async (colId: string, direction: "left" | "right") => {
     const idx = columns.findIndex((c) => c.id === colId);
     if (idx === -1) return;
     const targetIdx = direction === "left" ? idx - 1 : idx + 1;
@@ -101,17 +101,17 @@ export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, o
     } catch {
       toast.error("Failed to move column.");
     }
-  };
+  }, [columns, onRefreshProject]);
 
-  const scrollToColumn = (colId: string) => {
+  const scrollToColumn = useCallback((colId: string) => {
     setActiveTabColId(colId);
     const colElement = document.getElementById(`kanban-column-${colId}`);
     if (colElement && containerRef.current) {
       colElement.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
     }
-  };
+  }, []);
 
-  const handleCreateInlineColumn = async () => {
+  const handleCreateInlineColumn = useCallback(async () => {
     if (!newColumnName.trim() || isSubmittingCol) return;
     setIsSubmittingCol(true);
     try {
@@ -128,7 +128,17 @@ export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, o
     } finally {
       setIsSubmittingCol(false);
     }
-  };
+  }, [projectId, newColumnName, isSubmittingCol, onRefreshProject]);
+
+  const handleOpenReorderModal = useCallback(() => setIsReorderModalOpen(true), []);
+  const handleCloseReorderModal = useCallback(() => setIsReorderModalOpen(false), []);
+
+  const handleReorderSuccess = useCallback(() => {
+    if (onRefreshProject) onRefreshProject();
+  }, [onRefreshProject]);
+
+  // Stable refreshProject for columns — avoids breaking KanbanColumn memo
+  const refreshProject = useMemo(() => onRefreshProject || noop, [onRefreshProject]);
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
@@ -138,7 +148,7 @@ export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, o
           columns={columns}
           activeTabColId={activeTabColId}
           onScrollToColumn={scrollToColumn}
-          onOpenReorderModal={() => setIsReorderModalOpen(true)}
+          onOpenReorderModal={handleOpenReorderModal}
         />
 
         {/* Main Board Scroll Container */}
@@ -164,7 +174,7 @@ export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, o
                     totalColumns={columns.length}
                     onMoveColumn={(dir) => handleMoveColumn(col.id, dir)}
                     onTaskClick={onTaskClick}
-                    onRefreshProject={onRefreshProject || noop}
+                    onRefreshProject={refreshProject}
                   />
                 </div>
               ))}
@@ -222,10 +232,8 @@ export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, o
         <ReorderColumnsModal
           isOpen={isReorderModalOpen}
           columns={columns}
-          onClose={() => setIsReorderModalOpen(false)}
-          onSuccess={() => {
-            if (onRefreshProject) onRefreshProject();
-          }}
+          onClose={handleCloseReorderModal}
+          onSuccess={handleReorderSuccess}
         />
       </div>
     </DndContext>

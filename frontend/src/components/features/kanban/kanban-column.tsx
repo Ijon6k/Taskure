@@ -4,7 +4,7 @@ import { useState, useMemo, memo, useRef, useEffect, useCallback } from "react";
 import { useDndContext } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
-import { Plus, GripVertical } from "lucide-react";
+import { Plus, GripVertical, CheckCircle2 } from "lucide-react";
 import { ColumnData, TaskData, api } from "@/lib/api";
 import { KanbanCard } from "./kanban-card";
 import { ColumnContextMenu } from "./column-context-menu";
@@ -216,6 +216,12 @@ function KanbanColumnInner({
           ) : (
             <h3 className="text-base font-medium text-theme-primary truncate">{column.name}</h3>
           )}
+          {column.behavior === "completed" && (
+            <CheckCircle2
+              className="w-4 h-4 text-emerald-400 shrink-0"
+              aria-label="Completed column"
+            />
+          )}
           <span className="px-2 py-0.5 bg-theme-elevated text-theme-secondary font-mono text-[11px] rounded-full border border-theme-subtle shrink-0 leading-none">
             {filteredTasks.length}
           </span>
@@ -226,6 +232,7 @@ function KanbanColumnInner({
             columnId={column.id}
             columnName={column.name}
             columnColor={columnColor}
+            columnBehavior={column.behavior || "active"}
             projectId={projectId}
             onRefreshProject={onRefreshProject}
             onRenameTrigger={handleRenameStart}

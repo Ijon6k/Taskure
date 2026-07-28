@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { MoreHorizontal, Pencil, Copy, Trash2, Palette, ChevronRight, ArrowLeft, ArrowRight } from "lucide-react";
+import { MoreHorizontal, Pencil, Copy, Trash2, Palette, ChevronRight, ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as Dialog from "@radix-ui/react-dialog";
 import { api } from "@/lib/api";
@@ -9,11 +9,14 @@ import { toast } from "sonner";
 import { ColorSwatchPicker } from "@/components/ui/color-swatch-picker";
 import { TAG_COLOR_PALETTE } from "@/lib/tags";
 import { ConfirmModal } from "@/components/modals/confirm-modal";
+import { useQueryClient } from "@tanstack/react-query";
+import { invalidateFocusQueries } from "@/lib/api/queries/use-workspace";
 
 interface ColumnContextMenuProps {
   columnId: string;
   columnName: string;
   columnColor: string;
+  columnBehavior?: "active" | "completed";
   projectId: string;
   onRefreshProject: () => void;
   onRenameTrigger: () => void;
@@ -27,6 +30,7 @@ export function ColumnContextMenu({
   columnId,
   columnName,
   columnColor,
+  columnBehavior = "active",
   projectId,
   onRefreshProject,
   onRenameTrigger,
@@ -59,17 +63,37 @@ export function ColumnContextMenu({
     setMobileColorOpen(false);
   }, [columnId, columnColor, onRefreshProject]);
 
+  const queryClient = useQueryClient();
+
+  const handleToggleBehavior = useCallback(async () => {
+    const isCompleted = columnBehavior === "completed";
+    const nextBehavior = isCompleted ? "active" : "completed";
+    try {
+      await api.updateColumn(columnId, { behavior: nextBehavior });
+      invalidateFocusQueries(queryClient);
+      if (nextBehavior === "completed") {
+        toast.success("Column marked as finished.");
+      } else {
+        toast.success("Column marked as active.");
+      }
+      onRefreshProject();
+    } catch {
+      toast.error("Failed to update column behavior");
+    }
+  }, [columnId, columnBehavior, onRefreshProject, queryClient]);
+
   const handleDuplicate = useCallback(async () => {
     try {
       await api.createColumn(projectId, {
         name: columnName + " (copy)",
         color: columnColor,
+        behavior: columnBehavior,
       });
       onRefreshProject();
     } catch {
       toast.error("Failed to duplicate column");
     }
-  }, [columnName, columnColor, projectId, onRefreshProject]);
+  }, [columnName, columnColor, columnBehavior, projectId, onRefreshProject]);
 
   const handleDeleteConfirm = useCallback(async () => {
     if (!columnToDelete) return;
@@ -90,6 +114,8 @@ export function ColumnContextMenu({
       <MoreHorizontal className="w-3.5 h-3.5" />
     </button>
   );
+
+  const isCompleted = columnBehavior === "completed";
 
   if (isMobile) {
     return (
@@ -162,6 +188,18 @@ export function ColumnContextMenu({
                     <Copy className="w-4 h-4 text-theme-secondary" />
                     Duplicate Column
                   </button>
+
+                  <div className="mx-3 my-1 h-px bg-theme-default" />
+
+                  {/* Finished Column Toggle Item */}
+                  <button
+                    onClick={() => { handleToggleBehavior(); setMenuOpen(false); }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-theme-primary hover:bg-theme-hover rounded-md transition-colors font-medium"
+                  >
+                    <CheckCircle2 className={`w-4 h-4 ${isCompleted ? "text-brand-accent" : "text-theme-tertiary"}`} />
+                    <span>{isCompleted ? "Mark as active column" : "Mark as finished column"}</span>
+                  </button>
+
                   <div className="mx-3 my-1 h-px bg-theme-default" />
                   <button
                     onClick={() => { setColumnToDelete(columnId); setMenuOpen(false); }}
@@ -195,7 +233,7 @@ export function ColumnContextMenu({
         <DropdownMenu.Trigger asChild>{trigger}</DropdownMenu.Trigger>
         <DropdownMenu.Portal>
           <DropdownMenu.Content
-            className="z-50 min-w-[180px] rounded-md bg-theme-elevated border border-theme-default p-1 shadow-xl animate-in fade-in duration-100"
+            className="z-50 w-56 max-w-[calc(100vw-2rem)] rounded-md bg-theme-elevated border border-theme-default p-1.5 shadow-xl animate-in fade-in duration-100"
             sideOffset={4}
             align="end"
           >
@@ -256,6 +294,20 @@ export function ColumnContextMenu({
             >
               <Copy className="w-3.5 h-3.5 text-theme-secondary" />
               Duplicate Column
+            </DropdownMenu.Item>
+
+            <DropdownMenu.Separator className="mx-2 my-1 h-px bg-theme-default" />
+
+            {/* Finished Column Toggle Item */}
+            <DropdownMenu.Item
+              onSelect={(e) => {
+                e.preventDefault();
+                handleToggleBehavior();
+              }}
+              className="flex items-center gap-2.5 px-2.5 py-2 text-xs text-theme-primary hover:bg-theme-hover rounded-sm outline-none cursor-pointer transition-colors"
+            >
+              <CheckCircle2 className={`w-3.5 h-3.5 ${isCompleted ? "text-brand-accent" : "text-theme-tertiary"}`} />
+              <span>{isCompleted ? "Mark as active column" : "Mark as finished column"}</span>
             </DropdownMenu.Item>
 
             <DropdownMenu.Separator className="mx-2 my-1 h-px bg-theme-default" />

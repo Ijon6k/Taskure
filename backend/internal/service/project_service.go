@@ -9,12 +9,13 @@ import (
 )
 
 type CreateProjectInput struct {
-	Name        string `json:"name" binding:"required"`
-	Description string `json:"description"`
-	Color       string `json:"color"`
-	Icon        string `json:"icon"`
-	Status      string `json:"status"`
-	IsPinned    bool   `json:"is_pinned"`
+	Name         string `json:"name" binding:"required"`
+	Description  string `json:"description"`
+	Color        string `json:"color"`
+	Icon         string `json:"icon"`
+	Status       string `json:"status"`
+	IsPinned     bool   `json:"is_pinned"`
+	FocusEnabled *bool  `json:"focus_enabled"`
 }
 
 type ProjectService interface {
@@ -29,17 +30,20 @@ type projectService struct {
 	projectRepo   repository.ProjectRepository
 	workspaceRepo repository.WorkspaceRepository
 	columnRepo    repository.ColumnRepository
+	taskService   TaskService
 }
 
 func NewProjectService(
 	projectRepo repository.ProjectRepository,
 	workspaceRepo repository.WorkspaceRepository,
 	columnRepo repository.ColumnRepository,
+	taskService TaskService,
 ) ProjectService {
 	return &projectService{
 		projectRepo:   projectRepo,
 		workspaceRepo: workspaceRepo,
 		columnRepo:    columnRepo,
+		taskService:   taskService,
 	}
 }
 
@@ -66,15 +70,21 @@ func (s *projectService) CreateProject(input CreateProjectInput) (*models.Projec
 		status = "active"
 	}
 
+	focusEnabled := true
+	if input.FocusEnabled != nil {
+		focusEnabled = *input.FocusEnabled
+	}
+
 	project := models.Project{
-		Name:        input.Name,
-		Description: input.Description,
-		Color:       color,
-		Icon:        input.Icon,
-		Status:      status,
-		IsPinned:    input.IsPinned,
-		WorkspaceID: ws.ID,
-		OwnerID:     ws.OwnerID,
+		Name:         input.Name,
+		Description:  input.Description,
+		Color:        color,
+		Icon:         input.Icon,
+		Status:       status,
+		IsPinned:     input.IsPinned,
+		FocusEnabled: focusEnabled,
+		WorkspaceID:  ws.ID,
+		OwnerID:      ws.OwnerID,
 	}
 
 	if err := s.projectRepo.CreateProject(&project); err != nil {
@@ -83,13 +93,17 @@ func (s *projectService) CreateProject(input CreateProjectInput) (*models.Projec
 
 	// Create 3 default columns ("Todo", "In Progress", "Done")
 	defaultColumns := []models.Column{
-		{Name: "Todo", Position: 0, ProjectID: project.ID, Color: "#6B7280"},
-		{Name: "In Progress", Position: 1, ProjectID: project.ID, Color: "#3B82F6"},
-		{Name: "Done", Position: 2, ProjectID: project.ID, Color: "#22C55E"},
+		{Name: "Todo", Behavior: models.ColumnBehaviorActive, Position: 0, ProjectID: project.ID, Color: "#6B7280"},
+		{Name: "In Progress", Behavior: models.ColumnBehaviorActive, Position: 1, ProjectID: project.ID, Color: "#3B82F6"},
+		{Name: "Done", Behavior: models.ColumnBehaviorCompleted, Position: 2, ProjectID: project.ID, Color: "#22C55E"},
 	}
 
 	for _, col := range defaultColumns {
 		_ = s.columnRepo.CreateColumn(&col)
+	}
+
+	if s.taskService != nil {
+		s.taskService.InvalidateFocusCache()
 	}
 
 	return s.projectRepo.FindProject(project.PublicID)
@@ -141,6 +155,9 @@ func (s *projectService) UpdateProject(idOrPublicID string, updates map[string]i
 	if err := s.projectRepo.UpdateProject(project, updates); err != nil {
 		return nil, err
 	}
+	if s.taskService != nil {
+		s.taskService.InvalidateFocusCache()
+	}
 	return s.projectRepo.FindProject(project.ID)
 }
 
@@ -148,6 +165,9 @@ func (s *projectService) DeleteProject(idOrPublicID string) error {
 	project, err := s.projectRepo.FindProject(idOrPublicID)
 	if err != nil {
 		return err
+	}
+	if s.taskService != nil {
+		s.taskService.InvalidateFocusCache()
 	}
 	return s.projectRepo.DeleteProject(project)
 }

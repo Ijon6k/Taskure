@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { api, TaskData, ChecklistItemData, ColumnData, useProject } from "@/lib/api";
 import { AttachmentItem } from "../task-attachments-section";
 import { extractTaskTags } from "@/lib/tags";
@@ -30,6 +30,9 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
   const [taskTags, setTaskTags] = useState<string[]>([]);
   const [taskAttachments, setTaskAttachments] = useState<AttachmentItem[]>([]);
 
+  // AbortController ref to cancel in-flight fetch on taskId change / unmount
+  const abortRef = useRef<AbortController | null>(null);
+
   // Project details for column switching
   const { data: project } = useProject(task?.project_id ?? "");
   const columns: ColumnData[] = project?.columns || [];
@@ -42,10 +45,12 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
     { enabled: taskId !== null }
   );
 
-  const fetchTaskDetails = useCallback(async (id: string) => {
+  const fetchTaskDetails = useCallback(async (id: string, signal?: AbortSignal) => {
     setLoading(true);
     try {
-      const data = await api.getTask(id);
+      const data = await api.getTask(id, signal ? { signal } : undefined);
+      if (signal?.aborted) return;
+
       setTask(data);
       setEditTitle(data.title ?? "");
       setEditDescription(data.description ?? "");
@@ -54,7 +59,8 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
       const rawDue = data.due_date;
       setEditDueDate(rawDue ? (rawDue.split("T")[0] ?? null) : null);
       setTaskTags(extractTaskTags(data));
-    } catch {
+    } catch (e: unknown) {
+      if (e instanceof DOMException && e.name === "AbortError") return;
       toast.error("Failed to load task details.");
     } finally {
       setLoading(false);
@@ -63,11 +69,21 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
 
   useEffect(() => {
     if (taskId) {
-      fetchTaskDetails(taskId);
+      // Cancel previous in-flight fetch before starting a new one
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      fetchTaskDetails(taskId, controller.signal);
       setIsEditing(false);
     } else {
+      abortRef.current?.abort();
       setTask(null);
     }
+
+    return () => {
+      abortRef.current?.abort();
+    };
   }, [taskId, fetchTaskDetails]);
 
   const handleSaveEdit = async () => {
@@ -91,13 +107,7 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
   const handleColumnChange = async (newColumnId: string) => {
     if (!task || task.column_id === newColumnId) return;
     const targetCol = columns.find((c) => c.id === newColumnId);
-    const colNameLower = targetCol?.name.toLowerCase() || "";
-    let newStatus = "todo";
-    if (colNameLower.includes("done") || colNameLower.includes("selesai")) {
-      newStatus = "done";
-    } else if (colNameLower.includes("progress") || colNameLower.includes("doing")) {
-      newStatus = "in_progress";
-    }
+    const newStatus = targetCol?.behavior === "completed" ? "done" : "todo";
 
     try {
       await api.moveTask(task.id, {
@@ -158,22 +168,34 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
 
   const handleToggleChecklist = async (item: ChecklistItemData) => {
     if (!task) return;
-    const previousItems = task.checklist_items || [];
     const nextStatus = !item.is_completed;
 
-    // 1. Optimistic local state update (0ms UI lag)
-    const updatedItems = previousItems.map((c) =>
-      c.id === item.id ? { ...c, is_completed: nextStatus } : c
-    );
-    setTask({ ...task, checklist_items: updatedItems });
+    // Use functional updater so we read the latest task snapshot,
+    // not a stale closure value. This prevents race conditions
+    // when multiple toggles are in flight.
+    setTask((prev) => {
+      if (!prev) return null;
+      const currentItems = prev.checklist_items || [];
+      const updatedItems = currentItems.map((c) =>
+        c.id === item.id ? { ...c, is_completed: nextStatus } : c
+      );
+      return { ...prev, checklist_items: updatedItems };
+    });
 
     try {
       await api.updateChecklistItem(item.id, { is_completed: nextStatus });
       toast.success(nextStatus ? "Subtask completed!" : "Marked incomplete");
       onTaskUpdated?.();
     } catch (e) {
-      // Revert state on failure
-      setTask({ ...task, checklist_items: previousItems });
+      // Revert optimistically — only the specific item, using functional updater
+      setTask((prev) => {
+        if (!prev) return null;
+        const currentItems = prev.checklist_items || [];
+        const revertedItems = currentItems.map((c) =>
+          c.id === item.id ? { ...c, is_completed: !nextStatus } : c
+        );
+        return { ...prev, checklist_items: revertedItems };
+      });
       toast.error("Failed to update subtask: " + (e as Error).message);
     }
   };

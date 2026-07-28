@@ -84,5 +84,6 @@ func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 	}
 
 	r.GET("/focus", c.FocusHandler.GetFocusTask)
+	r.GET("/focus/overview", c.FocusHandler.GetFocusOverview)
 	r.POST("/seed", c.SeedHandler.SeedDemoData)
 }

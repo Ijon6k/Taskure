@@ -6,8 +6,9 @@ import (
 )
 
 type CreateColumnInput struct {
-	Name  string `json:"name" binding:"required"`
-	Color string `json:"color"`
+	Name     string `json:"name" binding:"required"`
+	Color    string `json:"color"`
+	Behavior string `json:"behavior"`
 }
 
 type ColumnService interface {
@@ -19,12 +20,18 @@ type ColumnService interface {
 type columnService struct {
 	columnRepo  repository.ColumnRepository
 	projectRepo repository.ProjectRepository
+	taskService TaskService
 }
 
-func NewColumnService(columnRepo repository.ColumnRepository, projectRepo repository.ProjectRepository) ColumnService {
+func NewColumnService(
+	columnRepo repository.ColumnRepository,
+	projectRepo repository.ProjectRepository,
+	taskService TaskService,
+) ColumnService {
 	return &columnService{
 		columnRepo:  columnRepo,
 		projectRepo: projectRepo,
+		taskService: taskService,
 	}
 }
 
@@ -39,8 +46,14 @@ func (s *columnService) CreateColumn(projectIDOrPublicID string, input CreateCol
 		return nil, err
 	}
 
+	behavior := input.Behavior
+	if behavior == "" {
+		behavior = models.ColumnBehaviorActive
+	}
+
 	col := models.Column{
 		Name:      input.Name,
+		Behavior:  behavior,
 		Color:     input.Color,
 		Position:  int(count),
 		ProjectID: project.ID,
@@ -50,6 +63,9 @@ func (s *columnService) CreateColumn(projectIDOrPublicID string, input CreateCol
 		return nil, err
 	}
 
+	if s.taskService != nil {
+		s.taskService.InvalidateFocusCache()
+	}
 	return &col, nil
 }
 
@@ -62,9 +78,15 @@ func (s *columnService) UpdateColumn(id string, updates map[string]interface{}) 
 	if err := s.columnRepo.UpdateColumn(col, updates); err != nil {
 		return nil, err
 	}
+	if s.taskService != nil {
+		s.taskService.InvalidateFocusCache()
+	}
 	return col, nil
 }
 
 func (s *columnService) DeleteColumn(id string) error {
+	if s.taskService != nil {
+		s.taskService.InvalidateFocusCache()
+	}
 	return s.columnRepo.DeleteColumn(id)
 }

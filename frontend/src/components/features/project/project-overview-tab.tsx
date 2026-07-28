@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Edit3, CheckCircle2, LayoutGrid, Plus, Check, X } from "lucide-react";
 import { api, ProjectData, TaskData, ResourceLinkItem } from "@/lib/api";
 import { computeTaskStats } from "@/lib/helpers";
@@ -49,20 +49,35 @@ export function ProjectOverviewTab({
   const stats = computeTaskStats(project.columns || []);
 
   const priorityOrder: Record<string, number> = { urgent: 1, high: 2, medium: 3, low: 4 };
-  const sortedActiveTasks = sortBy(
-    stats.allTasks.filter((t) => t.status !== "done"),
-    [(t) => priorityOrder[t.priority || "medium"] || 3]
-  );
-  const focusTask = sortedActiveTasks[0] || null;
 
-  const upcomingTasks = sortBy(
-    stats.allTasks.filter((t) => t.due_date && t.status !== "done"),
-    [(t) => new Date(t.due_date!).getTime()]
-  ).slice(0, 5);
+  const completedColumnIds = useMemo(() => {
+    const set = new Set<string>();
+    (project?.columns || []).forEach((c) => {
+      if (c.behavior === "completed") {
+        set.add(c.id);
+      }
+    });
+    return set;
+  }, [project?.columns]);
 
-  const completedTasks = stats.allTasks
-    .filter((t) => t.status === "done" || (t as any).is_completed)
-    .slice(0, 5);
+  const { sortedActiveTasks, focusTask, upcomingTasks, completedTasks } = useMemo(() => {
+    const isCompletedTask = (t: TaskData) =>
+      completedColumnIds.has(t.column_id) || t.status === "done" || Boolean((t as any).is_completed);
+
+    const activeTasks = stats.allTasks.filter((t) => !isCompletedTask(t));
+
+    const sorted = sortBy(activeTasks, [(t) => priorityOrder[t.priority || "medium"] || 3]);
+
+    return {
+      sortedActiveTasks: sorted,
+      focusTask: sorted[0] || null,
+      upcomingTasks: sortBy(
+        activeTasks.filter((t) => Boolean(t.due_date)),
+        [(t) => new Date(t.due_date!).getTime()]
+      ).slice(0, 5),
+      completedTasks: stats.allTasks.filter(isCompletedTask).slice(0, 5),
+    };
+  }, [stats.allTasks, completedColumnIds]);
 
   const handleStartEdit = () => {
     setName(project.name || "");
@@ -126,9 +141,11 @@ export function ProjectOverviewTab({
       <PageContainer variant="default" className="!space-y-10">
         {/* Header & Edit Action Toggle */}
         <div className="flex items-center justify-between">
-          <h2 className="text-[11px] font-medium text-theme-secondary uppercase tracking-[0.06em]">
-            Overview
-          </h2>
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-[11px] font-medium text-theme-secondary uppercase tracking-[0.06em]">
+              Overview
+            </h2>
+          </div>
 
           {isEditingInline ? (
             <div className="flex items-center gap-2">

@@ -1,9 +1,27 @@
 import type { NextConfig } from "next";
-import path from "path";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  outputFileTracingRoot: path.join(__dirname),
+
+  // Tree-shake icon imports — reduces client bundle
+  experimental: {
+    optimizePackageImports: ["lucide-react"],
+  },
+
+  // Security headers added at Next.js level (complements Nginx)
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        ],
+      },
+    ];
+  },
+
   async rewrites() {
     const apiPort = process.env.PORT_API || "4000";
     const aiPort = process.env.PORT_AI || "5000";

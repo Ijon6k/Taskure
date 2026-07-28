@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 export type ThemeMode = "graphite" | "dark" | "light";
 export type ProjectViewMode = "board" | "overview";
@@ -61,41 +61,41 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const setTheme = (newTheme: ThemeMode) => {
+  const setTheme = useCallback((newTheme: ThemeMode) => {
     setThemeState(newTheme);
     localStorage.setItem("kanban_theme", newTheme);
     document.documentElement.setAttribute("data-theme", newTheme);
-  };
+  }, []);
 
-  const setAccentColor = (newAccent: string) => {
+  const setAccentColor = useCallback((newAccent: string) => {
     setAccentColorState(newAccent);
     localStorage.setItem("kanban_accent", newAccent);
     document.documentElement.style.setProperty("--brand-accent", newAccent);
-  };
+  }, []);
 
-  const setDefaultProjectView = (newView: ProjectViewMode) => {
+  const setDefaultProjectView = useCallback((newView: ProjectViewMode) => {
     setDefaultProjectViewState(newView);
     localStorage.setItem("kanban_default_project_view", newView);
-  };
+  }, []);
 
-  const getProjectNavUrl = (projectId: string) => {
+  const getProjectNavUrl = useCallback((projectId: string) => {
     return defaultProjectView === "overview"
       ? `/projects/${projectId}`
       : `/projects/${projectId}/board`;
-  };
+  }, [defaultProjectView]);
+
+  const value = useMemo(() => ({
+    theme,
+    accentColor,
+    defaultProjectView,
+    setTheme,
+    setAccentColor,
+    setDefaultProjectView,
+    getProjectNavUrl,
+  }), [theme, accentColor, defaultProjectView, setTheme, setAccentColor, setDefaultProjectView, getProjectNavUrl]);
 
   return (
-    <ThemeContext.Provider
-      value={{
-        theme,
-        accentColor,
-        defaultProjectView,
-        setTheme,
-        setAccentColor,
-        setDefaultProjectView,
-        getProjectNavUrl,
-      }}
-    >
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );

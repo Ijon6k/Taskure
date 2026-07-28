@@ -28,7 +28,8 @@ export function ConfirmDeleteProjectModal({
   useEffect(() => {
     if (isOpen) {
       setInputValue("");
-      setTimeout(() => inputRef.current?.focus(), 100);
+      const id = setTimeout(() => inputRef.current?.focus(), 100);
+      return () => clearTimeout(id);
     }
   }, [isOpen]);
 

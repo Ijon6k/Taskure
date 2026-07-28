@@ -43,10 +43,10 @@ func main() {
 	taskRepo := repository.NewTaskRepository(conn)
 
 	workspaceService := service.NewWorkspaceService(workspaceRepo)
-	projectService := service.NewProjectService(projectRepo, workspaceRepo, columnRepo)
-	columnService := service.NewColumnService(columnRepo, projectRepo)
 	taskService := service.NewTaskService(taskRepo, projectRepo)
-	seedService := service.NewSeedService(workspaceRepo, projectRepo, columnRepo, taskRepo)
+	projectService := service.NewProjectService(projectRepo, workspaceRepo, columnRepo, taskService)
+	columnService := service.NewColumnService(columnRepo, projectRepo, taskService)
+	seedService := service.NewSeedService(workspaceRepo, projectRepo, columnRepo, taskRepo, taskService)
 
 	// Backfill missing NanoIDs on startup
 	_ = workspaceService.BackfillNanoIDs()

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { projectsService } from "../services/projects.service";
 import { CreateProjectInput, ProjectData } from "../types";
+import { invalidateFocusQueries } from "./use-workspace";
 
 export const PROJECT_KEYS = {
   all: ["projects"] as const,
@@ -30,6 +31,7 @@ export function useCreateProject() {
     mutationFn: (data: CreateProjectInput) => projectsService.createProject(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.all });
+      invalidateFocusQueries(queryClient);
     },
   });
 }
@@ -42,6 +44,7 @@ export function useUpdateProject() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.all });
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.detail(variables.id) });
+      invalidateFocusQueries(queryClient);
     },
   });
 }
@@ -52,6 +55,7 @@ export function useDeleteProject() {
     mutationFn: (id: string) => projectsService.deleteProject(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.all });
+      invalidateFocusQueries(queryClient);
     },
   });
 }

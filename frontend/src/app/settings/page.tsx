@@ -22,6 +22,8 @@ import {
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileHeader } from "@/components/layout/mobile-header";
 import { CreateProjectModal } from "@/components/features/project/create-project-modal";
+import { EditProjectModal } from "@/components/features/project/edit-project-modal";
+import { useUIStore } from "@/store/use-ui-store";
 import { ImportExportTagsModal } from "@/components/modals/import-export-tags-modal";
 import { ImportExportWorkspaceModal } from "@/components/modals/import-export-workspace-modal";
 import { ShortcutsModal } from "@/components/modals/shortcuts-modal";
@@ -48,6 +50,10 @@ export default function SettingsPage() {
 
   const { data: projects = [] } = useProjects();
   const seedDemoMutation = useSeedDemo();
+
+  const isEditProjectOpen = useUIStore((s) => s.isEditProjectOpen);
+  const editingProject = useUIStore((s) => s.editingProject);
+  const closeEditProject = useUIStore((s) => s.closeEditProject);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isTagsJsonModalOpen, setIsTagsJsonModalOpen] = useState(false);
@@ -179,6 +185,8 @@ export default function SettingsPage() {
                 </div>
               </div>
             </section>
+
+
 
             {/* ── 3. APPEARANCE SECTION ── */}
             <section className="space-y-7">
@@ -459,6 +467,12 @@ export default function SettingsPage() {
       <ShortcutsModal
         isOpen={isShortcutsModalOpen}
         onClose={() => setIsShortcutsModalOpen(false)}
+      />
+
+      <EditProjectModal
+        isOpen={isEditProjectOpen}
+        project={editingProject}
+        onClose={closeEditProject}
       />
     </div>
   );

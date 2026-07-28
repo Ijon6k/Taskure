@@ -15,6 +15,7 @@ type ProjectRepository interface {
 	UpdateProject(project *models.Project, updates map[string]interface{}) error
 	DeleteProject(project *models.Project) error
 	GetAllProjects() ([]models.Project, error)
+	GetFocusOverview() (*FocusOverviewResult, error)
 }
 
 type projectRepository struct {
@@ -89,6 +90,12 @@ func (r *projectRepository) FindProject(idOrPublicID string) (*models.Project, e
 	return &project, nil
 }
 
+type FocusOverviewResult struct {
+	Included         int `json:"included"`
+	Excluded         int `json:"excluded"`
+	SetupRecommended int `json:"setup_recommended"`
+}
+
 func (r *projectRepository) UpdateProject(project *models.Project, updates map[string]interface{}) error {
 	return r.db.Model(project).Updates(updates).Error
 }
@@ -99,6 +106,42 @@ func (r *projectRepository) DeleteProject(project *models.Project) error {
 
 func (r *projectRepository) GetAllProjects() ([]models.Project, error) {
 	var projects []models.Project
-	err := r.db.Find(&projects).Error
+	err := r.db.Preload("Columns", func(db *gorm.DB) *gorm.DB {
+		return db.Order("position asc")
+	}).Preload("Columns.Tasks", func(db *gorm.DB) *gorm.DB {
+		return db.Order("position asc")
+	}).Find(&projects).Error
 	return projects, err
+}
+
+func (r *projectRepository) GetFocusOverview() (*FocusOverviewResult, error) {
+	var projects []models.Project
+	err := r.db.Where("is_archived = ? AND (status IS NULL OR status != ?)", false, "archived").
+		Preload("Columns").
+		Find(&projects).Error
+	if err != nil {
+		return nil, err
+	}
+
+	res := &FocusOverviewResult{}
+	for _, p := range projects {
+		if !p.FocusEnabled {
+			res.Excluded++
+			continue
+		}
+		res.Included++
+
+		hasCompletedCol := false
+		for _, col := range p.Columns {
+			if col.Behavior == models.ColumnBehaviorCompleted {
+				hasCompletedCol = true
+				break
+			}
+		}
+		if len(p.Columns) > 0 && !hasCompletedCol {
+			res.SetupRecommended++
+		}
+	}
+
+	return res, nil
 }

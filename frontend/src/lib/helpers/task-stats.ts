@@ -32,63 +32,25 @@ export function computeTaskStats(columns: ColumnData[] = []): TaskStats {
   const allTasks: TaskData[] = safeColumns.flatMap((col) =>
     (col.tasks || []).map((t) => ({
       ...t,
-      status: t.status || col.name.toLowerCase().replace(/\s+/g, "_"),
+      status: t.status || (col.behavior === "completed" ? "done" : "in_progress"),
     }))
   );
 
-  let backlogCount = 0;
   let inProgressCount = 0;
-  let reviewCount = 0;
   let doneCount = 0;
 
   const completedTasks: TaskData[] = [];
   const columnStats: ColumnStat[] = [];
 
-  safeColumns.forEach((col, index) => {
-    const normName = col.name.toLowerCase().replace(/[-_]/g, " ").trim();
+  safeColumns.forEach((col) => {
     const tasksInCol = col.tasks || [];
-
-    const isDoneCol =
-      normName.includes("done") ||
-      normName.includes("complete") ||
-      normName.includes("finish") ||
-      normName.includes("closed") ||
-      normName.includes("shipped") ||
-      normName.includes("deploy") ||
-      (safeColumns.length > 1 && index === safeColumns.length - 1);
-
-    const isReviewCol =
-      !isDoneCol &&
-      (normName.includes("review") ||
-        normName.includes("test") ||
-        normName.includes("qa") ||
-        normName.includes("verify") ||
-        normName.includes("audit"));
-
-    const isInProgressCol =
-      !isDoneCol &&
-      !isReviewCol &&
-      (normName.includes("progress") ||
-        normName.includes("doing") ||
-        normName.includes("work") ||
-        normName.includes("dev") ||
-        normName.includes("wip") ||
-        normName.includes("active"));
-
-    const isBacklogCol =
-      !isDoneCol &&
-      !isReviewCol &&
-      !isInProgressCol;
+    const isDoneCol = col.behavior === "completed";
 
     if (isDoneCol) {
       doneCount += tasksInCol.length;
       completedTasks.push(...tasksInCol);
-    } else if (isReviewCol) {
-      reviewCount += tasksInCol.length;
-    } else if (isInProgressCol) {
-      inProgressCount += tasksInCol.length;
     } else {
-      backlogCount += tasksInCol.length;
+      inProgressCount += tasksInCol.length;
     }
 
     columnStats.push({
@@ -117,9 +79,9 @@ export function computeTaskStats(columns: ColumnData[] = []): TaskStats {
     allTasks,
     completedTasks,
     completionPercent,
-    backlogCount,
+    backlogCount: 0,
     inProgressCount,
-    reviewCount,
+    reviewCount: 0,
     doneCount,
     columnStats,
     totalSubtasks,

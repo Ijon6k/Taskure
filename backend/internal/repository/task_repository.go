@@ -68,7 +68,9 @@ func (r *taskRepository) DeleteTask(task *models.Task) error {
 
 func (r *taskRepository) GetPendingTasks() ([]models.Task, error) {
 	var tasks []models.Task
-	err := r.db.Where("status != ?", "done").Find(&tasks).Error
+	err := r.db.Preload("Column").Preload("ChecklistItems", func(db *gorm.DB) *gorm.DB {
+		return db.Order("position asc")
+	}).Preload("Labels").Find(&tasks).Error
 	return tasks, err
 }
 

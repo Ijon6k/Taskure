@@ -128,14 +128,10 @@ export function useKanbanDnd({
     }
 
     const targetCol = columns.find((c) => c.id === targetColId);
-    const colNameLower = targetCol?.name.toLowerCase() || "";
     let newStatus = activeTaskData.status;
-
-    if (colNameLower.includes("done") || colNameLower.includes("selesai")) {
+    if (targetCol?.behavior === "completed") {
       newStatus = "done";
-    } else if (colNameLower.includes("progress") || colNameLower.includes("doing")) {
-      newStatus = "in_progress";
-    } else if (colNameLower.includes("todo") || colNameLower.includes("backlog")) {
+    } else if (newStatus === "done") {
       newStatus = "todo";
     }
 

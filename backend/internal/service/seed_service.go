@@ -18,6 +18,7 @@ type seedService struct {
 	projectRepo   repository.ProjectRepository
 	columnRepo    repository.ColumnRepository
 	taskRepo      repository.TaskRepository
+	taskService   TaskService
 }
 
 func NewSeedService(
@@ -25,12 +26,14 @@ func NewSeedService(
 	projectRepo repository.ProjectRepository,
 	columnRepo repository.ColumnRepository,
 	taskRepo repository.TaskRepository,
+	taskService TaskService,
 ) SeedService {
 	return &seedService{
 		workspaceRepo: workspaceRepo,
 		projectRepo:   projectRepo,
 		columnRepo:    columnRepo,
 		taskRepo:      taskRepo,
+		taskService:   taskService,
 	}
 }
 
@@ -67,21 +70,22 @@ func (s *seedService) SeedDemoData() ([]string, error) {
 	}
 
 	p1 := models.Project{
-		Name:        "Welcome & Getting Started",
-		Description: "Interactive guide to explore all Kanban features: columns, tasks, checklists, tags, shortcuts, and focus mode.",
-		Color:       "#6366F1",
-		Icon:        "🚀",
-		Status:      "active",
-		IsPinned:    true,
-		WorkspaceID: ws.ID,
-		OwnerID:     ws.OwnerID,
-		Settings:    jsonRaw(p1Settings),
+		Name:         "Welcome & Getting Started",
+		Description:  "Interactive guide to explore all Kanban features: columns, tasks, checklists, tags, shortcuts, and focus mode.",
+		Color:        "#6366F1",
+		Icon:         "🚀",
+		Status:       "active",
+		IsPinned:     true,
+		FocusEnabled: true,
+		WorkspaceID:  ws.ID,
+		OwnerID:      ws.OwnerID,
+		Settings:     jsonRaw(p1Settings),
 	}
 	_ = s.projectRepo.CreateProject(&p1)
 
-	col1_1 := models.Column{Name: "Getting Started", Position: 0, ProjectID: p1.ID, Color: "#6366F1"}
-	col1_2 := models.Column{Name: "In Progress", Position: 1, ProjectID: p1.ID, Color: "#3B82F6"}
-	col1_3 := models.Column{Name: "Completed", Position: 2, ProjectID: p1.ID, Color: "#22C55E"}
+	col1_1 := models.Column{Name: "Getting Started", Behavior: models.ColumnBehaviorActive, Position: 0, ProjectID: p1.ID, Color: "#6366F1"}
+	col1_2 := models.Column{Name: "In Progress", Behavior: models.ColumnBehaviorActive, Position: 1, ProjectID: p1.ID, Color: "#3B82F6"}
+	col1_3 := models.Column{Name: "Completed", Behavior: models.ColumnBehaviorCompleted, Position: 2, ProjectID: p1.ID, Color: "#22C55E"}
 	_ = s.columnRepo.CreateColumn(&col1_1)
 	_ = s.columnRepo.CreateColumn(&col1_2)
 	_ = s.columnRepo.CreateColumn(&col1_3)
@@ -163,22 +167,23 @@ func (s *seedService) SeedDemoData() ([]string, error) {
 	}
 
 	p2 := models.Project{
-		Name:        "Product Roadmap 2026",
-		Description: "Feature backlog, UI redesign, performance optimization, and release planning for Q3/Q4.",
-		Color:       "#10B981",
-		Icon:        "⚡",
-		Status:      "active",
-		IsPinned:    true,
-		WorkspaceID: ws.ID,
-		OwnerID:     ws.OwnerID,
-		Settings:    jsonRaw(p2Settings),
+		Name:         "Product Roadmap 2026",
+		Description:  "Feature backlog, UI redesign, performance optimization, and release planning for Q3/Q4.",
+		Color:        "#10B981",
+		Icon:         "⚡",
+		Status:       "active",
+		IsPinned:     true,
+		FocusEnabled: true,
+		WorkspaceID:  ws.ID,
+		OwnerID:      ws.OwnerID,
+		Settings:     jsonRaw(p2Settings),
 	}
 	_ = s.projectRepo.CreateProject(&p2)
 
-	col2_1 := models.Column{Name: "Backlog", Position: 0, ProjectID: p2.ID, Color: "#6B7280"}
-	col2_2 := models.Column{Name: "To Do", Position: 1, ProjectID: p2.ID, Color: "#F59E0B"}
-	col2_3 := models.Column{Name: "In Progress", Position: 2, ProjectID: p2.ID, Color: "#3B82F6"}
-	col2_4 := models.Column{Name: "Done", Position: 3, ProjectID: p2.ID, Color: "#10B981"}
+	col2_1 := models.Column{Name: "Backlog", Behavior: models.ColumnBehaviorActive, Position: 0, ProjectID: p2.ID, Color: "#6B7280"}
+	col2_2 := models.Column{Name: "To Do", Behavior: models.ColumnBehaviorActive, Position: 1, ProjectID: p2.ID, Color: "#F59E0B"}
+	col2_3 := models.Column{Name: "In Progress", Behavior: models.ColumnBehaviorActive, Position: 2, ProjectID: p2.ID, Color: "#3B82F6"}
+	col2_4 := models.Column{Name: "Done", Behavior: models.ColumnBehaviorCompleted, Position: 3, ProjectID: p2.ID, Color: "#10B981"}
 	_ = s.columnRepo.CreateColumn(&col2_1)
 	_ = s.columnRepo.CreateColumn(&col2_2)
 	_ = s.columnRepo.CreateColumn(&col2_3)
@@ -261,6 +266,10 @@ func (s *seedService) SeedDemoData() ([]string, error) {
 	_ = s.taskRepo.CreateTask(&t2_5)
 	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Define CSS variables in globals.css", IsCompleted: true, Position: 0, TaskID: t2_5.ID})
 	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Update cards, dropdowns, and modals", IsCompleted: true, Position: 1, TaskID: t2_5.ID})
+
+	if s.taskService != nil {
+		s.taskService.InvalidateFocusCache()
+	}
 
 	return []string{p1.Name, p2.Name}, nil
 }
