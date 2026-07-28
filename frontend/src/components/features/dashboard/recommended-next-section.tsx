@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, CheckSquare } from "lucide-react";
 import { FocusItem } from "@/lib/api";
+import { PriorityBadge } from "@/components/ui/priority-badge";
 import { DueDateText } from "@/components/ui/due-date-text";
+import { useTheme } from "@/components/providers/theme-provider";
 
 interface RecommendedNextSectionProps {
   recommendations: FocusItem[];
@@ -13,18 +15,19 @@ interface RecommendedNextSectionProps {
 
 export function RecommendedNextSection({ recommendations, loading }: RecommendedNextSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { getProjectNavUrl } = useTheme();
 
   if (loading) {
     return (
-      <div>
+      <div className="space-y-3">
         <span className="text-[13px] font-semibold uppercase tracking-wide text-theme-tertiary block pb-2 border-b border-theme-subtle">
           Recommended next
         </span>
         <div className="space-y-1 mt-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex items-center gap-2.5 py-2 animate-pulse">
-              <div className="w-2 h-2 bg-surface-hover" />
-              <div className="flex-1 h-4 bg-surface-hover" />
+              <div className="w-2 h-2 bg-surface-hover rounded-full" />
+              <div className="flex-1 h-4 bg-surface-hover rounded" />
             </div>
           ))}
         </div>
@@ -32,55 +35,82 @@ export function RecommendedNextSection({ recommendations, loading }: Recommended
     );
   }
 
-  const validRecommendations = (recommendations || []).filter(
-    (r) => r && r.task && r.project && r.project.id && r.project.name
-  );
+  if (!recommendations || recommendations.length === 0) return null;
 
-  if (!validRecommendations || validRecommendations.length === 0) return null;
-
-  const displayedItems = isExpanded ? validRecommendations.slice(0, 10) : validRecommendations.slice(0, 3);
-  const canExpand = validRecommendations.length > 3;
+  const displayedItems = isExpanded ? recommendations.slice(0, 10) : recommendations.slice(0, 3);
+  const canExpand = recommendations.length > 3;
 
   return (
-    <div>
+    <div className="space-y-3">
       <div className="flex items-center justify-between pb-2 border-b border-theme-subtle">
         <span className="text-[13px] font-semibold uppercase tracking-wide text-theme-tertiary">
           Recommended next
         </span>
         {canExpand && (
           <button
+            type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="inline-flex items-center gap-1 text-[12px] text-theme-tertiary hover:text-theme-primary transition-colors"
+            className="inline-flex items-center gap-1 text-[12px] text-theme-tertiary hover:text-theme-primary transition-colors cursor-pointer"
           >
-            {isExpanded ? "Less" : "More"}
+            <span>{isExpanded ? "Less" : "More"}</span>
             {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
         )}
       </div>
 
-      <div className="mt-2 space-y-0.5">
+      <div className="mt-2 space-y-1">
         {displayedItems.map((item) => {
           const { task, project } = item;
-          const projectName = project?.name || "Personal project";
+          const projectName = project?.name || "Project";
           const projectColor = project?.color || "#7F9CF5";
+          const projectId = "project_id" in task ? task.project_id : project.id;
+          const navUrl = getProjectNavUrl(projectId);
+          const checklistSummary = "checklist_summary" in task ? task.checklist_summary : undefined;
 
           return (
             <Link
               key={task.id}
-              href={`/projects/${task.project_id}/board`}
-              className="flex items-start gap-2.5 px-2 py-2.5 rounded-[6px] hover:bg-surface-hover/40 transition-colors group/rec"
+              href={navUrl}
+              className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition-all group/rec cursor-pointer border border-transparent hover:border-theme-subtle"
             >
-              <span
-                className="w-1.5 h-1.5 shrink-0 mt-[7px]"
-                style={{ backgroundColor: projectColor }}
-              />
-              <div className="flex-1 min-w-0">
-                <span className="block text-[15px] text-theme-secondary group-hover/rec:text-theme-primary transition-colors truncate">
-                  {task.title}
-                </span>
-                <span className="text-[13px] text-theme-tertiary">{projectName}</span>
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <span
+                  className="w-2 h-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: projectColor }}
+                />
+                <div className="flex-1 min-w-0 space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[14px] font-medium text-theme-secondary group-hover/rec:text-theme-primary transition-colors truncate">
+                      {task.title}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[12px] text-theme-tertiary">
+                    <span>{projectName}</span>
+                    {item.reason_tag && (
+                      <>
+                        <span>·</span>
+                        <span>{item.reason_tag}</span>
+                      </>
+                    )}
+                    {checklistSummary && checklistSummary.total > 0 && (
+                      <>
+                        <span>·</span>
+                        <span className="inline-flex items-center gap-1">
+                          <CheckSquare className="w-3 h-3 text-theme-tertiary" />
+                          {checklistSummary.completed}/{checklistSummary.total}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
-              <DueDateText dateStr={task.due_date} className="!text-[13px] shrink-0 mt-[2px]" />
+
+              <div className="flex items-center gap-2 shrink-0">
+                {task.priority && task.priority !== "low" && (
+                  <PriorityBadge priority={task.priority} className="!text-[11px] !py-0.5" />
+                )}
+                <DueDateText dateStr={task.due_date} className="!text-[12px] shrink-0" />
+              </div>
             </Link>
           );
         })}

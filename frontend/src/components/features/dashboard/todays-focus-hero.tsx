@@ -1,136 +1,130 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, CheckSquare, Square, Sparkles, FolderPlus, HardDrive } from "lucide-react";
-import { FocusItem, ChecklistItemData } from "@/lib/api";
+import { ArrowRight, CheckCircle2, CheckSquare, Square, Loader2 } from "lucide-react";
+import { FocusItem, api } from "@/lib/api";
 import { PriorityBadge } from "@/components/ui/priority-badge";
 import { DueDateText } from "@/components/ui/due-date-text";
-import { getFormattedDueDate } from "@/lib/utils/date";
 import { useTheme } from "@/components/providers/theme-provider";
+import { WorkspaceStateCode } from "@/lib/helpers/workspace-state";
+import { useUIStore } from "@/store/use-ui-store";
+import { useQueryClient } from "@tanstack/react-query";
+import { invalidateFocusQueries } from "@/lib/api/queries/use-workspace";
+import { toast } from "sonner";
 
 interface TodaysFocusHeroProps {
   hero: FocusItem | null;
   loading: boolean;
+  stateCode: WorkspaceStateCode;
   onOpenCreateProject?: () => void;
 }
 
-function deriveReasons(task: FocusItem["task"]): string[] {
-  const reasons: string[] = [];
-
-  const priority = task.priority?.toLowerCase() || "";
-  const dueDateStr = task.due_date;
-
-  if (dueDateStr) {
-    const parsed = new Date(dueDateStr);
-    const now = new Date();
-    if (!isNaN(parsed.getTime())) {
-      const isOverdue = parsed < now && parsed.toDateString() !== now.toDateString();
-      const isToday = parsed.toDateString() === now.toDateString();
-
-      if (isOverdue) reasons.push("Overdue — needs immediate attention");
-      else if (isToday) reasons.push("Due today — high priority completion");
-    }
-  }
-
-  if (priority === "urgent") reasons.push("Highest priority across all projects");
-  else if (priority === "high") reasons.push("High priority task");
-
-  if (reasons.length === 0) reasons.push("Most impactful next step based on your workflow");
-
-  return reasons;
-}
-
-export function TodaysFocusHero({ hero, loading, onOpenCreateProject }: TodaysFocusHeroProps) {
+export function TodaysFocusHero({
+  hero,
+  loading,
+  stateCode,
+  onOpenCreateProject,
+}: TodaysFocusHeroProps) {
   const { getProjectNavUrl } = useTheme();
+  const setSelectedTaskId = useUIStore((s) => s.setSelectedTaskId);
+  const queryClient = useQueryClient();
 
+  const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
+  const [togglingSubtaskId, setTogglingSubtaskId] = useState<string | null>(null);
+
+  // ── Loading Skeleton ─────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="w-full bg-surface-l2 rounded-md shadow-elevation-l3 p-8 lg:p-10 animate-pulse space-y-5 min-h-[260px]">
-        <div className="w-24 h-3.5 bg-surface-l4 rounded" />
-        <div className="w-3/4 h-8 bg-surface-l4 rounded" />
-        <div className="w-1/2 h-4 bg-surface-l4 rounded" />
-        <div className="w-36 h-11 bg-surface-l4 rounded-md mt-4" />
+      <div className="w-full bg-surface-l2 rounded-xl p-8 animate-pulse space-y-4 min-h-[180px]">
+        <div className="w-20 h-3 bg-surface-hover rounded" />
+        <div className="w-2/3 h-7 bg-surface-hover rounded" />
+        <div className="w-1/3 h-4 bg-surface-hover rounded" />
+        <div className="w-28 h-9 bg-surface-hover rounded-md mt-2" />
       </div>
     );
   }
 
-  if (!hero || !hero.task || !hero.project || !hero.project.id || !hero.project.name) {
+  // ── Fallback States (FRESH, ARCHIVED, EMPTY, CLEAR, PAUSED) ──────────────────
+  if (!hero || !hero.task || !hero.project?.id) {
     return (
-      <div className="w-full bg-surface-l2 rounded-md shadow-elevation-l3 p-8 sm:p-10 flex flex-col justify-center min-h-[260px] relative overflow-hidden space-y-5">
-        {/* Aurora Atmospheric Glow Mesh */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
-          <div
-            className="absolute -top-[30%] -right-[10%] w-[500px] h-[340px] rounded-full blur-[70px] opacity-[0.14]"
-            style={{
-              background: "radial-gradient(circle, var(--brand-accent) 0%, rgba(168, 85, 247, 0.3) 50%, transparent 80%)",
-            }}
-          />
-        </div>
-
-        <div className="space-y-1.5 relative z-10 max-w-[540px]">
-          <h2 className="text-[24px] sm:text-[28px] font-medium text-theme-primary tracking-tight leading-snug">
-            Your canvas is wide open
-          </h2>
-          <p className="text-[14px] text-theme-secondary leading-relaxed">
-            Create your first project to start organizing tasks, columns, and focus priorities.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3 relative z-10 pt-1">
-          {onOpenCreateProject && (
-            <button
-              type="button"
-              onClick={onOpenCreateProject}
-              className="px-4 py-2.5 bg-brand-accent hover:bg-brand-accent-hover text-slate-950 font-semibold text-[13px] rounded-md flex items-center gap-2 transition-colors cursor-pointer"
-            >
-              <FolderPlus className="w-4 h-4" />
-              <span>Create first project</span>
-            </button>
-          )}
-          <Link
-            href="/settings"
-            className="px-4 py-2.5 bg-surface-l3 hover:bg-surface-l4 text-theme-primary font-medium text-[13px] rounded-md border border-theme-subtle flex items-center gap-2 transition-colors cursor-pointer"
-          >
-            <HardDrive className="w-4 h-4 text-theme-tertiary" />
-            <span>Workspace settings</span>
-          </Link>
-        </div>
-      </div>
+      <FallbackCard
+        stateCode={stateCode}
+        onOpenCreateProject={onOpenCreateProject}
+      />
     );
   }
 
+  // ── Active Hero (ACTIVE state) ───────────────────────────────────────────────
   const { task, project } = hero;
-  const projectName = project?.name || "Personal project";
+  const projectName = project?.name || "Project";
   const projectColor = project?.color || "#7F9CF5";
-  const checklist = task.checklist_items || [];
-  const reasons = deriveReasons(task);
+  const checklist = ("checklist" in task && task.checklist ? task.checklist : ("checklist_items" in task ? task.checklist_items : [])) || [];
+  const checklistSummary = "checklist_summary" in task ? task.checklist_summary : undefined;
+
+  // Handler: Complete task directly from Hero Card
+  const handleMarkComplete = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (completingTaskId) return;
+
+    setCompletingTaskId(task.id);
+    try {
+      await api.updateTask(task.id, { status: "done" });
+      toast.success(`Completed "${task.title}"!`);
+      invalidateFocusQueries(queryClient);
+    } catch (err) {
+      toast.error("Failed to complete task: " + (err as Error).message);
+    } finally {
+      setCompletingTaskId(null);
+    }
+  };
+
+  // Handler: Toggle checklist item directly from Hero Card
+  const handleToggleSubtask = async (subtaskId: string, currentCompleted: boolean, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (togglingSubtaskId) return;
+
+    setTogglingSubtaskId(subtaskId);
+    try {
+      await api.updateChecklistItem(subtaskId, { is_completed: !currentCompleted });
+      invalidateFocusQueries(queryClient);
+      toast.success(currentCompleted ? "Subtask unchecked" : "Subtask completed!");
+    } catch (err) {
+      toast.error("Failed to update subtask: " + (err as Error).message);
+    } finally {
+      setTogglingSubtaskId(null);
+    }
+  };
 
   return (
-    <div className="w-full bg-surface-l2 rounded-md shadow-elevation-l3 p-8 lg:p-10 min-h-[260px] relative overflow-hidden">
-      {/* Aurora Atmospheric Glow Mesh Layer */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
-        {/* Aurora Primary Wave — Accent Glow */}
-        <div
-          className="absolute -top-[35%] -right-[10%] w-[550px] h-[380px] rounded-full blur-[70px] opacity-[0.15] transition-opacity duration-700"
-          style={{
-            background: "radial-gradient(circle, var(--brand-accent) 0%, rgba(168, 85, 247, 0.4) 50%, transparent 80%)",
-          }}
-        />
-        {/* Aurora Secondary Wave — Cyan Sky Under-Glow */}
-        <div
-          className="absolute -bottom-[40%] right-[15%] w-[420px] h-[320px] rounded-full blur-[80px] opacity-[0.10] transition-opacity duration-700"
-          style={{
-            background: "radial-gradient(circle, #38BDF8 0%, rgba(59, 130, 246, 0.3) 50%, transparent 80%)",
-          }}
-        />
-      </div>
+    <div className="w-full bg-surface-l2 rounded-xl p-6 sm:p-8 space-y-5 relative overflow-hidden group/hero">
+      {/* Subtle ambient gradient — only on active hero */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse 60% 80% at 88% 45%, var(--brand-accent) 0%, transparent 70%)",
+          opacity: 0.06,
+        }}
+      />
 
-      <div className="relative z-10 space-y-6">
-        {/* Top Header Row */}
+      <div className="space-y-5 relative z-10">
+        {/* Project tag + metadata */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-[13px] font-medium text-theme-secondary">
-            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: projectColor }} />
+          <div className="flex items-center gap-2 text-xs font-medium text-theme-secondary">
+            <span
+              className="w-2 h-2 rounded-full shrink-0"
+              style={{ backgroundColor: projectColor }}
+            />
             <span>{projectName}</span>
+            {hero.reason_tag && (
+              <>
+                <span className="text-theme-tertiary font-normal">·</span>
+                <span className="text-theme-tertiary font-normal">{hero.reason_tag}</span>
+              </>
+            )}
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
@@ -139,53 +133,161 @@ export function TodaysFocusHero({ hero, loading, onOpenCreateProject }: TodaysFo
           </div>
         </div>
 
-        {/* Task Title */}
-        <h2 className="text-[26px] sm:text-[32px] font-medium text-theme-primary tracking-tight leading-tight max-w-[760px]">
-          {task.title}
-        </h2>
+        {/* Task title — Click opens Task Drawer */}
+        <button
+          type="button"
+          onClick={() => setSelectedTaskId(task.id)}
+          className="text-left w-full group/title cursor-pointer"
+        >
+          <h2 className="text-xl sm:text-2xl font-semibold text-theme-primary group-hover/title:text-brand-accent transition-colors tracking-tight leading-snug max-w-[760px]">
+            {task.title}
+          </h2>
+        </button>
 
-        {/* Derive Reasons */}
-        {reasons.length > 0 && (
-          <div className="space-y-1.5 pt-1">
-            {reasons.map((reason, i) => (
-              <p key={i} className="text-[14px] text-theme-secondary flex items-center gap-2">
-                <span className="w-3 h-0.5 bg-theme-tertiary/40 rounded-full" />
-                <span>{reason}</span>
-              </p>
+        {/* Interactive Checklist preview */}
+        {checklist && checklist.length > 0 && (
+          <div className="space-y-1.5 max-w-[480px]">
+            <div className="text-[11px] font-mono text-theme-tertiary uppercase tracking-wider">
+              {checklist.filter((c) => c.is_completed).length}/{checklist.length} subtasks done
+            </div>
+            {checklist.slice(0, 3).map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={(e) => handleToggleSubtask(item.id, item.is_completed, e)}
+                disabled={togglingSubtaskId === item.id}
+                className="flex items-center gap-2 text-xs hover:bg-surface-l3/50 px-2 py-1 -mx-2 rounded transition-colors w-full text-left cursor-pointer"
+              >
+                {togglingSubtaskId === item.id ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-accent shrink-0" />
+                ) : item.is_completed ? (
+                  <CheckSquare className="w-3.5 h-3.5 text-brand-accent shrink-0" />
+                ) : (
+                  <Square className="w-3.5 h-3.5 text-theme-tertiary shrink-0" />
+                )}
+                <span
+                  className={
+                    item.is_completed
+                      ? "line-through text-theme-tertiary"
+                      : "text-theme-primary"
+                  }
+                >
+                  {item.title}
+                </span>
+              </button>
             ))}
           </div>
         )}
 
-        {/* Subtasks Checklist Preview */}
-        {checklist.length > 0 && (
-          <div className="pt-2 space-y-2 max-w-[500px]">
-            <div className="text-[12px] font-mono text-theme-tertiary uppercase tracking-wider">
-              Checklist ({checklist.filter((c) => c.is_completed).length}/{checklist.length})
-            </div>
-            {checklist.slice(0, 3).map((item) => (
-              <div key={item.id} className="flex items-center gap-2.5 text-[14px]">
-                {item.is_completed ? (
-                  <CheckSquare className="w-4 h-4 text-brand-accent shrink-0" />
-                ) : (
-                  <Square className="w-4 h-4 text-theme-tertiary shrink-0" />
-                )}
-                <span className={item.is_completed ? "line-through text-theme-tertiary" : "text-theme-primary"}>
-                  {item.title}
-                </span>
-              </div>
-            ))}
+        {/* Checklist summary text fallback */}
+        {(!checklist || checklist.length === 0) && checklistSummary && checklistSummary.total > 0 && (
+          <div className="text-[12px] text-theme-tertiary">
+            {checklistSummary.completed}/{checklistSummary.total} subtasks completed
           </div>
         )}
 
         {/* CTA */}
-        <Link
-          href={getProjectNavUrl(task.project_id)}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-accent hover:bg-brand-accent-hover text-slate-950 text-[14px] font-semibold rounded-md transition-colors w-fit shadow-xs"
-        >
-          <span>Continue</span>
-          <ArrowRight className="w-4 h-4" />
-        </Link>
+        <div className="pt-1 flex items-center gap-3">
+          <Link
+            href={getProjectNavUrl(task.project_id)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-brand-accent hover:bg-brand-accent-hover text-slate-950 text-xs font-semibold rounded-md transition-colors shadow-xs"
+          >
+            <span>Continue in {projectName}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
       </div>
+    </div>
+  );
+}
+
+// ── Fallback Card ──────────────────────────────────────────────────────────────
+
+function FallbackCard({
+  stateCode,
+  onOpenCreateProject,
+}: {
+  stateCode: WorkspaceStateCode;
+  onOpenCreateProject?: (() => void) | undefined;
+}) {
+  let title: string;
+  let subtitle: string;
+  let cta: React.ReactNode = null;
+
+  switch (stateCode) {
+    case "FRESH":
+      title = "Start something";
+      subtitle = "Create a project to begin.";
+      if (onOpenCreateProject) {
+        cta = (
+          <button
+            type="button"
+            onClick={onOpenCreateProject}
+            className="px-3.5 py-2 bg-brand-accent hover:bg-brand-accent-hover text-slate-950 font-semibold text-xs rounded-md transition-colors cursor-pointer shadow-xs"
+          >
+            New project
+          </button>
+        );
+      }
+      break;
+
+    case "ARCHIVED":
+      title = "All projects archived";
+      subtitle = "Restore or create an active project to surface priorities.";
+      cta = (
+        <Link
+          href="/projects"
+          className="px-3.5 py-2 bg-surface-l3 hover:bg-surface-hover text-theme-primary font-medium text-xs rounded-md transition-colors cursor-pointer"
+        >
+          View projects
+        </Link>
+      );
+      break;
+
+    case "EMPTY":
+      title = "Ready when you are";
+      subtitle = "Add your first task to any project.";
+      cta = (
+        <Link
+          href="/projects"
+          className="px-3.5 py-2 bg-brand-accent hover:bg-brand-accent-hover text-slate-950 font-semibold text-xs rounded-md transition-colors cursor-pointer shadow-xs"
+        >
+          Go to projects
+        </Link>
+      );
+      break;
+
+    case "PAUSED":
+      title = "Focus is paused";
+      subtitle = "No projects are included in today's focus.";
+      cta = (
+        <Link
+          href="/projects"
+          className="px-3.5 py-2 bg-surface-l3 hover:bg-surface-hover text-theme-primary font-medium text-xs rounded-md transition-colors cursor-pointer"
+        >
+          Go to projects
+        </Link>
+      );
+      break;
+
+    case "CLEAR":
+    default:
+      title = "All clear";
+      subtitle = "Nothing needs your attention right now.";
+      break;
+  }
+
+  return (
+    <div className="w-full bg-surface-l2 rounded-xl p-8 flex flex-col justify-center min-h-[160px] space-y-4">
+      <div className="space-y-1.5 max-w-[480px]">
+        <h2 className="text-xl font-semibold text-theme-primary tracking-tight">
+          {title}
+        </h2>
+        <p className="text-[13px] text-theme-secondary leading-relaxed">
+          {subtitle}
+        </p>
+      </div>
+      {cta && <div className="pt-1">{cta}</div>}
     </div>
   );
 }

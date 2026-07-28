@@ -25,6 +25,7 @@ export interface ProjectData {
   status?: "active" | "paused" | "archived" | string;
   is_pinned?: boolean;
   is_archived: boolean;
+  focus_enabled?: boolean;
   created_at: string;
   updated_at: string;
   // JSONB column — all flexible project metadata lives here
@@ -37,6 +38,7 @@ export interface ProjectData {
 export interface ColumnData {
   id: string;
   name: string;
+  behavior?: "active" | "completed";
   position: number;
   project_id: string;
   color?: string;
@@ -98,13 +100,55 @@ export interface TaskData {
   attachments?: AttachmentData[];
 }
 
+export interface FocusChecklistItemView {
+  id: string;
+  title: string;
+  is_completed: boolean;
+}
+
+export interface FocusTaskView {
+  id: string;
+  title: string;
+  priority: "urgent" | "high" | "medium" | "low";
+  due_date?: string;
+  project_id: string;
+  checklist_summary?: {
+    completed: number;
+    total: number;
+  };
+  checklist?: FocusChecklistItemView[];
+}
+
+export interface FocusProjectView {
+  id: string;
+  name: string;
+  color?: string;
+  icon?: string;
+}
+
 export interface FocusItem {
-  task: TaskData;
-  project: ProjectData;
-  score: number;
+  task: TaskData | FocusTaskView;
+  project: ProjectData | FocusProjectView;
+  score?: number;
+  reason_tag?: string;
+}
+
+export interface FocusOverview {
+  active_projects: number;
+}
+
+export interface WorkspaceSummary {
+  active_projects_count: number;
+  paused_projects_count: number;
+  archived_projects_count: number;
+  actionable_tasks_count: number;
+  completed_tasks_today: number;
 }
 
 export interface FocusResponse {
+  state_code: "FRESH" | "ARCHIVED" | "EMPTY" | "ACTIVE" | "CLEAR" | "PAUSED";
+  active_projects_count: number;
+  summary?: WorkspaceSummary;
   hero: FocusItem | null;
   recommendations: FocusItem[];
 }
@@ -120,6 +164,7 @@ export interface CreateProjectInput {
   icon?: string;
   status?: string;
   is_pinned?: boolean;
+  focus_enabled?: boolean;
 }
 
 export interface UpdateProjectInput {
@@ -130,6 +175,7 @@ export interface UpdateProjectInput {
   status?: string;
   is_pinned?: boolean;
   is_archived?: boolean;
+  focus_enabled?: boolean;
   // Overview fields — merged into settings JSONB by backend service
   target_goal?: string;
   target_date?: string;
@@ -141,6 +187,14 @@ export interface UpdateProjectInput {
 export interface CreateColumnInput {
   name: string;
   color?: string;
+  behavior?: "active" | "completed";
+}
+
+export interface UpdateColumnInput {
+  name?: string;
+  color?: string;
+  position?: number;
+  behavior?: "active" | "completed";
 }
 
 export interface CreateTaskInput {
