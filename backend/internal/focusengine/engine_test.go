@@ -100,7 +100,7 @@ func TestCalculatePriorityScore(t *testing.T) {
 func TestEvaluate_EmptyAndSingleTask(t *testing.T) {
 	now := time.Now()
 	projectMap := map[string]models.Project{
-		"prj-1": {PublicBase: models.PublicBase{PublicID: "prj-1"}, Name: "Backend"},
+		"prj-1": {PublicBase: models.PublicBase{PublicID: "prj-1"}, Name: "Backend", FocusEnabled: true},
 	}
 
 	// 1. Empty tasks
@@ -137,7 +137,11 @@ func TestEvaluate_EmptyAndSingleTask(t *testing.T) {
 
 func TestEvaluate_DeterministicSorting(t *testing.T) {
 	now := time.Date(2026, 7, 25, 12, 0, 0, 0, time.UTC)
-	projectMap := map[string]models.Project{}
+	projectMap := map[string]models.Project{
+		"prj-1": {PublicBase: models.PublicBase{PublicID: "prj-1"}, Name: "Test Proj 1", FocusEnabled: true},
+		"prj-2": {PublicBase: models.PublicBase{PublicID: "prj-2"}, Name: "Test Proj 2", FocusEnabled: true},
+		"prj-3": {PublicBase: models.PublicBase{PublicID: "prj-3"}, Name: "Test Proj 3", FocusEnabled: true},
+	}
 
 	// Create 3 tasks with SAME Focus Score (Medium priority = 10 pts, No due date)
 	// Tie breaker should rely on UpdatedAt ASC -> CreatedAt ASC -> TaskID ASC
@@ -146,29 +150,35 @@ func TestEvaluate_DeterministicSorting(t *testing.T) {
 			PublicID:  "tsk-3",
 			Base:      models.Base{UpdatedAt: now.Add(-1 * time.Hour), CreatedAt: now.Add(-10 * time.Hour)},
 		},
-		Title:    "Task C (Recently Updated)",
-		Priority: "medium",
+		ProjectID: "prj-1",
+		Title:     "Task C (Recently Updated)",
+		Priority:  "medium",
 	}
 	t2 := models.Task{
 		PublicBase: models.PublicBase{
 			PublicID:  "tsk-1",
 			Base:      models.Base{UpdatedAt: now.Add(-5 * time.Hour), CreatedAt: now.Add(-10 * time.Hour)},
 		},
-		Title:    "Task A (Older Updated)",
-		Priority: "medium",
+		ProjectID: "prj-2",
+		Title:     "Task A (Older Updated)",
+		Priority:  "medium",
 	}
 	t3 := models.Task{
 		PublicBase: models.PublicBase{
 			PublicID:  "tsk-2",
 			Base:      models.Base{UpdatedAt: now.Add(-1 * time.Hour), CreatedAt: now.Add(-10 * time.Hour)},
 		},
-		Title:    "Task B (Urgent Priority - Higher Score)",
-		Priority: "urgent",
+		ProjectID: "prj-3",
+		Title:     "Task B (Urgent Priority - Higher Score)",
+		Priority:  "urgent",
 	}
 
 	res := Evaluate([]models.Task{t1, t2, t3}, projectMap, now)
 
 	// t3 has Urgent priority (score 30), so t3 MUST be Hero (#1)
+	if res.Hero == nil {
+		t.Fatalf("expected Hero to be present")
+	}
 	if res.Hero.Task.PublicID != "tsk-2" {
 		t.Fatalf("expected Hero to be tsk-2 (higher score), got %s", res.Hero.Task.PublicID)
 	}
@@ -188,9 +198,9 @@ func TestEvaluate_DeterministicSorting(t *testing.T) {
 func TestEvaluate_DiversityFiltering(t *testing.T) {
 	now := time.Date(2026, 7, 25, 12, 0, 0, 0, time.UTC)
 	projectMap := map[string]models.Project{
-		"prj-1": {PublicBase: models.PublicBase{PublicID: "prj-1"}, Name: "AI Service"},
-		"prj-2": {PublicBase: models.PublicBase{PublicID: "prj-2"}, Name: "Roadmap"},
-		"prj-3": {PublicBase: models.PublicBase{PublicID: "prj-3"}, Name: "Study"},
+		"prj-1": {PublicBase: models.PublicBase{PublicID: "prj-1"}, Name: "AI Service", FocusEnabled: true},
+		"prj-2": {PublicBase: models.PublicBase{PublicID: "prj-2"}, Name: "Roadmap", FocusEnabled: true},
+		"prj-3": {PublicBase: models.PublicBase{PublicID: "prj-3"}, Name: "Study", FocusEnabled: true},
 	}
 
 	tasks := []models.Task{
@@ -204,39 +214,45 @@ func TestEvaluate_DiversityFiltering(t *testing.T) {
 	res := Evaluate(tasks, projectMap, now)
 
 	// Hero should be tsk-1 (AI Service)
+	if res.Hero == nil {
+		t.Fatalf("expected Hero to be present")
+	}
 	if res.Hero.Task.PublicID != "tsk-1" {
 		t.Errorf("expected Hero to be tsk-1, got %s", res.Hero.Task.PublicID)
 	}
 
-	// Recommendations should filter out duplicate prj-1 tasks (tsk-2 and tsk-3)!
-	// So recommendations should contain prj-2 (Roadmap) and prj-3 (Study) only!
-	if len(res.Recommendations) != 2 {
-		t.Fatalf("expected 2 diversity-filtered recommendations, got %d", len(res.Recommendations))
+	// Top recommendations must prioritize distinct projects (prj-2 and prj-3 first)
+	if len(res.Recommendations) != 3 {
+		t.Fatalf("expected 3 recommendations, got %d", len(res.Recommendations))
 	}
 
-	projectsInRec := make(map[string]bool)
-	for _, rec := range res.Recommendations {
-		if projectsInRec[rec.Task.ProjectID] {
-			t.Errorf("duplicate project %s found in recommendations!", rec.Task.ProjectID)
-		}
-		projectsInRec[rec.Task.ProjectID] = true
+	if res.Recommendations[0].Task.ProjectID != "prj-2" {
+		t.Errorf("expected 1st recommendation to be prj-2 (distinct project), got %s", res.Recommendations[0].Task.ProjectID)
 	}
-
-	if !projectsInRec["prj-2"] || !projectsInRec["prj-3"] {
-		t.Errorf("expected recommendations to contain prj-2 and prj-3")
+	if res.Recommendations[1].Task.ProjectID != "prj-3" {
+		t.Errorf("expected 2nd recommendation to be prj-3 (distinct project), got %s", res.Recommendations[1].Task.ProjectID)
+	}
+	if res.Recommendations[2].Task.PublicID != "tsk-2" {
+		t.Errorf("expected 3rd recommendation fallback to be tsk-2, got %s", res.Recommendations[2].Task.PublicID)
 	}
 }
 
-func TestEvaluate_MaxTenRecommendations(t *testing.T) {
+func TestEvaluate_MaxThreeRecommendations(t *testing.T) {
 	now := time.Now()
 	projectMap := map[string]models.Project{}
 	var tasks []models.Task
 
-	// Create 15 tasks across 15 different projects
-	for i := 1; i <= 15; i++ {
+	// Create 10 tasks across 10 different projects
+	for i := 1; i <= 10; i++ {
+		pID := fmt.Sprintf("prj-%d", i)
+		projectMap[pID] = models.Project{
+			PublicBase: models.PublicBase{PublicID: pID},
+			Name:       fmt.Sprintf("Project %d", i),
+			Status:     "active",
+		}
 		tasks = append(tasks, models.Task{
 			PublicBase: models.PublicBase{PublicID: fmt.Sprintf("tsk-%d", i)},
-			ProjectID:  fmt.Sprintf("prj-%d", i),
+			ProjectID:  pID,
 			Priority:   "high",
 			Title:      fmt.Sprintf("Task %d", i),
 		})
@@ -249,9 +265,139 @@ func TestEvaluate_MaxTenRecommendations(t *testing.T) {
 		t.Fatalf("expected Hero to be non-nil")
 	}
 
-	// Recommendations must be capped at 10 items
-	if len(res.Recommendations) != 10 {
-		t.Errorf("expected exactly 10 recommendations, got %d", len(res.Recommendations))
+	// Recommendations must be capped at 3 items maximum
+	if len(res.Recommendations) != 3 {
+		t.Errorf("expected exactly 3 recommendations, got %d", len(res.Recommendations))
+	}
+}
+
+func TestEvaluate_ColumnBehavior(t *testing.T) {
+	now := time.Now()
+	projectMap := map[string]models.Project{
+		"prj-1": {
+			PublicBase:   models.PublicBase{PublicID: "prj-1"},
+			Name:         "Project with Completed Column",
+			FocusEnabled: true,
+			Columns: []models.Column{
+				{InternalBase: models.InternalBase{ID: "col-active"}, Behavior: models.ColumnBehaviorActive},
+				{InternalBase: models.InternalBase{ID: "col-done"}, Behavior: models.ColumnBehaviorCompleted},
+				{InternalBase: models.InternalBase{ID: "col-archive"}, Behavior: models.ColumnBehaviorCompleted},
+			},
+		},
+		"prj-2": {
+			PublicBase:   models.PublicBase{PublicID: "prj-2"},
+			Name:         "Project without Completed Column",
+			FocusEnabled: true,
+			Columns: []models.Column{
+				{InternalBase: models.InternalBase{ID: "col-todo"}, Behavior: models.ColumnBehaviorActive},
+				{InternalBase: models.InternalBase{ID: "col-progress"}, Behavior: models.ColumnBehaviorActive},
+			},
+		},
+	}
+
+	tasks := []models.Task{
+		{
+			PublicBase: models.PublicBase{PublicID: "tsk-active-1"},
+			ProjectID:  "prj-1",
+			ColumnID:   "col-active",
+			Column:     models.Column{InternalBase: models.InternalBase{ID: "col-active"}, Behavior: models.ColumnBehaviorActive},
+			Priority:   "high",
+			Title:      "Active Task",
+		},
+		{
+			PublicBase: models.PublicBase{PublicID: "tsk-completed-1"},
+			ProjectID:  "prj-1",
+			ColumnID:   "col-done",
+			Column:     models.Column{InternalBase: models.InternalBase{ID: "col-done"}, Behavior: models.ColumnBehaviorCompleted},
+			Priority:   "urgent",
+			Title:      "Done Task (Should be ignored)",
+		},
+		{
+			PublicBase: models.PublicBase{PublicID: "tsk-archive-1"},
+			ProjectID:  "prj-1",
+			ColumnID:   "col-archive",
+			Column:     models.Column{InternalBase: models.InternalBase{ID: "col-archive"}, Behavior: models.ColumnBehaviorCompleted},
+			Priority:   "urgent",
+			Title:      "Archived Task (Should be ignored)",
+		},
+		{
+			PublicBase: models.PublicBase{PublicID: "tsk-no-completed-col"},
+			ProjectID:  "prj-2",
+			ColumnID:   "col-todo",
+			Column:     models.Column{InternalBase: models.InternalBase{ID: "col-todo"}, Behavior: models.ColumnBehaviorActive},
+			Priority:   "medium",
+			Title:      "Task in project without completed column (Fallback active)",
+		},
+	}
+
+	res := Evaluate(tasks, projectMap, now)
+
+	if res.Hero == nil {
+		t.Fatalf("expected Hero to be present")
+	}
+	if res.Hero.Task.PublicID != "tsk-active-1" {
+		t.Errorf("expected Hero to be tsk-active-1, got %s", res.Hero.Task.PublicID)
+	}
+
+	if len(res.Recommendations) != 1 {
+		t.Fatalf("expected 1 recommendation, got %d", len(res.Recommendations))
+	}
+	if res.Recommendations[0].Task.PublicID != "tsk-no-completed-col" {
+		t.Errorf("expected recommendation to be tsk-no-completed-col, got %s", res.Recommendations[0].Task.PublicID)
+	}
+}
+
+func TestEvaluate_FocusParticipation(t *testing.T) {
+	now := time.Now()
+	projectMap := map[string]models.Project{
+		"prj-active": {
+			PublicBase: models.PublicBase{PublicID: "prj-active"},
+			Name:       "Active Project",
+			Status:     "active",
+		},
+		"prj-paused": {
+			PublicBase: models.PublicBase{PublicID: "prj-paused"},
+			Name:       "Paused Project",
+			Status:     "paused",
+		},
+		"prj-archived": {
+			PublicBase: models.PublicBase{PublicID: "prj-archived"},
+			Name:       "Archived Project",
+			Status:     "archived",
+		},
+	}
+
+	tasks := []models.Task{
+		{
+			PublicBase: models.PublicBase{PublicID: "tsk-active"},
+			ProjectID:  "prj-active",
+			Priority:   "high",
+			Title:      "Active Focus Task",
+		},
+		{
+			PublicBase: models.PublicBase{PublicID: "tsk-paused"},
+			ProjectID:  "prj-paused",
+			Priority:   "urgent",
+			Title:      "Urgent Task in Paused Project (Excluded)",
+		},
+		{
+			PublicBase: models.PublicBase{PublicID: "tsk-archived"},
+			ProjectID:  "prj-archived",
+			Priority:   "urgent",
+			Title:      "Urgent Task in Archived Project (Excluded)",
+		},
+	}
+
+	res := Evaluate(tasks, projectMap, now)
+
+	if res.Hero == nil {
+		t.Fatalf("expected Hero to be present")
+	}
+	if res.Hero.Task.PublicID != "tsk-active" {
+		t.Errorf("expected Hero to be tsk-active, got %s", res.Hero.Task.PublicID)
+	}
+	if len(res.Recommendations) != 0 {
+		t.Errorf("expected 0 recommendations, got %d", len(res.Recommendations))
 	}
 }
 

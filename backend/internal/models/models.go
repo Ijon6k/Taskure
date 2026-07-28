@@ -98,6 +98,7 @@ type Project struct {
 	Status      string         `gorm:"size:20;default:'active';index" json:"status"`
 	IsPinned    bool           `gorm:"default:false;index" json:"is_pinned"`
 	IsArchived  bool           `gorm:"default:false;index" json:"is_archived"`
+	FocusEnabled bool          `gorm:"not null;default:true;index" json:"focus_enabled"`
 	Settings    datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"settings"`
 
 	Columns     []Column         `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"columns,omitempty"`
@@ -120,11 +121,18 @@ func (p *Project) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
+// Column behavior constants
+const (
+	ColumnBehaviorActive    = "active"
+	ColumnBehaviorCompleted = "completed"
+)
+
 // --- Column ---
 
 type Column struct {
 	InternalBase
 	Name      string `gorm:"not null;size:50" json:"name"`
+	Behavior  string `gorm:"size:20;not null;default:'active';index" json:"behavior"`
 	Position  int    `gorm:"not null;default:0" json:"position"`
 	ProjectID string `gorm:"type:uuid;not null;index:idx_column_project_position,priority:1" json:"project_id"`
 	Color     string `gorm:"size:7" json:"color,omitempty"`
@@ -152,6 +160,7 @@ type Task struct {
 	Tags           datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"tags"`
 
 	Labels         []Label         `gorm:"many2many:task_labels;constraint:OnDelete:CASCADE" json:"labels,omitempty"`
+	Column         Column          `gorm:"foreignKey:ColumnID" json:"column,omitempty"`
 	ChecklistItems []ChecklistItem `gorm:"foreignKey:TaskID;constraint:OnDelete:CASCADE" json:"checklist_items,omitempty"`
 	Notes          []TaskNote      `gorm:"foreignKey:TaskID;constraint:OnDelete:CASCADE" json:"notes,omitempty"`
 	Attachments    []Attachment    `gorm:"foreignKey:TaskID;constraint:OnDelete:CASCADE" json:"attachments,omitempty"`

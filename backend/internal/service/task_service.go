@@ -44,6 +44,8 @@ type TaskService interface {
 
 	// Focus Engine
 	GetFocusTask() (*focusengine.FocusResult, error)
+	GetFocusOverview() (*repository.FocusOverviewResult, error)
+	InvalidateFocusCache()
 }
 
 type taskService struct {
@@ -61,11 +63,15 @@ func NewTaskService(taskRepo repository.TaskRepository, projectRepo repository.P
 	}
 }
 
-func (s *taskService) invalidateFocusCache() {
+func (s *taskService) InvalidateFocusCache() {
 	s.cacheMu.Lock()
 	defer s.cacheMu.Unlock()
 	s.focusCache = nil
 	s.focusCacheExpiry = time.Time{}
+}
+
+func (s *taskService) invalidateFocusCache() {
+	s.InvalidateFocusCache()
 }
 
 
@@ -158,6 +164,7 @@ func (s *taskService) UpdateTask(idOrPublicID string, updates map[string]interfa
 	if err := s.taskRepo.UpdateTask(task, updates); err != nil {
 		return nil, err
 	}
+	s.invalidateFocusCache()
 	return s.taskRepo.FindTask(task.ID)
 }
 
@@ -172,7 +179,24 @@ func (s *taskService) MoveTask(idOrPublicID string, input MoveTaskInput) (*model
 		"position":  input.Position,
 	}
 
-	if input.Status != "" {
+	// Look up target column's behavior from task's project
+	project, err := s.projectRepo.FindProject(task.ProjectID)
+	if err == nil && project != nil {
+		for _, col := range project.Columns {
+			if col.ID == input.ColumnID {
+				if col.Behavior == models.ColumnBehaviorCompleted {
+					updates["status"] = "done"
+				} else {
+					if input.Status != "" {
+						updates["status"] = input.Status
+					} else {
+						updates["status"] = "in_progress"
+					}
+				}
+				break
+			}
+		}
+	} else if input.Status != "" {
 		updates["status"] = input.Status
 	}
 
@@ -180,6 +204,7 @@ func (s *taskService) MoveTask(idOrPublicID string, input MoveTaskInput) (*model
 		return nil, err
 	}
 
+	s.invalidateFocusCache()
 	return s.taskRepo.FindTask(task.ID)
 }
 
@@ -188,6 +213,7 @@ func (s *taskService) DeleteTask(idOrPublicID string) error {
 	if err != nil {
 		return err
 	}
+	s.invalidateFocusCache()
 	return s.taskRepo.DeleteTask(task)
 }
 
@@ -213,6 +239,7 @@ func (s *taskService) AddChecklistItem(taskIDOrPublicID string, input AddCheckli
 		return nil, err
 	}
 
+	s.invalidateFocusCache()
 	return &item, nil
 }
 
@@ -225,22 +252,16 @@ func (s *taskService) UpdateChecklistItem(id string, updates map[string]interfac
 	if err := s.taskRepo.UpdateChecklistItem(item, updates); err != nil {
 		return nil, err
 	}
+	s.invalidateFocusCache()
 	return item, nil
 }
 
 func (s *taskService) DeleteChecklistItem(id string) error {
+	s.invalidateFocusCache()
 	return s.taskRepo.DeleteChecklistItem(id)
 }
 
 func (s *taskService) GetFocusTask() (*focusengine.FocusResult, error) {
-	s.cacheMu.RLock()
-	if s.focusCache != nil && time.Now().Before(s.focusCacheExpiry) {
-		cached := *s.focusCache
-		s.cacheMu.RUnlock()
-		return &cached, nil
-	}
-	s.cacheMu.RUnlock()
-
 	pendingTasks, err := s.taskRepo.GetPendingTasks()
 	if err != nil {
 		return nil, err
@@ -254,15 +275,16 @@ func (s *taskService) GetFocusTask() (*focusengine.FocusResult, error) {
 	projectMap := make(map[string]models.Project)
 	for _, p := range projects {
 		projectMap[p.ID] = p
+		if p.PublicID != "" {
+			projectMap[p.PublicID] = p
+		}
 	}
 
 	result := focusengine.Evaluate(pendingTasks, projectMap, time.Now())
-
-	s.cacheMu.Lock()
-	s.focusCache = &result
-	s.focusCacheExpiry = time.Now().Add(30 * time.Second)
-	s.cacheMu.Unlock()
-
 	return &result, nil
+}
+
+func (s *taskService) GetFocusOverview() (*repository.FocusOverviewResult, error) {
+	return s.projectRepo.GetFocusOverview()
 }
 
