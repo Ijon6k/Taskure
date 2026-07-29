@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/Ijon6k/kanbanproject/apps/api/internal/config"
+	"github.com/Ijon6k/Taskure/apps/api/internal/config"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/rs/zerolog"

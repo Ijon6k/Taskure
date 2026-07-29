@@ -4,7 +4,7 @@ package models
 import (
 	"time"
 
-	"github.com/Ijon6k/kanbanproject/apps/api/pkg/nanoid"
+	"github.com/Ijon6k/Taskure/apps/api/pkg/nanoid"
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"

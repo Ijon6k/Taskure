@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Ijon6k/kanbanproject/apps/api/internal/models"
+	"github.com/Ijon6k/Taskure/apps/api/internal/models"
 )
 
 // priorityRank converts priority string to integer rank for sorting comparison.

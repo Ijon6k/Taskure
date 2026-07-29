@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"github.com/Ijon6k/kanbanproject/apps/api/internal/response"
-	"github.com/Ijon6k/kanbanproject/apps/api/internal/service"
-	"github.com/Ijon6k/kanbanproject/apps/api/internal/viewmodels"
+	"github.com/Ijon6k/Taskure/apps/api/internal/response"
+	"github.com/Ijon6k/Taskure/apps/api/internal/service"
+	"github.com/Ijon6k/Taskure/apps/api/internal/viewmodels"
 	"github.com/gin-gonic/gin"
 )
 

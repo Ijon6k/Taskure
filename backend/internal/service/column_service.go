@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/Ijon6k/kanbanproject/apps/api/internal/models"
-	"github.com/Ijon6k/kanbanproject/apps/api/internal/repository"
+	"github.com/Ijon6k/Taskure/apps/api/internal/models"
+	"github.com/Ijon6k/Taskure/apps/api/internal/repository"
 )
 
 type CreateColumnInput struct {

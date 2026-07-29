@@ -10,10 +10,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Ijon6k/kanbanproject/apps/api/internal/focusengine"
-	"github.com/Ijon6k/kanbanproject/apps/api/internal/models"
-	"github.com/Ijon6k/kanbanproject/apps/api/internal/repository"
-	"github.com/Ijon6k/kanbanproject/apps/api/internal/storage"
+	"github.com/Ijon6k/Taskure/apps/api/internal/focusengine"
+	"github.com/Ijon6k/Taskure/apps/api/internal/models"
+	"github.com/Ijon6k/Taskure/apps/api/internal/repository"
+	"github.com/Ijon6k/Taskure/apps/api/internal/storage"
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 )

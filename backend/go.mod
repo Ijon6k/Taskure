@@ -1,4 +1,4 @@
-module github.com/Ijon6k/kanbanproject/apps/api
+module github.com/Ijon6k/Taskure/apps/api
 
 go 1.25.0
 

@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Ijon6k/kanbanproject/apps/api/internal/focusengine"
-	"github.com/Ijon6k/kanbanproject/apps/api/internal/models"
+	"github.com/Ijon6k/Taskure/apps/api/internal/focusengine"
+	"github.com/Ijon6k/Taskure/apps/api/internal/models"
 )
 
 func TestDeriveStateCode(t *testing.T) {

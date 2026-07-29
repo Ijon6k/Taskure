@@ -4,8 +4,8 @@ package db
 import (
 	"log"
 
-	"github.com/Ijon6k/kanbanproject/apps/api/internal/config"
-	"github.com/Ijon6k/kanbanproject/apps/api/internal/models"
+	"github.com/Ijon6k/Taskure/apps/api/internal/config"
+	"github.com/Ijon6k/Taskure/apps/api/internal/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"

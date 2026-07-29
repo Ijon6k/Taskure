@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Ijon6k/kanbanproject/apps/api/internal/models"
+	"github.com/Ijon6k/Taskure/apps/api/internal/models"
 )
 
 // CalculateDeadlineScore evaluates the nearness of a task's due date (0 - 40 pts).

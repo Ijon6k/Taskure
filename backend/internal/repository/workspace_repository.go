@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"github.com/Ijon6k/kanbanproject/apps/api/internal/models"
-	"github.com/Ijon6k/kanbanproject/apps/api/pkg/nanoid"
+	"github.com/Ijon6k/Taskure/apps/api/internal/models"
+	"github.com/Ijon6k/Taskure/apps/api/pkg/nanoid"
 	"gorm.io/gorm"
 )
 

@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/Ijon6k/kanbanproject/apps/api/internal/service"
+	"github.com/Ijon6k/Taskure/apps/api/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
