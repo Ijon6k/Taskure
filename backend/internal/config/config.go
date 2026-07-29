@@ -28,6 +28,8 @@ type Config struct {
 	MinIOUser      string
 	MinIOPassword  string
 	MinIOBucket    string
+	MinIOPublicURL string
+	MinIOUseSSL    bool
 
 	OpenAIKey      string
 	AnthropicKey   string
@@ -53,10 +55,12 @@ func Load() Config {
 		RedisPort:     getenv("REDIS_PORT", "6379"),
 		RedisPassword: getenv("REDIS_PASSWORD", ""),
 
-		MinIOEndpoint: getenv("MINIO_ENDPOINT", "minio:9000"),
-		MinIOUser:     getenv("MINIO_ROOT_USER", "minioadmin"),
-		MinIOPassword: getenv("MINIO_ROOT_PASSWORD", "minioadmin"),
-		MinIOBucket:   getenv("MINIO_BUCKET", "kanban-uploads"),
+		MinIOEndpoint:  getenvFirst([]string{"MINIO_ENDPOINT", "S3_ENDPOINT"}, "minio:9000"),
+		MinIOUser:      getenvFirst([]string{"MINIO_ACCESS_KEY", "MINIO_ROOT_USER", "MINIO_USER", "AWS_ACCESS_KEY_ID"}, "minioadmin"),
+		MinIOPassword:  getenvFirst([]string{"MINIO_SECRET_KEY", "MINIO_ROOT_PASSWORD", "MINIO_PASSWORD", "AWS_SECRET_ACCESS_KEY"}, "minioadmin"),
+		MinIOBucket:    getenvFirst([]string{"MINIO_BUCKET", "S3_BUCKET"}, "kanban-uploads"),
+		MinIOPublicURL: getenvFirst([]string{"MINIO_PUBLIC_URL", "S3_PUBLIC_URL"}, "http://localhost:1106/storage/kanban-uploads"),
+		MinIOUseSSL:    getenvFirst([]string{"MINIO_USE_SSL", "S3_USE_SSL"}, "false") == "true",
 
 		OpenAIKey:    getenv("OPENAI_API_KEY", ""),
 		AnthropicKey: getenv("ANTHROPIC_API_KEY", ""),
@@ -76,6 +80,15 @@ func (c Config) PostgresDSN() string {
 func getenv(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
+	}
+	return fallback
+}
+
+func getenvFirst(keys []string, fallback string) string {
+	for _, key := range keys {
+		if v := os.Getenv(key); v != "" {
+			return v
+		}
 	}
 	return fallback
 }

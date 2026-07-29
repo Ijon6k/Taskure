@@ -75,6 +75,8 @@ func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 		tasks.PATCH("/:id/move", c.TaskHandler.MoveTask)
 		tasks.DELETE("/:id", c.TaskHandler.DeleteTask)
 		tasks.POST("/:id/checklist", c.ChecklistHandler.AddChecklistItem)
+		tasks.POST("/:id/attachments", c.TaskHandler.UploadTaskAttachment)
+		tasks.DELETE("/:id/attachments/:attachmentId", c.TaskHandler.DeleteTaskAttachment)
 	}
 
 	checklist := r.Group("/checklist")

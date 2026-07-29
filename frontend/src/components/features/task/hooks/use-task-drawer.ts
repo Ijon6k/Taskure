@@ -59,6 +59,7 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
       const rawDue = data.due_date;
       setEditDueDate(rawDue ? (rawDue.split("T")[0] ?? null) : null);
       setTaskTags(extractTaskTags(data));
+      setTaskAttachments((data.attachments as AttachmentItem[]) ?? []);
     } catch (e: unknown) {
       if (e instanceof DOMException && e.name === "AbortError") return;
       toast.error("Failed to load task details.");
@@ -96,6 +97,7 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
         due_date: editDueDate ? new Date(editDueDate + "T00:00:00").toISOString() : null,
       });
       setTask(updated);
+      setTaskAttachments((updated.attachments as AttachmentItem[]) ?? taskAttachments);
       setIsEditing(false);
       toast.success("Task details saved!");
       onTaskUpdated?.();
@@ -132,6 +134,7 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
           due_date: iso ? new Date(iso + "T00:00:00").toISOString() : null,
         });
         setTask(updated);
+        setTaskAttachments((updated.attachments as AttachmentItem[]) ?? taskAttachments);
         toast.success("Due date updated");
         onTaskUpdated?.();
       } catch (e) {
@@ -146,6 +149,7 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
     try {
       const updated = await api.updateTask(task.id, { tags: newTags });
       setTask(updated);
+      setTaskAttachments((updated.attachments as AttachmentItem[]) ?? taskAttachments);
       const refreshed = extractTaskTags(updated);
       setTaskTags(refreshed.length > 0 ? refreshed : newTags);
       onTaskUpdated?.();
@@ -211,6 +215,44 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
     }
   };
 
+  const handleAttachmentsChange = async (newAtts: AttachmentItem[]) => {
+    setTaskAttachments(newAtts);
+    if (!task) return;
+    try {
+      const updated = await api.updateTask(task.id, { attachments: newAtts as any });
+      setTask(updated);
+      onTaskUpdated?.();
+    } catch (e) {
+      toast.error("Failed to save attachments: " + (e as Error).message);
+    }
+  };
+
+  const handleUploadAttachment = async (file: File) => {
+    if (!task) return;
+    try {
+      const updated = await api.uploadTaskAttachment(task.id, file);
+      setTask(updated);
+      setTaskAttachments((updated.attachments as AttachmentItem[]) ?? []);
+      toast.success(`File "${file.name}" uploaded to MinIO!`);
+      onTaskUpdated?.();
+    } catch (e) {
+      toast.error("Failed to upload attachment: " + (e as Error).message);
+    }
+  };
+
+  const handleDeleteAttachment = async (attachmentId: string) => {
+    if (!task) return;
+    try {
+      const updated = await api.deleteTaskAttachment(task.id, attachmentId);
+      setTask(updated);
+      setTaskAttachments((updated.attachments as AttachmentItem[]) ?? []);
+      toast.success("Attachment removed");
+      onTaskUpdated?.();
+    } catch (e) {
+      toast.error("Failed to delete attachment: " + (e as Error).message);
+    }
+  };
+
   const handleDeleteTask = async () => {
     if (!task) return;
     try {
@@ -241,6 +283,9 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
     taskTags,
     taskAttachments,
     setTaskAttachments,
+    handleAttachmentsChange,
+    handleUploadAttachment,
+    handleDeleteAttachment,
     columns,
     handleSaveEdit,
     handleColumnChange,

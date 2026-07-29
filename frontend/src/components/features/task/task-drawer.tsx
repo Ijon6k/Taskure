@@ -11,6 +11,7 @@ import { TaskSubtasksSection } from "./task-subtasks-section";
 import { TaskLabelsSection } from "./task-labels-section";
 import { TaskAttachmentsSection } from "./task-attachments-section";
 import { useTaskDrawer } from "./hooks/use-task-drawer";
+import { AutoResizeTextarea } from "@/components/ui/auto-resize-textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 
@@ -38,6 +39,9 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
     taskTags,
     taskAttachments,
     setTaskAttachments,
+    handleAttachmentsChange,
+    handleUploadAttachment,
+    handleDeleteAttachment,
     columns,
     handleSaveEdit,
     handleColumnChange,
@@ -179,12 +183,12 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
                     Description
                   </div>
                   {isEditing ? (
-                    <textarea
-                      rows={4}
+                    <AutoResizeTextarea
+                      minRows={3}
                       value={editDescription}
                       onChange={(e) => setEditDescription(e.target.value)}
                       placeholder="What needs to happen?"
-                      className="w-full bg-theme-elevated border border-theme-default rounded-md p-3 text-[15px] text-theme-primary placeholder-theme-tertiary focus:outline-none focus:border-brand-accent transition-colors resize-none"
+                      className="w-full bg-theme-elevated border border-theme-default rounded-md p-3 text-[15px] text-theme-primary placeholder-theme-tertiary focus:outline-none focus:border-brand-accent transition-colors"
                     />
                   ) : (
                     <div className="p-3 bg-theme-elevated border border-theme-default rounded-md text-[15px] text-theme-secondary min-h-[80px] whitespace-pre-wrap leading-relaxed">
@@ -216,7 +220,9 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
                 <CollapsibleSection title="Attachments" defaultOpen={true}>
                   <TaskAttachmentsSection
                     attachments={taskAttachments}
-                    onChange={(newAtts) => setTaskAttachments(newAtts)}
+                    onChange={(newAtts) => handleAttachmentsChange(newAtts)}
+                    onUploadFile={handleUploadAttachment}
+                    onDeleteFile={handleDeleteAttachment}
                   />
                 </CollapsibleSection>
 

@@ -3,6 +3,7 @@
 import { memo, useMemo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Paperclip } from "lucide-react";
 import { TaskData, ChecklistItemData } from "@/lib/api";
 import { calculateProgress } from "@/lib/helpers";
 import { extractTaskTags } from "@/lib/tags";
@@ -28,16 +29,18 @@ export const KanbanCard = memo(function KanbanCard({ task, onClick }: KanbanCard
     opacity: isDragging ? 0.3 : 1,
   };
 
-  const { checklistItems, completedChecklist, checklistPercent, tags } = useMemo(() => {
+  const { checklistItems, completedChecklist, checklistPercent, tags, attachmentCount } = useMemo(() => {
     const items = task.checklist_items || [];
     const completed = items.filter((i: ChecklistItemData) => i.is_completed).length;
     const percent = calculateProgress(completed, items.length);
     const extractedTags = extractTaskTags(task);
+    const attsCount = task.attachments?.length || 0;
     return {
       checklistItems: items,
       completedChecklist: completed,
       checklistPercent: percent,
       tags: extractedTags,
+      attachmentCount: attsCount,
     };
   }, [task]);
 
@@ -68,13 +71,26 @@ export const KanbanCard = memo(function KanbanCard({ task, onClick }: KanbanCard
       )}
 
       {/* Card Footer Details */}
-      {(checklistItems.length > 0 || task.due_date) && (
-        <div className="flex items-center justify-between text-[13px] font-mono text-theme-tertiary pt-0.5">
-          <span>
-            {checklistItems.length > 0
-              ? `${completedChecklist}/${checklistItems.length} subtasks`
-              : ""}
-          </span>
+      {(checklistItems.length > 0 || attachmentCount > 0 || task.due_date) && (
+        <div className="flex items-center justify-between text-[12px] font-mono text-theme-tertiary pt-0.5">
+          <div className="flex items-center gap-2.5">
+            {checklistItems.length > 0 && (
+              <span>
+                {completedChecklist}/{checklistItems.length} subtasks
+              </span>
+            )}
+
+            {attachmentCount > 0 && (
+              <div
+                className="flex items-center gap-1 text-[11px] text-theme-tertiary/90 hover:text-theme-secondary transition-colors"
+                title={`${attachmentCount} attachment${attachmentCount > 1 ? "s" : ""}`}
+              >
+                <Paperclip className="w-3.5 h-3.5 stroke-[1.5]" />
+                <span>{attachmentCount}</span>
+              </div>
+            )}
+          </div>
+
           <DueDateText dateStr={task.due_date} />
         </div>
       )}

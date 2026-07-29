@@ -16,6 +16,7 @@ type CreateProjectInput struct {
 	Status       string `json:"status"`
 	IsPinned     bool   `json:"is_pinned"`
 	FocusEnabled *bool  `json:"focus_enabled"`
+	Template     string `json:"template"`
 }
 
 type ProjectService interface {
@@ -91,15 +92,17 @@ func (s *projectService) CreateProject(input CreateProjectInput) (*models.Projec
 		return nil, err
 	}
 
-	// Create 3 default columns ("Todo", "In Progress", "Done")
-	defaultColumns := []models.Column{
-		{Name: "Todo", Behavior: models.ColumnBehaviorActive, Position: 0, ProjectID: project.ID, Color: "#6B7280"},
-		{Name: "In Progress", Behavior: models.ColumnBehaviorActive, Position: 1, ProjectID: project.ID, Color: "#3B82F6"},
-		{Name: "Done", Behavior: models.ColumnBehaviorCompleted, Position: 2, ProjectID: project.ID, Color: "#22C55E"},
-	}
+	// Create default columns unless template is explicitly set to "blank"
+	if input.Template != "blank" {
+		defaultColumns := []models.Column{
+			{Name: "Todo", Behavior: models.ColumnBehaviorActive, Position: 0, ProjectID: project.ID, Color: "#6B7280"},
+			{Name: "In Progress", Behavior: models.ColumnBehaviorActive, Position: 1, ProjectID: project.ID, Color: "#3B82F6"},
+			{Name: "Done", Behavior: models.ColumnBehaviorCompleted, Position: 2, ProjectID: project.ID, Color: "#22C55E"},
+		}
 
-	for _, col := range defaultColumns {
-		_ = s.columnRepo.CreateColumn(&col)
+		for _, col := range defaultColumns {
+			_ = s.columnRepo.CreateColumn(&col)
+		}
 	}
 
 	if s.taskService != nil {

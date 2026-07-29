@@ -13,6 +13,7 @@ export const createProjectSchema = z.object({
   color: z.string(),
   icon: z.string(),
   status: z.string(),
+  template: z.string().optional(),
 });
 
 export type CreateProjectSchema = z.infer<typeof createProjectSchema>;

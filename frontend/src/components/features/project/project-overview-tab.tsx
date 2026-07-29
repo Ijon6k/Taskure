@@ -83,6 +83,11 @@ export function ProjectOverviewTab({
     setName(project.name || "");
     setDescription(project.description || "");
     setStatus(project.status || "active");
+    setTargetGoal(settings.target_goal ?? "");
+    setTargetDate(settings.target_date ?? "");
+    setTagsInput((settings.tags ?? []).join(", "));
+    setResources(settings.resources ?? []);
+    setStrategyNotes(settings.strategy_notes ?? "");
     setIsEditingInline(true);
   };
 

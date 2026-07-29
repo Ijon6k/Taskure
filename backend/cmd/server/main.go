@@ -17,6 +17,7 @@ import (
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/middleware"
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/repository"
 	"github.com/Ijon6k/kanbanproject/apps/api/internal/service"
+	"github.com/Ijon6k/kanbanproject/apps/api/internal/storage"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
@@ -36,6 +37,18 @@ func main() {
 		logger.Fatal().Err(err).Msg("failed to connect to database")
 	}
 
+	// Initialize MinIO S3 Object Storage
+	storageSvc, err := storage.NewMinIOStorage(cfg, logger)
+	if err != nil {
+		logger.Warn().Err(err).Msg("could not initialize minio storage service, fallback storage will be used")
+	} else {
+		if err := storageSvc.EnsureBucket(context.Background()); err != nil {
+			logger.Warn().Err(err).Msg("could not auto-initialize minio bucket")
+		} else {
+			logger.Info().Str("bucket", cfg.MinIOBucket).Msg("minio bucket ready")
+		}
+	}
+
 	// Instantiating Clean Architecture Layers
 	workspaceRepo := repository.NewWorkspaceRepository(conn)
 	projectRepo := repository.NewProjectRepository(conn)
@@ -43,7 +56,7 @@ func main() {
 	taskRepo := repository.NewTaskRepository(conn)
 
 	workspaceService := service.NewWorkspaceService(workspaceRepo)
-	taskService := service.NewTaskService(taskRepo, projectRepo)
+	taskService := service.NewTaskService(taskRepo, projectRepo, storageSvc)
 	projectService := service.NewProjectService(projectRepo, workspaceRepo, columnRepo, taskService)
 	columnService := service.NewColumnService(columnRepo, projectRepo, taskService)
 	seedService := service.NewSeedService(workspaceRepo, projectRepo, columnRepo, taskRepo, taskService)

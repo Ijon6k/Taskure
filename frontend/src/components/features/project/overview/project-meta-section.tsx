@@ -1,10 +1,12 @@
 "use client";
 
-import { Target, Calendar, Clock, ChevronDown } from "lucide-react";
+import { Target, Calendar, Clock } from "lucide-react";
 import { ProjectData } from "@/lib/api";
 import { formatDateShort } from "@/lib/helpers";
 import { ProjectTagsEditor } from "./project-tags-editor";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { AutoResizeTextarea } from "@/components/ui/auto-resize-textarea";
+import { DatePickerPopover } from "@/components/ui/overlays/date-picker-popover";
 
 interface ProjectMetaSectionProps {
   project: ProjectData;
@@ -74,8 +76,8 @@ export function ProjectMetaSection({
 
       {/* Description */}
       {isEditingInline ? (
-        <textarea
-          rows={2}
+        <AutoResizeTextarea
+          minRows={2}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Add a brief description..."
@@ -90,9 +92,9 @@ export function ProjectMetaSection({
       {/* Target Goal */}
       {isEditingInline ? (
         <div className="flex items-start gap-3">
-          <Target className="w-4 h-4 text-theme-tertiary shrink-0 mt-0.5" />
-          <textarea
-            rows={2}
+          <Target className="w-4 h-4 text-theme-tertiary shrink-0 mt-2" />
+          <AutoResizeTextarea
+            minRows={2}
             value={targetGoal}
             onChange={(e) => setTargetGoal(e.target.value)}
             placeholder="What are you trying to achieve?"
@@ -113,22 +115,18 @@ export function ProjectMetaSection({
       {/* Metadata Row: Target Date & Created Date */}
       <div className="flex items-center gap-6 text-[13px] flex-wrap">
         {isEditingInline ? (
-          <div className="flex items-center gap-1.5 text-theme-secondary">
-            <Calendar className="w-3.5 h-3.5 text-theme-tertiary shrink-0" />
-            <input
-              type="date"
+          <div className="flex items-center gap-2 text-theme-secondary w-60">
+            <DatePickerPopover
               value={targetDate}
-              onChange={(e) => setTargetDate(e.target.value)}
-              className="bg-transparent text-theme-primary text-[13px] font-mono outline-none cursor-pointer border-b border-theme-subtle hover:border-theme-default focus:border-brand-accent pb-0.5"
+              onChange={(iso) => setTargetDate(iso || "")}
+              placeholder="Pick target date"
             />
           </div>
         ) : (
-          targetDate && (
-            <div className="flex items-center gap-1.5 text-theme-secondary font-mono">
-              <Calendar className="w-3.5 h-3.5 text-theme-tertiary shrink-0" />
-              <span>Target: {formatDateShort(targetDate)}</span>
-            </div>
-          )
+          <div className="flex items-center gap-1.5 text-theme-secondary font-mono">
+            <Calendar className="w-3.5 h-3.5 text-theme-tertiary shrink-0" />
+            <span>Target: {targetDate ? formatDateShort(targetDate) : "Not set"}</span>
+          </div>
         )}
 
         {project.created_at && (

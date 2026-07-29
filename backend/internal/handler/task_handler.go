@@ -85,3 +85,45 @@ func (h *TaskHandler) DeleteTask(c *gin.Context) {
 
 	response.Message(c, "Task deleted")
 }
+
+func (h *TaskHandler) UploadTaskAttachment(c *gin.Context) {
+	idParam := c.Param("id")
+	fileHeader, err := c.FormFile("file")
+	if err != nil {
+		response.BadRequest(c, err)
+		return
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		response.InternalServerError(c, err)
+		return
+	}
+	defer file.Close()
+
+	contentType := fileHeader.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+
+	task, err := h.service.UploadAttachment(c.Request.Context(), idParam, fileHeader.Filename, file, fileHeader.Size, contentType)
+	if err != nil {
+		response.InternalServerError(c, err)
+		return
+	}
+
+	response.OK(c, task)
+}
+
+func (h *TaskHandler) DeleteTaskAttachment(c *gin.Context) {
+	idParam := c.Param("id")
+	attachmentIDParam := c.Param("attachmentId")
+
+	task, err := h.service.DeleteAttachment(c.Request.Context(), idParam, attachmentIDParam)
+	if err != nil {
+		response.InternalServerError(c, err)
+		return
+	}
+
+	response.OK(c, task)
+}

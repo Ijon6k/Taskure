@@ -1,5 +1,5 @@
 import { fetcher } from "../client";
-import { ProjectData, UpdateProjectInput } from "../types";
+import { ProjectData, CreateProjectInput, UpdateProjectInput } from "../types";
 
 export const projectsService = {
   getProjects: (params?: { status?: string; search?: string; pinned?: boolean }) => {
@@ -15,7 +15,7 @@ export const projectsService = {
     return fetcher<ProjectData>(`/projects/${id}`);
   },
 
-  createProject: (data: { name: string; description?: string; color?: string; icon?: string; status?: string; is_pinned?: boolean }) => {
+  createProject: (data: CreateProjectInput) => {
     return fetcher<ProjectData>("/projects", {
       method: "POST",
       data,

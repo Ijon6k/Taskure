@@ -13,12 +13,13 @@ import { EditProjectModal } from "@/components/features/project/edit-project-mod
 import { useUIStore } from "@/store/use-ui-store";
 import { PageContainer } from "@/components/ui/page-container";
 
-type StatusFilter = "all" | "active" | "paused" | "archived";
+type StatusFilter = "all" | "active" | "paused" | "completed" | "archived";
 
 const STATUS_FILTER_OPTIONS: { key: StatusFilter; label: string }[] = [
   { key: "all", label: "All" },
   { key: "active", label: "Active" },
   { key: "paused", label: "Paused" },
+  { key: "completed", label: "Completed" },
   { key: "archived", label: "Archived" },
 ];
 

@@ -12,6 +12,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { BoardFilterState } from "@/lib/filter-tasks";
 
+import { cn } from "@/lib/utils";
+
 interface BoardSortDropdownProps {
   filters: BoardFilterState;
   onChangeFilters: (filters: BoardFilterState) => void;
@@ -26,14 +28,24 @@ export function BoardSortDropdown({ filters, onChangeFilters }: BoardSortDropdow
     { key: "updated", label: "Recently updated" },
   ];
 
-  const currentLabel = sortOptions.find((o) => o.key === filters.sortBy)?.label || "Sort";
+  const isCustomSort = filters.sortBy !== "position";
+  const activeSortLabel = sortOptions.find((o) => o.key === filters.sortBy)?.label;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary" size="default" className="shrink-0">
-          <ArrowUpDown className="w-3.5 h-3.5 text-theme-tertiary" />
-          <span>Sort: {currentLabel}</span>
+        <Button
+          variant="secondary"
+          size={isCustomSort ? "default" : "icon"}
+          className="shrink-0"
+          title={isCustomSort ? `Sorted by: ${activeSortLabel}` : "Sort tasks"}
+        >
+          <ArrowUpDown className={cn("w-3.5 h-3.5", isCustomSort ? "text-brand-accent" : "text-theme-secondary")} />
+          {isCustomSort && (
+            <span className="text-xs font-medium text-brand-accent">
+              {activeSortLabel}
+            </span>
+          )}
         </Button>
       </DropdownMenuTrigger>
 

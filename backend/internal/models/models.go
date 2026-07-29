@@ -158,12 +158,13 @@ type Task struct {
 	EstimatedHours *float64   `json:"estimated_hours,omitempty"`
 	ActualHours    *float64   `json:"actual_hours,omitempty"`
 	Tags           datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"tags"`
+	AttachmentsJSON datatypes.JSON `gorm:"column:attachments_json;type:jsonb;default:'[]'" json:"attachments"`
 
 	Labels         []Label         `gorm:"many2many:task_labels;constraint:OnDelete:CASCADE" json:"labels,omitempty"`
 	Column         Column          `gorm:"foreignKey:ColumnID" json:"column,omitempty"`
 	ChecklistItems []ChecklistItem `gorm:"foreignKey:TaskID;constraint:OnDelete:CASCADE" json:"checklist_items,omitempty"`
 	Notes          []TaskNote      `gorm:"foreignKey:TaskID;constraint:OnDelete:CASCADE" json:"notes,omitempty"`
-	Attachments    []Attachment    `gorm:"foreignKey:TaskID;constraint:OnDelete:CASCADE" json:"attachments,omitempty"`
+	Attachments    []Attachment    `gorm:"foreignKey:TaskID;constraint:OnDelete:CASCADE" json:"-"`
 }
 
 func (t *Task) BeforeCreate(tx *gorm.DB) error {

@@ -28,6 +28,8 @@ export const api = {
   addChecklistItem: tasksService.addChecklistItem,
   updateChecklistItem: tasksService.updateChecklistItem,
   deleteChecklistItem: tasksService.deleteChecklistItem,
+  uploadTaskAttachment: tasksService.uploadAttachment,
+  deleteTaskAttachment: tasksService.deleteAttachment,
 
   updateWorkspaceSettings: workspaceService.updateWorkspaceSettings,
   getFocusTask: workspaceService.getFocusTask,

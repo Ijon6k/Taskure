@@ -2,28 +2,49 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Link2, Upload, Plus, Trash2, ExternalLink, FileText, Image as ImageIcon, Eye, X } from "lucide-react";
+import { toast } from "sonner";
 
 export interface AttachmentItem {
   id: string;
   type: "link" | "file";
   title: string;
-  url?: string;
-  size?: string;
-  mimeType?: string;
+  url?: string | undefined;
+  size?: string | undefined;
+  mimeType?: string | undefined;
+}
+
+const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024; // 25MB limit for MinIO S3 uploads
+
+function isImageAttachment(item: AttachmentItem & { mime_type?: string }): boolean {
+  if (!item.url) return false;
+  const mime = item.mimeType || item.mime_type;
+  if (mime?.startsWith("image/")) return true;
+  const lowerTitle = item.title.toLowerCase();
+  const lowerUrl = item.url.toLowerCase();
+  const imageExtensions = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".avif"];
+  return (
+    imageExtensions.some((ext) => lowerTitle.endsWith(ext) || lowerUrl.endsWith(ext)) ||
+    lowerUrl.startsWith("data:image/")
+  );
 }
 
 interface TaskAttachmentsSectionProps {
   attachments?: AttachmentItem[];
   onChange?: (attachments: AttachmentItem[]) => void;
+  onUploadFile?: (file: File) => Promise<void>;
+  onDeleteFile?: (attachmentId: string) => Promise<void>;
 }
 
 export function TaskAttachmentsSection({
   attachments = [],
   onChange,
+  onUploadFile,
+  onDeleteFile,
 }: TaskAttachmentsSectionProps) {
   const [linkInput, setLinkInput] = useState("");
   const [linkNameInput, setLinkNameInput] = useState("");
   const [showLinkInput, setShowLinkInput] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -37,18 +58,6 @@ export function TaskAttachmentsSection({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [previewImage]);
-
-  const isImageAttachment = (item: AttachmentItem): boolean => {
-    if (!item.url) return false;
-    if (item.mimeType?.startsWith("image/")) return true;
-    const lowerTitle = item.title.toLowerCase();
-    const lowerUrl = item.url.toLowerCase();
-    const imageExtensions = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".avif"];
-    return (
-      imageExtensions.some((ext) => lowerTitle.endsWith(ext) || lowerUrl.endsWith(ext)) ||
-      lowerUrl.startsWith("data:image/")
-    );
-  };
 
   const handleAddLink = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -75,29 +84,40 @@ export function TaskAttachmentsSection({
     setShowLinkInput(false);
   };
 
-  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const newItems: AttachmentItem[] = Array.from(files).map((file) => {
-      const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
-      const sizeStr = file.size > 1024 * 1024 ? `${sizeMb} MB` : `${Math.round(file.size / 1024)} KB`;
-      return {
-        id: "file-" + Date.now() + Math.random().toString(36).substr(2, 4),
-        type: "file",
-        title: file.name,
-        size: sizeStr,
-        url: URL.createObjectURL(file),
-        mimeType: file.type,
-      };
-    });
+    const fileArray = Array.from(files);
 
-    const updated = [...attachments, ...newItems];
-    if (onChange) onChange(updated);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (onUploadFile) {
+      setIsUploading(true);
+      try {
+        for (const file of fileArray) {
+          if (file.size > MAX_FILE_SIZE_BYTES) {
+            toast.error(`File "${file.name}" exceeds 25MB max attachment limit.`);
+            continue;
+          }
+          await onUploadFile(file);
+        }
+      } catch (err) {
+        toast.error("Failed to upload file to MinIO: " + (err as Error).message);
+      } finally {
+        setIsUploading(false);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    }
   };
 
-  const handleDeleteAttachment = (id: string) => {
+  const handleDeleteAttachment = async (id: string) => {
+    if (onDeleteFile) {
+      try {
+        await onDeleteFile(id);
+      } catch (err) {
+        toast.error("Failed to delete attachment: " + (err as Error).message);
+      }
+      return;
+    }
     const updated = attachments.filter((item) => item.id !== id);
     if (onChange) onChange(updated);
   };
@@ -260,10 +280,11 @@ export function TaskAttachmentsSection({
                   {item.url && (
                     <a
                       href={item.url}
-                      target="_blank"
+                      target={item.url.startsWith("data:") ? "_self" : "_blank"}
+                      download={item.url.startsWith("data:") ? item.title : undefined}
                       rel="noreferrer"
                       className="p-1.5 text-theme-secondary hover:text-brand-accent hover:bg-surface-hover rounded-md transition-colors"
-                      title="Open file / link in new tab"
+                      title={item.url.startsWith("data:") ? "Download file" : "Open link in new tab"}
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>

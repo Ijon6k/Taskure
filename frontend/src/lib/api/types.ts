@@ -159,12 +159,13 @@ export type FocusResult = FocusResponse;
 
 export interface CreateProjectInput {
   name: string;
-  description?: string;
-  color?: string;
-  icon?: string;
-  status?: string;
-  is_pinned?: boolean;
-  focus_enabled?: boolean;
+  description?: string | undefined;
+  color?: string | undefined;
+  icon?: string | undefined;
+  status?: string | undefined;
+  is_pinned?: boolean | undefined;
+  focus_enabled?: boolean | undefined;
+  template?: string | undefined;
 }
 
 export interface UpdateProjectInput {
@@ -213,6 +214,7 @@ export interface UpdateTaskInput {
   status?: string;
   due_date?: string | null;
   tags?: string[];
+  attachments?: AttachmentData[] | undefined;
 }
 
 export interface MoveTaskInput {

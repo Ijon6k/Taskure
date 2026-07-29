@@ -7,6 +7,7 @@ export interface BoardFilterState {
   selectedPriority: string;
   selectedDueDate: string;
   selectedSubtasks: string;
+  selectedAttachments: string;
   sortBy: string;
 }
 
@@ -16,6 +17,7 @@ export const DEFAULT_BOARD_FILTERS: BoardFilterState = {
   selectedPriority: "all",
   selectedDueDate: "all",
   selectedSubtasks: "all",
+  selectedAttachments: "all",
   sortBy: "position",
 };
 
@@ -26,6 +28,7 @@ export function countActiveFilters(filters: BoardFilterState): number {
   if (filters.selectedPriority !== "all") count++;
   if (filters.selectedDueDate !== "all") count++;
   if (filters.selectedSubtasks !== "all") count++;
+  if (filters.selectedAttachments !== "all") count++;
   if (filters.sortBy !== "position") count++;
   return count;
 }
@@ -45,10 +48,16 @@ export function filterAndSortTasks(tasks: TaskData[], filters: BoardFilterState)
 
   // 2. Tag Filter
   if (filters.selectedTag !== "all") {
-    const targetTag = filters.selectedTag.toLowerCase();
-    result = result.filter((t) =>
-      extractTaskTags(t).some((tag) => tag.toLowerCase() === targetTag)
-    );
+    if (filters.selectedTag === "has_tags") {
+      result = result.filter((t) => extractTaskTags(t).length > 0);
+    } else if (filters.selectedTag === "no_tags") {
+      result = result.filter((t) => extractTaskTags(t).length === 0);
+    } else {
+      const targetTag = filters.selectedTag.toLowerCase();
+      result = result.filter((t) =>
+        extractTaskTags(t).some((tag) => tag.toLowerCase() === targetTag)
+      );
+    }
   }
 
   // 3. Priority Filter
@@ -92,6 +101,16 @@ export function filterAndSortTasks(tasks: TaskData[], filters: BoardFilterState)
       if (filters.selectedSubtasks === "pending") {
         return items.length > 0 && items.some((i) => !i.is_completed);
       }
+      return true;
+    });
+  }
+
+  // 6. Attachments Filter
+  if (filters.selectedAttachments !== "all") {
+    result = result.filter((t) => {
+      const attsCount = t.attachments?.length || 0;
+      if (filters.selectedAttachments === "has_attachments") return attsCount > 0;
+      if (filters.selectedAttachments === "no_attachments") return attsCount === 0;
       return true;
     });
   }

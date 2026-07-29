@@ -54,4 +54,23 @@ export const tasksService = {
       method: "DELETE",
     });
   },
+
+  // Attachments (MinIO S3)
+  uploadAttachment: (taskId: string, file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return fetcher<TaskData>(`/tasks/${taskId}/attachments`, {
+      method: "POST",
+      data: formData,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
+
+  deleteAttachment: (taskId: string, attachmentId: string) => {
+    return fetcher<TaskData>(`/tasks/${taskId}/attachments/${attachmentId}`, {
+      method: "DELETE",
+    });
+  },
 };

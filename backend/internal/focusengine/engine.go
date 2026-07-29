@@ -35,8 +35,10 @@ func Evaluate(tasks []models.Task, projectMap map[string]models.Project, now tim
 	pausedProjectsCount := 0
 
 	for _, proj := range projectMap {
-		if proj.IsArchived || strings.EqualFold(proj.Status, "archived") {
-			archivedProjectsCount++
+		if proj.IsArchived || strings.EqualFold(proj.Status, "archived") || strings.EqualFold(proj.Status, "completed") {
+			if proj.IsArchived || strings.EqualFold(proj.Status, "archived") {
+				archivedProjectsCount++
+			}
 			continue
 		}
 		key := proj.ID
@@ -136,7 +138,7 @@ func Evaluate(tasks []models.Task, projectMap map[string]models.Project, now tim
 			continue
 		}
 
-		if strings.EqualFold(proj.Status, "paused") || proj.IsArchived || strings.EqualFold(proj.Status, "archived") {
+		if strings.EqualFold(proj.Status, "paused") || strings.EqualFold(proj.Status, "completed") || proj.IsArchived || strings.EqualFold(proj.Status, "archived") {
 			continue
 		}
 

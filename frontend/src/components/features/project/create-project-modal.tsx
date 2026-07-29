@@ -58,6 +58,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
         color: data.color,
         icon: data.icon,
         status: data.status,
+        template: data.template || undefined,
       },
       {
         onSuccess: (created) => {
@@ -133,38 +134,65 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
             onSelect={(color) => setValue("color", color)}
           />
 
-          {/* Template Selection Cards — Clean Borderless Surface Cards */}
-          <div className="grid grid-cols-2 gap-3 pt-1">
-            <button
-              type="submit"
-              disabled={createProjectMutation.isPending}
-              className="p-4 bg-surface-l4 hover:bg-surface-hover rounded-md text-left transition-all space-y-1.5 group disabled:opacity-40 cursor-pointer"
-            >
-              <div className="flex items-center gap-2 text-[14px] font-semibold text-theme-primary">
-                <FolderPlus className="w-4 h-4 text-brand-accent" />
-                <span>Blank project</span>
-              </div>
-              <p className="text-[12px] text-theme-secondary leading-relaxed">
-                Empty board with default columns.
-              </p>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsImportJsonOpen(true)}
-              className="p-4 bg-surface-l4 hover:bg-surface-hover rounded-md text-left transition-all space-y-1.5 group cursor-pointer"
-            >
-              <div className="flex items-center justify-between text-[14px] font-semibold text-theme-primary">
-                <div className="flex items-center gap-2">
-                  <FileCode className="w-4 h-4 text-brand-accent" />
-                  <span>From JSON</span>
+          {/* Template Selection Cards */}
+          <div className="space-y-2 pt-1">
+            <label className="block text-[13px] font-medium text-theme-secondary uppercase tracking-[0.5px]">
+              Board Template
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setValue("template", "kanban");
+                  handleSubmit(onSubmit)();
+                }}
+                disabled={createProjectMutation.isPending}
+                className="p-3 bg-surface-l4 hover:bg-surface-hover rounded-md text-left transition-all space-y-1 group disabled:opacity-40 cursor-pointer border border-transparent focus:border-brand-accent"
+              >
+                <div className="flex items-center gap-1.5 text-[13px] font-semibold text-theme-primary">
+                  <FolderPlus className="w-3.5 h-3.5 text-brand-accent" />
+                  <span>Standard</span>
                 </div>
-                <ArrowRight className="w-3.5 h-3.5 text-theme-secondary group-hover:translate-x-0.5 transition-transform" />
-              </div>
-              <p className="text-[12px] text-theme-secondary leading-relaxed">
-                Paste or upload a board.
-              </p>
-            </button>
+                <p className="text-[11px] text-theme-secondary leading-normal">
+                  Todo, In Progress, Done columns.
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setValue("template", "blank");
+                  handleSubmit(onSubmit)();
+                }}
+                disabled={createProjectMutation.isPending}
+                className="p-3 bg-surface-l4 hover:bg-surface-hover rounded-md text-left transition-all space-y-1 group disabled:opacity-40 cursor-pointer border border-transparent focus:border-brand-accent"
+              >
+                <div className="flex items-center gap-1.5 text-[13px] font-semibold text-theme-primary">
+                  <FolderPlus className="w-3.5 h-3.5 text-theme-tertiary" />
+                  <span>From Blank</span>
+                </div>
+                <p className="text-[11px] text-theme-secondary leading-normal">
+                  Empty board with 0 columns.
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsImportJsonOpen(true)}
+                className="p-3 bg-surface-l4 hover:bg-surface-hover rounded-md text-left transition-all space-y-1 group cursor-pointer border border-transparent focus:border-brand-accent"
+              >
+                <div className="flex items-center justify-between text-[13px] font-semibold text-theme-primary">
+                  <div className="flex items-center gap-1.5">
+                    <FileCode className="w-3.5 h-3.5 text-brand-accent" />
+                    <span>From JSON</span>
+                  </div>
+                  <ArrowRight className="w-3 h-3 text-theme-secondary group-hover:translate-x-0.5 transition-transform" />
+                </div>
+                <p className="text-[11px] text-theme-secondary leading-normal">
+                  Paste or upload board JSON.
+                </p>
+              </button>
+            </div>
           </div>
         </form>
       </ModalContainer>

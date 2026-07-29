@@ -31,6 +31,7 @@ const PROJECT_ACCENT_COLORS = [
 const STATUS_OPTIONS = [
   { label: "Active", value: "active" },
   { label: "Paused", value: "paused" },
+  { label: "Completed", value: "completed" },
   { label: "Archived", value: "archived" },
 ];
 

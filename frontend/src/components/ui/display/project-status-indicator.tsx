@@ -14,8 +14,9 @@ export function getProjectStatusConfig(status?: string) {
       return { dotColor: "bg-emerald-500", textColor: "text-emerald-400" };
     case "paused":
       return { dotColor: "bg-amber-500", textColor: "text-amber-400" };
-    case "archived":
     case "completed":
+      return { dotColor: "bg-blue-500", textColor: "text-blue-400" };
+    case "archived":
       return { dotColor: "bg-slate-400", textColor: "text-theme-tertiary" };
     default:
       return { dotColor: "bg-emerald-500", textColor: "text-emerald-400" };

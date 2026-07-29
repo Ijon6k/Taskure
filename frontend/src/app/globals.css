@@ -434,6 +434,10 @@
   border-color: var(--border-subtle);
 }
 
+.bg-theme-subtle {
+  background-color: var(--border-subtle);
+}
+
 .border-theme-default {
   border-color: var(--border-default);
 }

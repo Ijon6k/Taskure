@@ -4,10 +4,11 @@ import { useState } from "react";
 import { Filter, Check, RotateCcw, Tag as TagIcon } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { BoardFilterState, DEFAULT_BOARD_FILTERS, countActiveFilters } from "@/lib/filter-tasks";
 import { getTagStyle } from "@/lib/tags";
+
+import { cn } from "@/lib/utils";
 
 interface BoardFilterPopoverProps {
   filters: BoardFilterState;
@@ -30,8 +31,15 @@ export function BoardFilterPopover({
       selectedPriority: "all",
       selectedDueDate: "all",
       selectedSubtasks: "all",
+      selectedAttachments: "all",
     });
   };
+
+  const tagPresenceOptions = [
+    { key: "all", label: "All tags" },
+    { key: "has_tags", label: "Has tags" },
+    { key: "no_tags", label: "No tags" },
+  ];
 
   const priorityOptions = [
     { key: "all", label: "All priorities" },
@@ -56,21 +64,31 @@ export function BoardFilterPopover({
     { key: "pending", label: "Pending" },
   ];
 
+  const attachmentOptions = [
+    { key: "all", label: "All attachments" },
+    { key: "has_attachments", label: "Has attachments" },
+    { key: "no_attachments", label: "No attachments" },
+  ];
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="secondary" size="default" className="shrink-0">
-          <Filter className="w-3.5 h-3.5 text-brand-accent" />
-          <span>Filter</span>
+        <Button
+          variant="secondary"
+          size={activeCount > 0 ? "default" : "icon"}
+          className="shrink-0"
+          title={activeCount > 0 ? `Filter (${activeCount} active)` : "Filter tasks"}
+        >
+          <Filter className={cn("w-3.5 h-3.5", activeCount > 0 ? "text-brand-accent" : "text-theme-secondary")} />
           {activeCount > 0 && (
-            <Badge variant="accent" className="ml-0.5 px-1.5 py-0 text-[10px]">
+            <span className="text-xs font-semibold text-brand-accent">
               {activeCount}
-            </Badge>
+            </span>
           )}
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent align="start" className="w-[300px] max-h-[420px] overflow-y-auto space-y-3">
+      <PopoverContent align="start" className="w-[300px] max-h-[440px] overflow-y-auto space-y-3">
         {/* Header */}
         <div className="flex items-center justify-between text-xs font-medium text-theme-primary">
           <span>Filter tasks</span>
@@ -88,54 +106,56 @@ export function BoardFilterPopover({
 
         <Separator />
 
-        {/* ── 1. TAGS SECTION (DYNAMIC BOARD TAGS ONLY) ── */}
+        {/* ── 1. TAGS SECTION ── */}
         <div className="space-y-1.5">
           <div className="text-[10px] font-medium text-theme-tertiary uppercase tracking-wider">
             Tags
           </div>
-          {boardTags.length === 0 ? (
-            <p className="text-[11px] text-theme-tertiary italic px-1">
-              No active tags on current board.
-            </p>
-          ) : (
-            <div className="space-y-0.5 max-h-[110px] overflow-y-auto pr-1">
+          <div className="space-y-0.5 max-h-[140px] overflow-y-auto pr-1">
+            {tagPresenceOptions.map((opt) => (
               <button
+                key={opt.key}
                 type="button"
-                onClick={() => onChangeFilters({ ...filters, selectedTag: "all" })}
+                onClick={() => onChangeFilters({ ...filters, selectedTag: opt.key })}
                 className="w-full px-2 py-1 rounded-md hover:bg-surface-hover flex items-center justify-between transition-colors text-left text-xs text-theme-primary cursor-pointer"
               >
-                <span>All tags</span>
-                {filters.selectedTag === "all" && <Check className="w-3.5 h-3.5 text-brand-accent" />}
+                <span>{opt.label}</span>
+                {filters.selectedTag === opt.key && <Check className="w-3.5 h-3.5 text-brand-accent" />}
               </button>
-              {boardTags.map((tag) => {
-                const isSelected = filters.selectedTag.toLowerCase() === tag.toLowerCase();
-                const style = getTagStyle(tag);
+            ))}
 
-                return (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() =>
-                      onChangeFilters({
-                        ...filters,
-                        selectedTag: isSelected ? "all" : tag,
-                      })
-                    }
-                    className="w-full px-2 py-1 rounded-md hover:bg-surface-hover flex items-center justify-between transition-colors text-left text-xs cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span
-                        className="w-2 h-2 rounded-full shrink-0"
-                        style={{ backgroundColor: style.color }}
-                      />
-                      <span className="text-theme-primary truncate">{tag}</span>
-                    </div>
-                    {isSelected && <Check className="w-3.5 h-3.5 text-brand-accent" />}
-                  </button>
-                );
-              })}
-            </div>
-          )}
+            {boardTags.length > 0 && (
+              <div className="pt-1 mt-1 border-t border-theme-subtle space-y-0.5">
+                {boardTags.map((tag) => {
+                  const isSelected = filters.selectedTag.toLowerCase() === tag.toLowerCase();
+                  const style = getTagStyle(tag);
+
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() =>
+                        onChangeFilters({
+                          ...filters,
+                          selectedTag: isSelected ? "all" : tag,
+                        })
+                      }
+                      className="w-full px-2 py-1 rounded-md hover:bg-surface-hover flex items-center justify-between transition-colors text-left text-xs cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span
+                          className="w-2 h-2 rounded-full shrink-0"
+                          style={{ backgroundColor: style.color }}
+                        />
+                        <span className="text-theme-primary truncate">{tag}</span>
+                      </div>
+                      {isSelected && <Check className="w-3.5 h-3.5 text-brand-accent" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
         <Separator />
@@ -214,6 +234,32 @@ export function BoardFilterPopover({
                   key={opt.key}
                   type="button"
                   onClick={() => onChangeFilters({ ...filters, selectedSubtasks: opt.key })}
+                  className="w-full px-2 py-1 rounded-md hover:bg-surface-hover flex items-center justify-between transition-colors text-left text-xs cursor-pointer"
+                >
+                  <span className="text-theme-primary">{opt.label}</span>
+                  {isSelected && <Check className="w-3.5 h-3.5 text-brand-accent" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* ── 5. ATTACHMENTS SECTION ── */}
+        <div className="space-y-1.5">
+          <div className="text-[10px] font-medium text-theme-tertiary uppercase tracking-wider">
+            Attachments
+          </div>
+          <div className="grid grid-cols-1 gap-0.5">
+            {attachmentOptions.map((opt) => {
+              const isSelected = filters.selectedAttachments === opt.key;
+
+              return (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => onChangeFilters({ ...filters, selectedAttachments: opt.key })}
                   className="w-full px-2 py-1 rounded-md hover:bg-surface-hover flex items-center justify-between transition-colors text-left text-xs cursor-pointer"
                 >
                   <span className="text-theme-primary">{opt.label}</span>
