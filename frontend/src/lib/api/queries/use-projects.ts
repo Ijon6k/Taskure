@@ -14,6 +14,9 @@ export function useProjects(filters?: { status?: string; search?: string; pinned
   return useQuery({
     queryKey: PROJECT_KEYS.list(filters),
     queryFn: () => projectsService.getProjects(filters),
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 15,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -22,6 +25,9 @@ export function useProject(id: string) {
     queryKey: PROJECT_KEYS.detail(id),
     queryFn: () => projectsService.getProject(id),
     enabled: Boolean(id),
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 15,
+    refetchOnWindowFocus: false,
   });
 }
 
