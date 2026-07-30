@@ -1,10 +1,18 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
+	"io"
+	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/Ijon6k/Taskure/apps/api/internal/models"
 	"github.com/Ijon6k/Taskure/apps/api/internal/repository"
+	"github.com/Ijon6k/Taskure/apps/api/internal/storage"
+	"github.com/google/uuid"
 	"gorm.io/datatypes"
 )
 
@@ -25,6 +33,9 @@ type ProjectService interface {
 	GetProject(idOrPublicID string) (*models.Project, error)
 	UpdateProject(idOrPublicID string, updates map[string]interface{}) (*models.Project, error)
 	DeleteProject(idOrPublicID string) error
+
+	// MinIO Resource Upload
+	UploadResource(ctx context.Context, projectIDOrPublicID string, fileName string, reader io.Reader, fileSize int64, contentType string) (*models.Project, error)
 }
 
 type projectService struct {
@@ -32,6 +43,7 @@ type projectService struct {
 	workspaceRepo repository.WorkspaceRepository
 	columnRepo    repository.ColumnRepository
 	taskService   TaskService
+	storage       storage.StorageService
 }
 
 func NewProjectService(
@@ -39,12 +51,14 @@ func NewProjectService(
 	workspaceRepo repository.WorkspaceRepository,
 	columnRepo repository.ColumnRepository,
 	taskService TaskService,
+	storage storage.StorageService,
 ) ProjectService {
 	return &projectService{
 		projectRepo:   projectRepo,
 		workspaceRepo: workspaceRepo,
 		columnRepo:    columnRepo,
 		taskService:   taskService,
+		storage:       storage,
 	}
 }
 
@@ -122,6 +136,11 @@ func (s *projectService) UpdateProject(idOrPublicID string, updates map[string]i
 		return nil, err
 	}
 
+	// Automatically unpin project if status is changed to completed or archived
+	if statusVal, ok := updates["status"].(string); ok && (statusVal == "completed" || statusVal == "archived") {
+		updates["is_pinned"] = false
+	}
+
 	// Parse current settings JSON into a map
 	settingsMap := make(map[string]interface{})
 	if len(project.Settings) > 0 {
@@ -173,4 +192,84 @@ func (s *projectService) DeleteProject(idOrPublicID string) error {
 		s.taskService.InvalidateFocusCache()
 	}
 	return s.projectRepo.DeleteProject(project)
+}
+
+func (s *projectService) UploadResource(ctx context.Context, projectIDOrPublicID string, fileName string, reader io.Reader, fileSize int64, contentType string) (*models.Project, error) {
+	project, err := s.projectRepo.FindProject(projectIDOrPublicID)
+	if err != nil {
+		return nil, err
+	}
+
+	ext := filepath.Ext(fileName)
+	objectName := fmt.Sprintf("projects/%s/%s_%s%s", project.ID, time.Now().Format("20060102_150405"), uuid.New().String()[:8], ext)
+
+	var uploadResult *storage.UploadResult
+	if s.storage != nil {
+		res, err := s.storage.UploadFile(ctx, objectName, reader, fileSize, contentType)
+		if err != nil {
+			return nil, fmt.Errorf("failed to upload project resource to object storage: %w", err)
+		}
+		uploadResult = res
+	} else {
+		uploadResult = &storage.UploadResult{
+			ObjectKey: objectName,
+			PublicURL: fmt.Sprintf("/storage/kanban-uploads/%s", objectName),
+			Size:      fileSize,
+		}
+	}
+
+	isImg := strings.HasPrefix(contentType, "image/") || isImageExt(ext)
+	resType := "file"
+	if isImg {
+		resType = "image"
+	}
+
+	resourceItem := map[string]interface{}{
+		"id":         "res_" + uuid.New().String()[:8],
+		"title":      fileName,
+		"url":        uploadResult.PublicURL,
+		"type":       resType,
+		"size":       formatFileSize(fileSize),
+		"mime_type":  contentType,
+		"created_at": time.Now().Format(time.RFC3339),
+		"object_key": uploadResult.ObjectKey,
+	}
+
+	settingsMap := make(map[string]interface{})
+	if len(project.Settings) > 0 {
+		_ = json.Unmarshal(project.Settings, &settingsMap)
+	}
+
+	var currentResources []interface{}
+	if rawRes, ok := settingsMap["resources"].([]interface{}); ok {
+		currentResources = rawRes
+	}
+	currentResources = append([]interface{}{resourceItem}, currentResources...)
+	settingsMap["resources"] = currentResources
+
+	bytes, err := json.Marshal(settingsMap)
+	if err != nil {
+		return nil, err
+	}
+
+	updates := map[string]interface{}{
+		"settings": datatypes.JSON(bytes),
+	}
+
+	if err := s.projectRepo.UpdateProject(project, updates); err != nil {
+		return nil, err
+	}
+
+	return s.projectRepo.FindProject(project.ID)
+}
+
+func isImageExt(ext string) bool {
+	lower := strings.ToLower(ext)
+	exts := []string{".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".avif"}
+	for _, e := range exts {
+		if e == lower {
+			return true
+		}
+	}
+	return false
 }

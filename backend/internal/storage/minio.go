@@ -19,7 +19,6 @@ type minioStorageService struct {
 	logger    zerolog.Logger
 }
 
-// NewMinIOStorage initializes MinIO client and returns a StorageService.
 func NewMinIOStorage(cfg config.Config, logger zerolog.Logger) (StorageService, error) {
 	client, err := minio.New(cfg.MinIOEndpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(cfg.MinIOUser, cfg.MinIOPassword, ""),
@@ -51,7 +50,6 @@ func (s *minioStorageService) EnsureBucket(ctx context.Context) error {
 		s.logger.Info().Str("bucket", s.bucket).Msg("created minio bucket")
 	}
 
-	// Set anonymous public read policy for the bucket
 	policy := fmt.Sprintf(`{
 		"Version": "2012-10-17",
 		"Statement": [
@@ -86,6 +84,14 @@ func (s *minioStorageService) UploadFile(ctx context.Context, objectName string,
 		PublicURL: s.GetPublicURL(info.Key),
 		Size:      info.Size,
 	}, nil
+}
+
+func (s *minioStorageService) GetObject(ctx context.Context, objectName string) (io.ReadCloser, error) {
+	obj, err := s.client.GetObject(ctx, s.bucket, objectName, minio.GetObjectOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get object '%s' from minio: %w", objectName, err)
+	}
+	return obj, nil
 }
 
 func (s *minioStorageService) DeleteFile(ctx context.Context, objectName string) error {

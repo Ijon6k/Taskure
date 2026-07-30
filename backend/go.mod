@@ -10,6 +10,7 @@ require (
 	github.com/matoous/go-nanoid/v2 v2.1.0
 	github.com/minio/minio-go/v7 v7.2.1
 	github.com/rs/zerolog v1.33.0
+	golang.org/x/image v0.44.0
 	gorm.io/datatypes v1.2.7
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.30.0
@@ -20,6 +21,7 @@ require (
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/chai2010/webp v1.4.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
@@ -59,9 +61,9 @@ require (
 	golang.org/x/arch v0.8.0 // indirect
 	golang.org/x/crypto v0.51.0 // indirect
 	golang.org/x/net v0.53.0 // indirect
-	golang.org/x/sync v0.20.0 // indirect
+	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.44.0 // indirect
-	golang.org/x/text v0.37.0 // indirect
+	golang.org/x/text v0.40.0 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/ini.v1 v1.67.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

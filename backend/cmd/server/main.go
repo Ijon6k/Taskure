@@ -57,7 +57,7 @@ func main() {
 
 	workspaceService := service.NewWorkspaceService(workspaceRepo)
 	taskService := service.NewTaskService(taskRepo, projectRepo, storageSvc)
-	projectService := service.NewProjectService(projectRepo, workspaceRepo, columnRepo, taskService)
+	projectService := service.NewProjectService(projectRepo, workspaceRepo, columnRepo, taskService, storageSvc)
 	columnService := service.NewColumnService(columnRepo, projectRepo, taskService)
 	seedService := service.NewSeedService(workspaceRepo, projectRepo, columnRepo, taskRepo, taskService)
 
@@ -70,7 +70,7 @@ func main() {
 	}
 
 	// HTTP Handler Container
-	container := handler.NewContainer(workspaceService, projectService, columnService, taskService, seedService)
+	container := handler.NewContainer(workspaceService, projectService, columnService, taskService, seedService, storageSvc)
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -101,6 +101,8 @@ func main() {
 			"service": "api",
 		})
 	})
+
+	router.GET("/storage/*filepath", container.StorageHandler.ServeStorageFile)
 
 	apiGroup := router.Group("/api")
 	container.RegisterRoutes(apiGroup)

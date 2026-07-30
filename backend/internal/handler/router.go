@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/Ijon6k/Taskure/apps/api/internal/service"
+	"github.com/Ijon6k/Taskure/apps/api/internal/storage"
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,6 +14,7 @@ type Container struct {
 	ChecklistHandler *ChecklistHandler
 	FocusHandler     *FocusHandler
 	SeedHandler      *SeedHandler
+	StorageHandler   *StorageHandler
 }
 
 func NewContainer(
@@ -21,6 +23,7 @@ func NewContainer(
 	columnService service.ColumnService,
 	taskService service.TaskService,
 	seedService service.SeedService,
+	storageSvc storage.StorageService,
 ) *Container {
 	return &Container{
 		WorkspaceHandler: NewWorkspaceHandler(workspaceService),
@@ -30,6 +33,7 @@ func NewContainer(
 		ChecklistHandler: NewChecklistHandler(taskService),
 		FocusHandler:     NewFocusHandler(taskService),
 		SeedHandler:      NewSeedHandler(seedService),
+		StorageHandler:   NewStorageHandler(storageSvc),
 	}
 }
 
@@ -43,6 +47,8 @@ func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 		})
 	})
 
+	r.GET("/storage/*filepath", c.StorageHandler.ServeStorageFile)
+
 	workspaces := r.Group("/workspaces")
 	{
 		workspaces.GET("/default", c.WorkspaceHandler.GetDefaultWorkspace)
@@ -55,6 +61,7 @@ func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 		projects.POST("", c.ProjectHandler.CreateProject)
 		projects.GET("/:id", c.ProjectHandler.GetProject)
 		projects.PATCH("/:id", c.ProjectHandler.UpdateProject)
+		projects.POST("/:id/resources/upload", c.ProjectHandler.UploadProjectResource)
 		projects.DELETE("/:id", c.ProjectHandler.DeleteProject)
 
 		// Column & Task creation scoped under project
@@ -71,8 +78,8 @@ func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 	tasks := r.Group("/tasks")
 	{
 		tasks.GET("/:id", c.TaskHandler.GetTask)
-		tasks.PATCH("/:id", c.TaskHandler.UpdateTask)
 		tasks.PATCH("/:id/move", c.TaskHandler.MoveTask)
+		tasks.PATCH("/:id", c.TaskHandler.UpdateTask)
 		tasks.DELETE("/:id", c.TaskHandler.DeleteTask)
 		tasks.POST("/:id/checklist", c.ChecklistHandler.AddChecklistItem)
 		tasks.POST("/:id/attachments", c.TaskHandler.UploadTaskAttachment)

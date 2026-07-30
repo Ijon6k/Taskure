@@ -81,3 +81,32 @@ func (h *ProjectHandler) DeleteProject(c *gin.Context) {
 
 	response.Message(c, "Project deleted successfully")
 }
+
+func (h *ProjectHandler) UploadProjectResource(c *gin.Context) {
+	idParam := c.Param("id")
+	fileHeader, err := c.FormFile("file")
+	if err != nil {
+		response.BadRequest(c, err)
+		return
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		response.InternalServerError(c, err)
+		return
+	}
+	defer file.Close()
+
+	contentType := fileHeader.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+
+	project, err := h.service.UploadResource(c.Request.Context(), idParam, fileHeader.Filename, file, fileHeader.Size, contentType)
+	if err != nil {
+		response.InternalServerError(c, err)
+		return
+	}
+
+	response.OK(c, project)
+}
