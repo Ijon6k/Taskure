@@ -4,6 +4,10 @@ export interface ResourceLinkItem {
   id: string;
   title: string;
   url: string;
+  type?: "link" | "file" | "image" | undefined;
+  size?: string | undefined;
+  mime_type?: string | undefined;
+  created_at?: string | undefined;
 }
 
 export interface ProjectSettings {

@@ -74,6 +74,8 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
     e.preventDefault();
     if (!name.trim()) return;
 
+    const finalIsPinned = (status === "completed" || status === "archived") ? false : isPinned;
+
     updateProjectMutation.mutate(
       {
         id: project.id,
@@ -83,7 +85,7 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
           color,
           status,
           icon,
-          is_pinned: isPinned,
+          is_pinned: finalIsPinned,
           focus_enabled: focusEnabled,
         },
       },

@@ -87,6 +87,52 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
     };
   }, [taskId, fetchTaskDetails]);
 
+  // Clipboard Paste Image Handler (Ctrl+V paste image directly to task attachments)
+  useEffect(() => {
+    if (!taskId || !task) return;
+
+    const handlePaste = async (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      const imageFiles: File[] = [];
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item && item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) {
+            const ext = file.type.split("/")[1] || "png";
+            const renamedFile = new File(
+              [file],
+              `pasted-image-${Date.now()}.${ext}`,
+              { type: file.type }
+            );
+            imageFiles.push(renamedFile);
+          }
+        }
+      }
+
+      if (imageFiles.length > 0) {
+        e.preventDefault();
+        toast.info(`Uploading ${imageFiles.length} pasted image(s)...`);
+        for (const imgFile of imageFiles) {
+          try {
+            const updated = await api.uploadTaskAttachment(task.id, imgFile);
+            setTask(updated);
+            setTaskAttachments((updated.attachments as AttachmentItem[]) ?? []);
+            toast.success(`Pasted image attached to task!`);
+            onTaskUpdated?.();
+          } catch (err) {
+            toast.error("Failed to upload pasted image: " + (err as Error).message);
+          }
+        }
+      }
+    };
+
+    window.addEventListener("paste", handlePaste);
+    return () => window.removeEventListener("paste", handlePaste);
+  }, [taskId, task, onTaskUpdated]);
+
   const handleSaveEdit = async () => {
     if (!task) return;
     try {

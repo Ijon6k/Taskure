@@ -191,8 +191,12 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
                       className="w-full bg-theme-elevated border border-theme-default rounded-md p-3 text-[15px] text-theme-primary placeholder-theme-tertiary focus:outline-none focus:border-brand-accent transition-colors"
                     />
                   ) : (
-                    <div className="p-3 bg-theme-elevated border border-theme-default rounded-md text-[15px] text-theme-secondary min-h-[80px] whitespace-pre-wrap leading-relaxed">
-                      {task.description || "No description provided."}
+                    <div className="p-3 bg-theme-elevated border border-theme-default rounded-md text-[15px] min-h-[80px] whitespace-pre-wrap leading-relaxed">
+                      {task.description ? (
+                        <span className="text-theme-secondary">{task.description}</span>
+                      ) : (
+                        <span className="text-theme-tertiary italic">No description provided.</span>
+                      )}
                     </div>
                   )}
                 </div>

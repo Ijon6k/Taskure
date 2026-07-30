@@ -2,7 +2,7 @@
 
 import { use, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
-import { ChevronRight, FileText, LayoutGrid, FileCode, Edit3, Filter } from "lucide-react";
+import { ChevronRight, FileText, LayoutGrid, FolderOpen, Edit3, Filter } from "lucide-react";
 import { useProject, TaskData } from "@/lib/api";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileHeader } from "@/components/layout/mobile-header";
@@ -13,7 +13,7 @@ import { EditProjectModal } from "@/components/features/project/edit-project-mod
 import { ImportJsonModal } from "@/components/features/project/import-json-modal";
 import { ExportJsonModal } from "@/components/features/project/export-json-modal";
 import { ProjectOverviewTab } from "@/components/features/project/project-overview-tab";
-import { ProjectContextTab } from "@/components/features/project/project-context-tab";
+import { ProjectResourcesTab } from "@/components/features/project/project-resources-tab";
 import { BoardFilterToolbar } from "@/components/features/kanban/board-filter-toolbar";
 import { BoardFilterState, DEFAULT_BOARD_FILTERS, filterAndSortTasks } from "@/lib/filter-tasks";
 import { useUIStore } from "@/store/use-ui-store";
@@ -25,7 +25,7 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
   const projectId = resolvedParams.id;
 
   const { data: project, isLoading: loading, refetch } = useProject(projectId);
-  const [activeTab, setActiveTab] = useState<"overview" | "board" | "context">("board");
+  const [activeTab, setActiveTab] = useState<"overview" | "board" | "resources">("board");
 
   // Board Multi-Dimensional Filter State
   const [boardFilters, setBoardFilters] = useState<BoardFilterState>(DEFAULT_BOARD_FILTERS);
@@ -148,15 +148,15 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
               </button>
 
               <button
-                onClick={() => setActiveTab("context")}
+                onClick={() => setActiveTab("resources")}
                 className={`px-2.5 py-1.5 md:py-2 border-b-2 flex items-center gap-1.5 transition-colors shrink-0 ${
-                  activeTab === "context"
+                  activeTab === "resources"
                     ? "border-brand-accent text-theme-primary font-semibold"
                     : "border-transparent text-theme-secondary hover:text-theme-primary"
                 }`}
               >
-                <FileCode className="w-3.5 h-3.5 md:w-[15px] md:h-[15px]" />
-                <span>Context</span>
+                <FolderOpen className="w-3.5 h-3.5 md:w-[15px] md:h-[15px]" />
+                <span>Resources</span>
               </button>
             </div>
 
@@ -207,12 +207,15 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
           <ProjectOverviewTab
             project={project || null}
             onRefreshProject={refetch}
-            onSwitchTab={() => setActiveTab("board")}
+            onSwitchTab={(target) => setActiveTab(target as any)}
           />
         )}
 
-        {activeTab === "context" && (
-          <ProjectContextTab projectId={projectId} />
+        {activeTab === "resources" && (
+          <ProjectResourcesTab
+            project={project || null}
+            onRefreshProject={refetch}
+          />
         )}
       </div>
 

@@ -41,7 +41,7 @@ export default function HomePage() {
 
   const isLoading = isProjectsLoading || isFocusLoading;
   const pinnedProjects = useMemo(
-    () => projects.filter((p) => p.is_pinned),
+    () => projects.filter((p) => p.is_pinned && p.status !== "completed" && p.status !== "archived" && !p.is_archived),
     [projects]
   );
 

@@ -154,7 +154,7 @@ export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, o
         {/* Main Board Scroll Container */}
         <div
           ref={containerRef}
-          className="w-full h-full flex-1 flex gap-4 md:gap-5 overflow-x-auto p-3.5 md:p-6 items-start select-none relative snap-x snap-mandatory md:snap-none"
+          className="w-full h-full flex-1 flex gap-4 md:gap-5 overflow-x-auto px-3.5 md:px-6 pt-3 md:pt-4 pb-3.5 md:pb-6 items-stretch select-none relative snap-x snap-mandatory md:snap-none"
         >
           {columns.length === 0 && !isAddingColumn ? (
             <EmptyBoardChoiceState
@@ -165,7 +165,7 @@ export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, o
           ) : (
             <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
               {columns.map((col, idx) => (
-                <div key={col.id} id={`kanban-column-${col.id}`} className="snap-center shrink-0 w-[calc(100vw-2rem)] md:w-80 max-w-full">
+                <div key={col.id} id={`kanban-column-${col.id}`} className="snap-center shrink-0 w-[calc(100vw-2rem)] md:w-80 max-w-full h-full max-h-full flex flex-col">
                   <KanbanColumn
                     column={col}
                     tasks={col.tasks || []}

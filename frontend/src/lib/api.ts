@@ -14,6 +14,7 @@ export const api = {
   getProject: projectsService.getProject,
   createProject: projectsService.createProject,
   updateProject: projectsService.updateProject,
+  uploadProjectResource: projectsService.uploadResource,
   deleteProject: projectsService.deleteProject,
 
   createColumn: columnsService.createColumn,

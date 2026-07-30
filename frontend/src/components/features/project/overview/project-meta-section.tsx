@@ -61,18 +61,21 @@ export function ProjectMetaSection({
   };
 
   return (
-    <div className="space-y-5 pt-1">
-      {/* Project Name */}
+    <div className="space-y-4 pt-1">
+      {/* Page Title (Project Name) — Largest typography anchor */}
       {isEditingInline ? (
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Project name"
-          className="document-input"
-          style={{ fontSize: "22px", fontWeight: 600 }}
+          className="document-input text-2xl sm:text-3xl font-semibold tracking-tight text-theme-primary"
         />
-      ) : null}
+      ) : (
+        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-theme-primary leading-tight">
+          {project.name}
+        </h1>
+      )}
 
       {/* Description */}
       {isEditingInline ? (
@@ -81,10 +84,10 @@ export function ProjectMetaSection({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Add a brief description..."
-          className="document-textarea"
+          className="document-textarea text-[14px] sm:text-[15px]"
         />
       ) : (
-        <p className="text-[14px] text-theme-primary/80 leading-relaxed">
+        <p className="text-[14px] sm:text-[15px] text-theme-secondary leading-relaxed max-w-2xl">
           {project.description || "Project overview and key objectives."}
         </p>
       )}
@@ -98,22 +101,22 @@ export function ProjectMetaSection({
             value={targetGoal}
             onChange={(e) => setTargetGoal(e.target.value)}
             placeholder="What are you trying to achieve?"
-            className="document-textarea flex-1"
+            className="document-textarea flex-1 text-[14px] sm:text-[15px]"
           />
         </div>
       ) : (
         targetGoal && (
           <div className="flex items-start gap-3 pt-0.5">
             <Target className="w-4 h-4 text-theme-tertiary shrink-0 mt-0.5" />
-            <p className="text-[14px] text-theme-primary/80 leading-relaxed">
+            <p className="text-[14px] sm:text-[15px] text-theme-secondary leading-relaxed max-w-2xl">
               {targetGoal}
             </p>
           </div>
         )
       )}
 
-      {/* Metadata Row: Target Date & Created Date */}
-      <div className="flex items-center gap-6 text-[13px] flex-wrap">
+      {/* Small Metadata Labels: Target Date & Created Date (High legibility typography) */}
+      <div className="flex items-center gap-6 text-[13px] flex-wrap pt-0.5">
         {isEditingInline ? (
           <div className="flex items-center gap-2 text-theme-secondary w-60">
             <DatePickerPopover
@@ -123,14 +126,14 @@ export function ProjectMetaSection({
             />
           </div>
         ) : (
-          <div className="flex items-center gap-1.5 text-theme-secondary font-mono">
+          <div className="flex items-center gap-1.5 text-theme-tertiary text-[12.5px] font-mono">
             <Calendar className="w-3.5 h-3.5 text-theme-tertiary shrink-0" />
             <span>Target: {targetDate ? formatDateShort(targetDate) : "Not set"}</span>
           </div>
         )}
 
         {project.created_at && (
-          <div className="flex items-center gap-1.5 text-theme-secondary font-mono">
+          <div className="flex items-center gap-1.5 text-theme-tertiary text-[12.5px] font-mono">
             <Clock className="w-3.5 h-3.5 text-theme-tertiary shrink-0" />
             <span>Created {formatDateShort(project.created_at)}</span>
           </div>
@@ -140,7 +143,7 @@ export function ProjectMetaSection({
       {/* Status Selector (edit mode only) */}
       {isEditingInline && (
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-medium text-theme-secondary uppercase tracking-wider">Status</span>
+          <span className="text-[12px] font-medium text-theme-tertiary">Status</span>
           <Select value={status} onValueChange={setStatus}>
             <SelectTrigger className="w-[130px] h-8 text-[13px] bg-surface-l3 border border-theme-subtle">
               <SelectValue placeholder="Status" />

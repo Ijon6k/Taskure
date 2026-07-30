@@ -172,83 +172,83 @@ function KanbanColumnInner({
         ...style,
         borderColor: showOver ? "var(--brand-accent)" : "transparent",
       }}
-      className={`relative w-full md:w-80 md:min-w-80 shrink-0 flex flex-col max-h-full rounded-md bg-surface-l2 overflow-hidden group/col ${
+      className={`relative w-full md:w-80 md:min-w-80 shrink-0 flex flex-col max-h-full overflow-y-auto rounded-md bg-surface-l2 group/col ${
         showOver ? "ring-2 ring-brand-accent/20 bg-surface-hover" : ""
       }`}
     >
-      {/* Top border accent — clipped by outer column overflow-hidden */}
-      <div
-        className={`absolute top-0 left-0 right-0 h-[3px] transition-opacity duration-200 ${
-          isDragging || isOver ? "" : "opacity-60 md:opacity-40 group-hover/col:opacity-90"
-        }`}
-        style={{
-          backgroundColor: columnColor,
-          opacity: isDragging ? 0.9 : isOver ? 0.8 : undefined,
-        }}
-      />
+      {/* Sticky Column Header Container - Flush top-0 with solid background */}
+      <div className="sticky top-0 z-30 bg-surface-l2 shrink-0 border-b border-theme-subtle rounded-t-md">
+        {/* Top border accent */}
+        <div
+          className={`h-[3px] w-full rounded-t-md transition-opacity duration-200 ${
+            isDragging || isOver ? "" : "opacity-60 md:opacity-40 group-hover/col:opacity-90"
+          }`}
+          style={{
+            backgroundColor: columnColor,
+            opacity: isDragging ? 0.9 : isOver ? 0.8 : undefined,
+          }}
+        />
 
-      {/* Column Header */}
-      <div className="h-11 md:h-10 flex items-center justify-between px-3.5 pt-2.5 pb-0">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <button
-            {...attributes}
-            {...listeners}
-            className="w-7 h-7 md:w-5 md:h-5 rounded-[6px] flex items-center justify-center text-theme-tertiary opacity-100 md:opacity-0 md:group-hover/col:opacity-100 hover:text-theme-primary hover:bg-theme-elevated cursor-grab active:cursor-grabbing transition-all duration-200 touch-none shrink-0"
-            tabIndex={0}
-            aria-label="Drag to reorder column"
-          >
-            <GripVertical className="w-4 h-4" />
-          </button>
-          <span
-            className="w-2.5 h-2.5 rounded-full shrink-0"
-            style={{ backgroundColor: columnColor }}
-          />
-          {isRenaming ? (
-            <input
-              ref={renameInputRef}
-              value={renameValue}
-              onChange={(e) => setRenameValue(e.target.value)}
-              onBlur={handleRenameSubmit}
-              onKeyDown={handleRenameKeyDown}
-              maxLength={50}
-              className="w-full max-w-[140px] bg-theme-elevated border border-brand-accent rounded-[6px] px-2 py-0.5 text-base font-medium text-theme-primary outline-none"
+        {/* Column Header */}
+        <div className="h-11 md:h-10 flex items-center justify-between px-3.5 py-2 bg-surface-l2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <button
+              {...attributes}
+              {...listeners}
+              className="w-7 h-7 md:w-5 md:h-5 rounded-[6px] flex items-center justify-center text-theme-tertiary opacity-100 md:opacity-0 md:group-hover/col:opacity-100 hover:text-theme-primary hover:bg-theme-elevated cursor-grab active:cursor-grabbing transition-all duration-200 touch-none shrink-0"
+              tabIndex={0}
+              aria-label="Drag to reorder column"
+            >
+              <GripVertical className="w-4 h-4" />
+            </button>
+            <span
+              className="w-2.5 h-2.5 rounded-full shrink-0"
+              style={{ backgroundColor: columnColor }}
             />
-          ) : (
-            <h3 className="text-base font-medium text-theme-primary truncate">{column.name}</h3>
-          )}
-          {column.behavior === "completed" && (
-            <CheckCircle2
-              className="w-4 h-4 text-emerald-400 shrink-0"
-              aria-label="Completed column"
-            />
-          )}
-          <span className="px-2 py-0.5 bg-theme-elevated text-theme-secondary font-mono text-[11px] rounded-full border border-theme-subtle shrink-0 leading-none">
-            {filteredTasks.length}
-          </span>
-        </div>
+            {isRenaming ? (
+              <input
+                ref={renameInputRef}
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                onBlur={handleRenameSubmit}
+                onKeyDown={handleRenameKeyDown}
+                maxLength={50}
+                className="w-full max-w-[140px] bg-theme-elevated border border-brand-accent rounded-[6px] px-2 py-0.5 text-base font-medium text-theme-primary outline-none"
+              />
+            ) : (
+              <h3 className="text-base font-medium text-theme-primary truncate">{column.name}</h3>
+            )}
+            {column.behavior === "completed" && (
+              <CheckCircle2
+                className="w-4 h-4 text-emerald-400 shrink-0"
+                aria-label="Completed column"
+              />
+            )}
+            <span className="px-2 py-0.5 bg-theme-elevated text-theme-secondary font-mono text-[11px] rounded-full border border-theme-subtle shrink-0 leading-none">
+              {filteredTasks.length}
+            </span>
+          </div>
 
-        <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover/col:opacity-100 transition-all duration-200 shrink-0">
-          <ColumnContextMenu
-            columnId={column.id}
-            columnName={column.name}
-            columnColor={columnColor}
-            columnBehavior={column.behavior || "active"}
-            projectId={projectId}
-            onRefreshProject={onRefreshProject}
-            onRenameTrigger={handleRenameStart}
-            canMoveLeft={columnIndex > 0}
-            canMoveRight={columnIndex < totalColumns - 1}
-            onMoveLeft={() => onMoveColumn?.("left")}
-            onMoveRight={() => onMoveColumn?.("right")}
-          />
+          <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover/col:opacity-100 transition-all duration-200 shrink-0">
+            <ColumnContextMenu
+              columnId={column.id}
+              columnName={column.name}
+              columnColor={columnColor}
+              columnBehavior={column.behavior || "active"}
+              projectId={projectId}
+              onRefreshProject={onRefreshProject}
+              onRenameTrigger={handleRenameStart}
+              canMoveLeft={columnIndex > 0}
+              canMoveRight={columnIndex < totalColumns - 1}
+              onMoveLeft={() => onMoveColumn?.("left")}
+              onMoveRight={() => onMoveColumn?.("right")}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="mx-3 mt-2.5 mb-2.5 h-px bg-theme-subtle" />
-
       {/* Task Stack Container */}
-      <div className="flex-1 overflow-y-auto space-y-2.5 px-3.5 pb-3.5 min-h-[100px]">
+      <div className="space-y-2.5 p-3.5 min-h-[100px] rounded-b-md">
         {/* Add Task Button / Form at the VERY TOP of the Task List */}
         {isAdding ? (
           <div className="p-3 bg-theme-elevated border border-accent rounded-md space-y-2.5 shadow-md animate-in fade-in duration-100">

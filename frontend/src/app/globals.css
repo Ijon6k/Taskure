@@ -704,12 +704,12 @@
    Consistent lightweight section headers across the app.
    ============================================================ */
 .section-title {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 12px;
+  color: var(--text-primary);
+  text-transform: none;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
 }
 
 /* ============================================================

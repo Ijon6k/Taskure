@@ -29,6 +29,18 @@ export const projectsService = {
     });
   },
 
+  uploadResource: (id: string, file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return fetcher<ProjectData>(`/projects/${id}/resources/upload`, {
+      method: "POST",
+      data: formData,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
+
   deleteProject: (id: string) => {
     return fetcher<{ message: string }>(`/projects/${id}`, {
       method: "DELETE",

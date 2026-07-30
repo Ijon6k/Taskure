@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CardHeader } from "@/components/ui/card";
+import { ChevronDown } from "lucide-react";
 
 export interface ColumnStatItem {
   id: string;
@@ -14,6 +14,7 @@ interface ColumnDistributionBarProps {
   columnStats: ColumnStatItem[];
   totalTasks: number;
   className?: string;
+  initialCollapsed?: boolean;
 }
 
 const DEFAULT_COLORS = [
@@ -84,8 +85,10 @@ export function ColumnDistributionBar({
   columnStats = [],
   totalTasks = 0,
   className = "",
+  initialCollapsed = false,
 }: ColumnDistributionBarProps) {
   const [hoveredColId, setHoveredColId] = useState<string | null>(null);
+  const [isCollapsed, setIsCollapsed] = useState(initialCollapsed);
 
   // Normalize column stats with exact percentages
   const validStats: FormattedColumnStat[] = columnStats.map((col, idx) => {
@@ -102,16 +105,32 @@ export function ColumnDistributionBar({
   });
 
   return (
-    <div className={`space-y-4 py-1 ${className}`}>
-      {/* Section Header matching overall app design system */}
+    <div className={`space-y-3.5 py-1 ${className}`}>
+      {/* Section Header with Minimalist Collapse Toggle */}
       <div className="flex items-center justify-between">
-        <CardHeader>Progress</CardHeader>
-        <span className="font-mono text-theme-secondary text-[13px] font-medium">
+        <div className="flex items-center gap-1.5">
+          <h3 className="section-title !mb-0">Progress</h3>
+          <button
+            type="button"
+            onClick={() => setIsCollapsed((prev) => !prev)}
+            className="p-1 rounded-md text-theme-tertiary hover:text-theme-primary hover:bg-theme-elevated transition-all cursor-pointer"
+            title={isCollapsed ? "Expand details" : "Collapse details"}
+            aria-label={isCollapsed ? "Expand progress distribution" : "Collapse progress distribution"}
+          >
+            <ChevronDown
+              className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                isCollapsed ? "-rotate-90 text-theme-tertiary" : "rotate-0 text-theme-secondary"
+              }`}
+            />
+          </button>
+        </div>
+
+        <span className="font-mono text-theme-tertiary text-[12px]">
           {totalTasks} {totalTasks === 1 ? "task" : "tasks"}
         </span>
       </div>
 
-      {/* 100% Full-Width Square Rectangular Bar - Height Increased for Prominence */}
+      {/* 100% Full-Width Square Rectangular Bar - Prominent Height */}
       <div className="w-full h-3.5 rounded-none bg-white/[0.06] overflow-hidden flex items-center gap-[2px]">
         {totalTasks === 0 ? (
           <div className="w-full h-full bg-white/[0.06]" />
@@ -143,19 +162,21 @@ export function ColumnDistributionBar({
         )}
       </div>
 
-      {/* Borderless Column Breakdown Rows with Clear Typography */}
-      <div className="pt-0.5 space-y-1">
-        {validStats.map((col) => (
-          <ColumnDistributionRow
-            key={col.id}
-            col={col}
-            isHovered={hoveredColId === col.id}
-            isDimmed={hoveredColId !== null && hoveredColId !== col.id}
-            onHover={setHoveredColId}
-            onLeave={() => setHoveredColId(null)}
-          />
-        ))}
-      </div>
+      {/* Borderless Column Breakdown Rows - Collapsible */}
+      {!isCollapsed && (
+        <div className="pt-0.5 space-y-1 animate-in fade-in duration-150">
+          {validStats.map((col) => (
+            <ColumnDistributionRow
+              key={col.id}
+              col={col}
+              isHovered={hoveredColId === col.id}
+              isDimmed={hoveredColId !== null && hoveredColId !== col.id}
+              onHover={setHoveredColId}
+              onLeave={() => setHoveredColId(null)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

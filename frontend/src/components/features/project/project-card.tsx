@@ -37,6 +37,10 @@ export const ProjectCard = memo(function ProjectCard({
   const handleTogglePin = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (project.status === "completed" || project.status === "archived" || project.is_archived) {
+      toast.info("Completed or archived projects cannot be pinned.");
+      return;
+    }
     const newPinnedState = !project.is_pinned;
     updateProjectMutation.mutate(
       { id: project.id, data: { is_pinned: newPinnedState } },
@@ -124,85 +128,97 @@ export const ProjectCard = memo(function ProjectCard({
   return (
     <Link
       href={getProjectNavUrl(project.id)}
-      className={`group/card block p-5 bg-surface-l2 rounded-xl hover:bg-surface-hover/80 transition-all duration-150 relative ${className}`}
+      className={`group/card flex flex-col justify-between h-[175px] p-5 bg-surface-l2 rounded-xl hover:bg-surface-hover/80 transition-all duration-150 relative ${className}`}
     >
-      {/* Header: Color Dot + Title + Theme Accent Pinned Toggle + 3-dots Menu */}
-      <div className="flex items-start justify-between gap-3 mb-2.5">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <span
-            className="w-2.5 h-2.5 rounded-full shrink-0 mt-0.5"
-            style={{ backgroundColor: projectColor }}
-          />
-          <h3 className="text-[17px] font-semibold text-theme-primary transition-colors truncate">
-            {project.name}
-          </h3>
+      <div>
+        {/* Header: Color Dot + Title + Theme Accent Pinned Toggle + 3-dots Menu */}
+        <div className="flex items-center justify-between gap-3 mb-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span
+              className="w-2.5 h-2.5 rounded-full shrink-0"
+              style={{ backgroundColor: projectColor }}
+            />
+            <h3 className="text-[17px] font-semibold text-theme-primary transition-colors truncate">
+              {project.name}
+            </h3>
+          </div>
+
+          <div className="flex items-center gap-0.5 shrink-0 -mr-1">
+            {/* Pinned Toggle Button (Theme Accent Color) */}
+            <button
+              type="button"
+              onClick={handleTogglePin}
+              disabled={updateProjectMutation.isPending}
+              className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                project.is_pinned
+                  ? "text-brand-accent opacity-100 hover:bg-surface-l3/80"
+                  : "text-theme-tertiary hover:text-brand-accent hover:bg-surface-l3/80 opacity-0 group-hover/card:opacity-100"
+              }`}
+              title={project.is_pinned ? "Unpin project" : "Pin to top"}
+            >
+              <Pin
+                className={`w-3.5 h-3.5 rotate-45 transition-transform ${
+                  project.is_pinned ? "fill-brand-accent" : ""
+                }`}
+              />
+            </button>
+
+            {/* 3 Dots Menu Trigger for Project Settings */}
+            <button
+              type="button"
+              onClick={handleOpenSettings}
+              className="p-1.5 rounded-md text-theme-tertiary hover:text-theme-primary hover:bg-surface-l3/80 opacity-0 group-hover/card:opacity-100 transition-all cursor-pointer"
+              title="Project settings"
+            >
+              <MoreVertical className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-0.5 shrink-0 -mr-1">
-          {/* Pinned Toggle Button (Theme Accent Color) */}
-          <button
-            type="button"
-            onClick={handleTogglePin}
-            disabled={updateProjectMutation.isPending}
-            className={`p-1.5 rounded-md transition-all cursor-pointer ${
-              project.is_pinned
-                ? "text-brand-accent opacity-100 hover:bg-surface-l3/80"
-                : "text-theme-tertiary hover:text-brand-accent hover:bg-surface-l3/80 opacity-0 group-hover/card:opacity-100"
-            }`}
-            title={project.is_pinned ? "Unpin project" : "Pin to top"}
-          >
-            <Pin
-              className={`w-3.5 h-3.5 rotate-45 transition-transform ${
-                project.is_pinned ? "fill-brand-accent" : ""
-              }`}
-            />
-          </button>
-
-          {/* 3 Dots Menu Trigger for Project Settings */}
-          <button
-            type="button"
-            onClick={handleOpenSettings}
-            className="p-1.5 rounded-md text-theme-tertiary hover:text-theme-primary hover:bg-surface-l3/80 opacity-0 group-hover/card:opacity-100 transition-all cursor-pointer"
-            title="Project settings"
-          >
-            <MoreVertical className="w-4 h-4" />
-          </button>
+        {/* Fixed Height Description Area with Ellipsis */}
+        <div className="h-10 mb-3 overflow-hidden">
+          {project.description ? (
+            <p className="text-[13px] text-theme-secondary leading-snug line-clamp-2">
+              {project.description}
+            </p>
+          ) : (
+            <p className="text-[13px] text-theme-tertiary italic leading-snug">
+              No description provided
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Description */}
-      {project.description && (
-        <p className="text-[13px] text-theme-secondary leading-relaxed line-clamp-2 mb-3.5">
-          {project.description}
-        </p>
-      )}
-
-      {/* Thin segmented distribution bar */}
-      {totalTasks > 0 && (
-        <div className="w-full h-[3px] bg-surface-l1 rounded-full overflow-hidden flex gap-px mb-3.5">
-          {columnsWithCounts.map((col) => {
-            if (col.count === 0) return null;
-            const widthPct = (col.count / totalTasks) * 100;
-            return (
-              <div
-                key={col.id}
-                className="h-full"
-                style={{
-                  width: `${widthPct}%`,
-                  backgroundColor: col.color || projectColor,
-                  opacity: 0.7,
-                }}
-                title={`${col.name}: ${col.count}`}
-              />
-            );
-          })}
+      <div>
+        {/* Fixed Progress / Distribution Bar */}
+        <div className="w-full h-[3px] bg-surface-l1/50 rounded-full overflow-hidden flex gap-px mb-3">
+          {totalTasks > 0 ? (
+            columnsWithCounts.map((col) => {
+              if (col.count === 0) return null;
+              const widthPct = (col.count / totalTasks) * 100;
+              return (
+                <div
+                  key={col.id}
+                  className="h-full"
+                  style={{
+                    width: `${widthPct}%`,
+                    backgroundColor: col.color || projectColor,
+                    opacity: 0.8,
+                  }}
+                  title={`${col.name}: ${col.count}`}
+                />
+              );
+            })
+          ) : (
+            <div className="w-full h-full bg-surface-l1/30" />
+          )}
         </div>
-      )}
 
-      {/* Footer: task count + last updated */}
-      <div className="flex items-center justify-between text-[12px] text-theme-tertiary pt-0.5">
-        <span>{totalTasks} {totalTasks === 1 ? "task" : "tasks"}</span>
-        {lastUpdated && <span>{lastUpdated}</span>}
+        {/* Footer: task count + last updated */}
+        <div className="flex items-center justify-between text-[12px] text-theme-tertiary pt-0.5">
+          <span>{totalTasks} {totalTasks === 1 ? "task" : "tasks"}</span>
+          {lastUpdated && <span>{lastUpdated}</span>}
+        </div>
       </div>
     </Link>
   );

@@ -17,7 +17,7 @@ import { ProjectResourcesSection } from "./overview/project-resources-section";
 interface ProjectOverviewTabProps {
   project: ProjectData | null;
   onRefreshProject?: () => void;
-  onSwitchTab?: (tab: "board") => void;
+  onSwitchTab?: (tab: "board" | "resources") => void;
 }
 
 export function ProjectOverviewTab({
@@ -143,14 +143,12 @@ export function ProjectOverviewTab({
 
   return (
     <div className="flex-1 overflow-y-auto text-theme-primary font-sans flex flex-col items-center">
-      <PageContainer variant="default" className="!space-y-10">
+      <PageContainer variant="wide" className="!space-y-8">
         {/* Header & Edit Action Toggle */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <h2 className="text-[11px] font-medium text-theme-secondary uppercase tracking-[0.06em]">
-              Overview
-            </h2>
-          </div>
+          <span className="text-[13px] font-medium text-theme-tertiary">
+            Project Overview
+          </span>
 
           {isEditingInline ? (
             <div className="flex items-center gap-2">
@@ -184,7 +182,7 @@ export function ProjectOverviewTab({
           )}
         </div>
 
-        {/* Project Meta Section (document-style) */}
+        {/* 1. Project Title & Meta Section */}
         <ProjectMetaSection
           project={project}
           isEditingInline={isEditingInline}
@@ -203,26 +201,21 @@ export function ProjectOverviewTab({
           parsedTagsList={parsedTagsList}
         />
 
-        {/* Task Distribution Bar */}
         <hr className="section-divider" />
-        <ColumnDistributionBar
-          columnStats={stats.columnStats}
-          totalTasks={stats.allTasks.length}
-        />
 
-        {/* Today's Focus */}
-        <div className="space-y-2">
-          <p className="section-title">Today&apos;s focus</p>
+        {/* 2. Today's Focus — Primary Active Visual Anchor */}
+        <div className="space-y-1.5">
+          <h2 className="section-title">Today&apos;s Focus</h2>
           <div
             onClick={() => focusTask && setSelectedTaskId(focusTask.id)}
-            className="interactive-row px-3 py-2 flex items-center justify-between cursor-pointer"
+            className="interactive-row px-3.5 py-2.5 flex items-center justify-between cursor-pointer"
           >
             {focusTask ? (
               <>
-                <span className="text-[14px] font-medium text-theme-primary truncate pr-3">
+                <span className="text-[15px] font-medium text-theme-primary truncate pr-3 tracking-tight">
                   {focusTask.title}
                 </span>
-                <PriorityBadge priority={focusTask.priority} />
+                <PriorityBadge priority={focusTask.priority} showDot />
               </>
             ) : (
               <span className="text-[13px] text-theme-tertiary">
@@ -234,23 +227,31 @@ export function ProjectOverviewTab({
 
         <hr className="section-divider" />
 
-        {/* Upcoming Deadlines & Recently Completed */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
-          <div className="space-y-2">
-            <p className="section-title">Upcoming deadlines</p>
+        {/* 3. Progress Distribution Bar */}
+        <ColumnDistributionBar
+          columnStats={stats.columnStats}
+          totalTasks={stats.allTasks.length}
+        />
+
+        <hr className="section-divider" />
+
+        {/* 4. Upcoming Deadlines & Recently Completed */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+          <div className="space-y-1.5">
+            <h3 className="section-title">Upcoming Deadlines</h3>
             {upcomingTasks.length === 0 ? (
-              <p className="text-[13px] text-theme-tertiary py-1">
+              <p className="text-[13px] text-theme-tertiary py-0.5">
                 No upcoming deadlines set.
               </p>
             ) : (
-              <div>
+              <div className="space-y-0.5">
                 {upcomingTasks.map((item: TaskData) => (
                   <div
                     key={item.id}
                     onClick={() => setSelectedTaskId(item.id)}
                     className="subtle-row"
                   >
-                    <span className="text-theme-primary/80 font-medium truncate flex-1">
+                    <span className="text-[14px] font-medium text-theme-primary truncate flex-1">
                       {item.title}
                     </span>
                     <DueDateText dateStr={item.due_date} />
@@ -260,14 +261,14 @@ export function ProjectOverviewTab({
             )}
           </div>
 
-          <div className="space-y-2">
-            <p className="section-title">Recently completed</p>
+          <div className="space-y-1.5">
+            <h3 className="section-title">Recently Completed</h3>
             {completedTasks.length === 0 ? (
-              <p className="text-[13px] text-theme-tertiary py-1">
+              <p className="text-[13px] text-theme-tertiary py-0.5">
                 No completed tasks yet.
               </p>
             ) : (
-              <div>
+              <div className="space-y-0.5">
                 {completedTasks.map((item: TaskData) => (
                   <div
                     key={item.id}
@@ -275,7 +276,7 @@ export function ProjectOverviewTab({
                     className="subtle-row"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5 text-semantic-success shrink-0" />
-                    <span className="text-theme-secondary font-normal truncate">
+                    <span className="text-[14px] font-normal text-theme-secondary truncate">
                       {item.title}
                     </span>
                   </div>
@@ -287,12 +288,12 @@ export function ProjectOverviewTab({
 
         <hr className="section-divider" />
 
-        {/* Resources & Links */}
-        <div className="space-y-2">
-          <p className="section-title">Resources &amp; Links</p>
+        {/* 5. Resources & Links */}
+        <div className="space-y-1.5">
           <ProjectResourcesSection
+            projectId={project.id}
             isEditingInline={isEditingInline}
-            resources={resources}
+            resources={isEditingInline ? resources : (settings.resources ?? [])}
             newResTitle={newResTitle}
             setNewResTitle={setNewResTitle}
             newResUrl={newResUrl}
@@ -301,19 +302,21 @@ export function ProjectOverviewTab({
             handleRemoveResource={handleRemoveResource}
             strategyNotes={strategyNotes}
             setStrategyNotes={setStrategyNotes}
+            onOpenResourcesTab={() => onSwitchTab && onSwitchTab("resources")}
+            onAddPhotoResource={(newItems) => setResources([...newItems, ...resources])}
           />
         </div>
 
         <hr className="section-divider" />
 
-        {/* Quick Actions */}
-        <div className="space-y-2">
-          <p className="section-title">Quick actions</p>
-          <div className="flex gap-3">
+        {/* 6. Quick Actions */}
+        <div className="space-y-1.5">
+          <h3 className="section-title">Quick Actions</h3>
+          <div className="flex gap-2.5 flex-wrap">
             <button
               type="button"
               onClick={() => onSwitchTab && onSwitchTab("board")}
-              className="interactive-row px-3 py-2 text-[13px] text-theme-secondary hover:text-theme-primary flex items-center gap-2 font-medium transition-colors cursor-pointer"
+              className="interactive-row px-3 py-1.5 text-[13px] text-theme-secondary hover:text-theme-primary flex items-center gap-2 font-medium transition-colors cursor-pointer"
             >
               <LayoutGrid className="w-3.5 h-3.5" />
               <span>Open board</span>
@@ -322,7 +325,7 @@ export function ProjectOverviewTab({
             <button
               type="button"
               onClick={() => onSwitchTab && onSwitchTab("board")}
-              className="interactive-row px-3 py-2 text-[13px] text-theme-secondary hover:text-theme-primary flex items-center gap-2 font-medium transition-colors cursor-pointer"
+              className="interactive-row px-3 py-1.5 text-[13px] text-theme-secondary hover:text-theme-primary flex items-center gap-2 font-medium transition-colors cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add task</span>
@@ -331,7 +334,7 @@ export function ProjectOverviewTab({
             <button
               type="button"
               onClick={handleStartEdit}
-              className="interactive-row px-3 py-2 text-[13px] text-theme-secondary hover:text-theme-primary flex items-center gap-2 font-medium transition-colors cursor-pointer"
+              className="interactive-row px-3 py-1.5 text-[13px] text-theme-secondary hover:text-theme-primary flex items-center gap-2 font-medium transition-colors cursor-pointer"
             >
               <Edit3 className="w-3.5 h-3.5" />
               <span>Edit details</span>

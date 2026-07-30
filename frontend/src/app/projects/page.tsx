@@ -53,8 +53,12 @@ export default function ProjectsPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const pinnedProjects = filteredProjects.filter((p) => p.is_pinned);
-  const unpinnedProjects = filteredProjects.filter((p) => !p.is_pinned);
+  const pinnedProjects = filteredProjects.filter(
+    (p) => p.is_pinned && p.status !== "completed" && p.status !== "archived" && !p.is_archived
+  );
+  const unpinnedProjects = filteredProjects.filter(
+    (p) => !p.is_pinned || p.status === "completed" || p.status === "archived" || p.is_archived
+  );
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-surface-l0 text-theme-primary font-sans select-none overflow-hidden">

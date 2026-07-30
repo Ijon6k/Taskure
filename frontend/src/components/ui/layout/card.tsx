@@ -20,7 +20,7 @@ export function Card({ children, className = "", ...props }: CardProps) {
 
 export function CardHeader({ children, className = "", ...props }: CardProps) {
   return (
-    <div className={`text-[11px] font-medium text-theme-secondary uppercase tracking-[0.06em] ${className}`} {...props}>
+    <div className={`text-[15px] font-semibold text-theme-primary normal-case tracking-tight ${className}`} {...props}>
       {children}
     </div>
   );

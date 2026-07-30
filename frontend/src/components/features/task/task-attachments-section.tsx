@@ -198,10 +198,10 @@ export function TaskAttachmentsSection({
         />
         <div className="flex items-center justify-center gap-2 text-theme-secondary group-hover:text-brand-accent transition-colors">
           <Upload className="w-4 h-4" />
-          <span className="text-[13px] font-medium">Click to upload files or drop here</span>
+          <span className="text-[13px] font-medium">Click to upload files, drop, or paste (Ctrl+V)</span>
         </div>
         <p className="text-[11px] text-theme-tertiary">
-          Supports images (PNG, JPG, WebP), PDFs, docs, and files up to 25MB
+          Supports clipboard image paste (Ctrl+V), PNG, JPG, WebP, PDFs, docs up to 25MB
         </p>
       </div>
 
