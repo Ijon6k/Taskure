@@ -17,14 +17,19 @@ func TestCalculateDeadlineScore(t *testing.T) {
 		expectedScore float64
 	}{
 		{
+			name:          "Overdue 12 days (capped)",
+			dueDate:       timePtr(now.AddDate(0, 0, -12)),
+			expectedScore: 50.0,
+		},
+		{
 			name:          "Overdue 2 days",
 			dueDate:       timePtr(now.AddDate(0, 0, -2)),
-			expectedScore: 40.0,
+			expectedScore: 42.0,
 		},
 		{
 			name:          "Overdue 1 day",
 			dueDate:       timePtr(now.AddDate(0, 0, -1)),
-			expectedScore: 40.0,
+			expectedScore: 41.0,
 		},
 		{
 			name:          "Due Today",
@@ -65,11 +70,27 @@ func TestCalculateDeadlineScore(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			score := CalculateDeadlineScore(tt.dueDate, now)
+			score := CalculateDeadlineScore(tt.dueDate, now, time.UTC)
 			if score != tt.expectedScore {
 				t.Errorf("expected score %.1f, got %.1f", tt.expectedScore, score)
 			}
 		})
+	}
+}
+
+func TestCalculateDeadlineScoreRespectsClientTimezone(t *testing.T) {
+	// Same scenario as the reported bug: a UTC+7 client stores "tomorrow"
+	// (Aug 1) as Jul 31 17:00Z. In the client zone that is one day out, so the
+	// score must be the "due tomorrow" bucket (35), not "due today" (38).
+	loc := time.FixedZone("client", 7*60*60)
+	now := time.Date(2026, 7, 31, 12, 0, 0, 0, time.UTC)
+	due := time.Date(2026, 7, 31, 17, 0, 0, 0, time.UTC)
+
+	if score := CalculateDeadlineScore(&due, now, loc); score != 35.0 {
+		t.Errorf("expected score 35.0 in client tz, got %.1f", score)
+	}
+	if score := CalculateDeadlineScore(&due, now, time.UTC); score != 38.0 {
+		t.Errorf("expected score 38.0 in UTC, got %.1f", score)
 	}
 }
 
@@ -97,6 +118,58 @@ func TestCalculatePriorityScore(t *testing.T) {
 	}
 }
 
+func TestCalculateRecencyScore(t *testing.T) {
+	now := time.Date(2026, 7, 25, 12, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name          string
+		updatedAt     time.Time
+		expectedScore float64
+	}{
+		{name: "Zero UpdatedAt stays neutral", updatedAt: time.Time{}, expectedScore: 0.0},
+		{name: "Touched today", updatedAt: now.Add(-2 * time.Hour), expectedScore: 0.0},
+		{name: "Touched 2 days ago", updatedAt: now.Add(-2 * 24 * time.Hour), expectedScore: 0.0},
+		{name: "Touched 3 days ago", updatedAt: now.Add(-3 * 24 * time.Hour), expectedScore: 5.0},
+		{name: "Touched 6 days ago", updatedAt: now.Add(-6 * 24 * time.Hour), expectedScore: 5.0},
+		{name: "Touched 7 days ago", updatedAt: now.Add(-7 * 24 * time.Hour), expectedScore: 10.0},
+		{name: "Touched 30 days ago", updatedAt: now.Add(-30 * 24 * time.Hour), expectedScore: 10.0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			score := CalculateRecencyScore(tt.updatedAt, now)
+			if score != tt.expectedScore {
+				t.Errorf("expected score %.1f, got %.1f", tt.expectedScore, score)
+			}
+		})
+	}
+}
+
+func TestCalculateChecklistScore(t *testing.T) {
+	tests := []struct {
+		name          string
+		checklist     []models.ChecklistItem
+		expectedScore float64
+	}{
+		{name: "No checklist", checklist: nil, expectedScore: 0.0},
+		{name: "All completed", checklist: []models.ChecklistItem{
+			{IsCompleted: true}, {IsCompleted: true},
+		}, expectedScore: 0.0},
+		{name: "One uncompleted", checklist: []models.ChecklistItem{
+			{IsCompleted: true}, {IsCompleted: false},
+		}, expectedScore: 5.0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			score := CalculateChecklistScore(tt.checklist)
+			if score != tt.expectedScore {
+				t.Errorf("expected score %.1f, got %.1f", tt.expectedScore, score)
+			}
+		})
+	}
+}
+
 func TestEvaluate_EmptyAndSingleTask(t *testing.T) {
 	now := time.Now()
 	projectMap := map[string]models.Project{
@@ -104,7 +177,7 @@ func TestEvaluate_EmptyAndSingleTask(t *testing.T) {
 	}
 
 	// 1. Empty tasks
-	resEmpty := Evaluate([]models.Task{}, projectMap, now)
+	resEmpty := Evaluate([]models.Task{}, projectMap, now, time.UTC)
 	if resEmpty.Hero != nil {
 		t.Errorf("expected Hero to be nil for empty tasks")
 	}
@@ -120,7 +193,7 @@ func TestEvaluate_EmptyAndSingleTask(t *testing.T) {
 		Priority:   "high",
 		Status:     "todo",
 	}
-	resSingle := Evaluate([]models.Task{task}, projectMap, now)
+	resSingle := Evaluate([]models.Task{task}, projectMap, now, time.UTC)
 	if resSingle.Hero == nil {
 		t.Fatalf("expected Hero to be present")
 	}
@@ -147,8 +220,8 @@ func TestEvaluate_DeterministicSorting(t *testing.T) {
 	// Tie breaker should rely on UpdatedAt ASC -> CreatedAt ASC -> TaskID ASC
 	t1 := models.Task{
 		PublicBase: models.PublicBase{
-			PublicID:  "tsk-3",
-			Base:      models.Base{UpdatedAt: now.Add(-1 * time.Hour), CreatedAt: now.Add(-10 * time.Hour)},
+			PublicID: "tsk-3",
+			Base:     models.Base{UpdatedAt: now.Add(-1 * time.Hour), CreatedAt: now.Add(-10 * time.Hour)},
 		},
 		ProjectID: "prj-1",
 		Title:     "Task C (Recently Updated)",
@@ -156,8 +229,8 @@ func TestEvaluate_DeterministicSorting(t *testing.T) {
 	}
 	t2 := models.Task{
 		PublicBase: models.PublicBase{
-			PublicID:  "tsk-1",
-			Base:      models.Base{UpdatedAt: now.Add(-5 * time.Hour), CreatedAt: now.Add(-10 * time.Hour)},
+			PublicID: "tsk-1",
+			Base:     models.Base{UpdatedAt: now.Add(-5 * time.Hour), CreatedAt: now.Add(-10 * time.Hour)},
 		},
 		ProjectID: "prj-2",
 		Title:     "Task A (Older Updated)",
@@ -165,15 +238,15 @@ func TestEvaluate_DeterministicSorting(t *testing.T) {
 	}
 	t3 := models.Task{
 		PublicBase: models.PublicBase{
-			PublicID:  "tsk-2",
-			Base:      models.Base{UpdatedAt: now.Add(-1 * time.Hour), CreatedAt: now.Add(-10 * time.Hour)},
+			PublicID: "tsk-2",
+			Base:     models.Base{UpdatedAt: now.Add(-1 * time.Hour), CreatedAt: now.Add(-10 * time.Hour)},
 		},
 		ProjectID: "prj-3",
 		Title:     "Task B (Urgent Priority - Higher Score)",
 		Priority:  "urgent",
 	}
 
-	res := Evaluate([]models.Task{t1, t2, t3}, projectMap, now)
+	res := Evaluate([]models.Task{t1, t2, t3}, projectMap, now, time.UTC)
 
 	// t3 has Urgent priority (score 30), so t3 MUST be Hero (#1)
 	if res.Hero == nil {
@@ -211,7 +284,7 @@ func TestEvaluate_DiversityFiltering(t *testing.T) {
 		{PublicBase: models.PublicBase{PublicID: "tsk-5"}, ProjectID: "prj-3", Priority: "medium", Title: "Study Task 1"},
 	}
 
-	res := Evaluate(tasks, projectMap, now)
+	res := Evaluate(tasks, projectMap, now, time.UTC)
 
 	// Hero should be tsk-1 (AI Service)
 	if res.Hero == nil {
@@ -258,7 +331,7 @@ func TestEvaluate_MaxThreeRecommendations(t *testing.T) {
 		})
 	}
 
-	res := Evaluate(tasks, projectMap, now)
+	res := Evaluate(tasks, projectMap, now, time.UTC)
 
 	// Hero = 1 task
 	if res.Hero == nil {
@@ -330,7 +403,7 @@ func TestEvaluate_ColumnBehavior(t *testing.T) {
 		},
 	}
 
-	res := Evaluate(tasks, projectMap, now)
+	res := Evaluate(tasks, projectMap, now, time.UTC)
 
 	if res.Hero == nil {
 		t.Fatalf("expected Hero to be present")
@@ -388,7 +461,7 @@ func TestEvaluate_FocusParticipation(t *testing.T) {
 		},
 	}
 
-	res := Evaluate(tasks, projectMap, now)
+	res := Evaluate(tasks, projectMap, now, time.UTC)
 
 	if res.Hero == nil {
 		t.Fatalf("expected Hero to be present")

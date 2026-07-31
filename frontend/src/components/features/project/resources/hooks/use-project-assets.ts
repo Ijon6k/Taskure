@@ -54,15 +54,16 @@ export function useProjectAssets(
   // 1. Overview Direct Assets
   const overviewAssets = useMemo<ProjectAsset[]>(() => {
     const raw: ResourceLinkItem[] = project?.settings?.resources ?? [];
-    return raw.map((res) => {
+    return raw.map((res, index) => {
       const urlStr = res?.url ?? "";
       const isImg = isImageFileName(res?.title || "") || Boolean(urlStr.match(/\.(png|jpg|jpeg|gif|webp|svg)$/i));
       const kind: AssetKind = res?.type === "image" || isImg ? "image" : urlStr.startsWith("http") ? "link" : "file";
 
       return {
-        id: res?.id || `res-${Math.random()}`,
+        id: res?.id || `res-${index}`,
         title: res?.title || "Resource",
         url: normalizeStorageUrl(urlStr),
+        previewUrl: res?.preview_url ? normalizeStorageUrl(res.preview_url) : undefined,
         kind,
         size: res?.size,
         mimeType: res?.mime_type,
@@ -89,6 +90,7 @@ export function useProjectAssets(
             id: att.id,
             title: att.title || "Task Attachment",
             url: normalizeStorageUrl(att.url || ""),
+            previewUrl: att.preview_url ? normalizeStorageUrl(att.preview_url) : undefined,
             kind,
             size: att.size,
             mimeType: att.mime_type,
@@ -294,15 +296,19 @@ export function useProjectAssets(
   };
 
   const deleteAsset = async (id: string) => {
-    const currentRaw: ResourceLinkItem[] = project?.settings?.resources ?? [];
-    const updated = currentRaw.filter((r) => r.id !== id);
-    await saveOverviewResources(updated);
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-    toast.success("Asset removed");
+    if (!project) return;
+    try {
+      await api.deleteProjectResource(project.id, id);
+      if (onRefreshProject) onRefreshProject();
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      toast.success("Asset removed");
+    } catch (err) {
+      toast.error("Failed to remove asset: " + (err as Error).message);
+    }
   };
 
   const editAsset = async (id: string, newTitle: string, newUrl?: string) => {
@@ -322,13 +328,16 @@ export function useProjectAssets(
   };
 
   const bulkDeleteAssets = async (ids: string[]) => {
-    const idSet = new Set(ids);
-    const currentRaw: ResourceLinkItem[] = project?.settings?.resources ?? [];
-    const updated = currentRaw.filter((r) => !idSet.has(r.id));
-    await saveOverviewResources(updated);
-    setSelectedIds(new Set());
-    setIsSelecting(false);
-    toast.success(`${ids.length} asset(s) removed`);
+    if (!project || ids.length === 0) return;
+    try {
+      await Promise.all(ids.map((id) => api.deleteProjectResource(project.id, id)));
+      if (onRefreshProject) onRefreshProject();
+      setSelectedIds(new Set());
+      setIsSelecting(false);
+      toast.success(`${ids.length} asset(s) removed`);
+    } catch (err) {
+      toast.error("Failed to remove assets: " + (err as Error).message);
+    }
   };
 
   // Selection Mode Actions

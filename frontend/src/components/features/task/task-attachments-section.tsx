@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Link2, Upload, Plus, Trash2, ExternalLink, FileText, Image as ImageIcon, Eye, X } from "lucide-react";
 import { toast } from "sonner";
-import { getThumbnailUrl, getPreviewUrl } from "@/lib/image-url";
+import { getPreviewUrl } from "@/lib/image-url";
+import { ThumbnailImage } from "@/components/ui/thumbnail-image";
 import { ImageLightboxModal } from "@/components/ui/overlays/image-lightbox-modal";
 
 export interface AttachmentItem {
@@ -11,11 +12,12 @@ export interface AttachmentItem {
   type: "link" | "file";
   title: string;
   url?: string | undefined;
+  preview_url?: string | undefined;
   size?: string | undefined;
   mimeType?: string | undefined;
 }
 
-const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024; // 25MB limit for MinIO S3 uploads
+const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024; // 500MB (matches backend limit)
 
 function isImageAttachment(item: AttachmentItem & { mime_type?: string }): boolean {
   if (!item.url) return false;
@@ -49,6 +51,14 @@ export function TaskAttachmentsSection({
   const [isUploading, setIsUploading] = useState(false);
   const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const openPreview = (item: AttachmentItem) => {
+    if (!item.url) return;
+    setPreviewImage({
+      url: item.preview_url || getPreviewUrl(item.url),
+      title: item.title,
+    });
+  };
 
   // ESC key to close image preview
   useEffect(() => {
@@ -97,7 +107,7 @@ export function TaskAttachmentsSection({
       try {
         for (const file of fileArray) {
           if (file.size > MAX_FILE_SIZE_BYTES) {
-            toast.error(`File "${file.name}" exceeds 25MB max attachment limit.`);
+            toast.error(`File "${file.name}" exceeds 500MB max attachment limit.`);
             continue;
           }
           await onUploadFile(file);
@@ -203,7 +213,7 @@ export function TaskAttachmentsSection({
           <span className="text-[13px] font-medium">Click to upload files, drop, or paste (Ctrl+V)</span>
         </div>
         <p className="text-[11px] text-theme-tertiary">
-          Supports clipboard image paste (Ctrl+V), PNG, JPG, WebP, PDFs, docs up to 25MB
+          Supports clipboard image paste (Ctrl+V), PNG, JPG, WebP, PDFs, docs up to 500MB
         </p>
       </div>
 
@@ -221,14 +231,18 @@ export function TaskAttachmentsSection({
                 <div className="flex items-center gap-3 min-w-0 pr-2">
                   {hasImage && item.url ? (
                     <div
-                      onClick={() => setPreviewImage({ url: item.url!, title: item.title })}
+                      onClick={() => openPreview(item)}
                       className="w-10 h-10 rounded-md overflow-hidden bg-surface-l1 border border-theme-subtle shrink-0 cursor-pointer relative group/thumb shadow-xs"
                       title="Click to expand image preview"
                     >
-                      <img
-                        src={getThumbnailUrl(item.url)}
+                      <ThumbnailImage
+                        src={item.url}
                         alt={item.title}
-                        className="w-full h-full object-cover transition-transform duration-200 group-hover/thumb:scale-105"
+                        width={200}
+                        loading="lazy"
+                        expectsVariants={Boolean(item.preview_url)}
+                        className="absolute inset-0"
+                        imgClassName="w-full h-full object-cover transition-transform duration-200 group-hover/thumb:scale-105"
                       />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 flex items-center justify-center transition-opacity">
                         <Eye className="w-3.5 h-3.5 text-white" />
@@ -251,7 +265,7 @@ export function TaskAttachmentsSection({
                       }`}
                       onClick={() => {
                         if (hasImage && item.url) {
-                          setPreviewImage({ url: item.url, title: item.title });
+                          openPreview(item);
                         }
                       }}
                     >
@@ -271,7 +285,7 @@ export function TaskAttachmentsSection({
                   {hasImage && item.url && (
                     <button
                       type="button"
-                      onClick={() => setPreviewImage({ url: item.url!, title: item.title })}
+                      onClick={() => openPreview(item)}
                       className="p-1.5 text-theme-secondary hover:text-brand-accent hover:bg-surface-hover rounded-md transition-colors"
                       title="Preview image"
                     >

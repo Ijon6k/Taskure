@@ -272,6 +272,7 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
           title: a.title,
         };
         if (a.url !== undefined) item.url = a.url;
+        if (a.preview_url !== undefined) item.preview_url = a.preview_url;
         if (a.size !== undefined) item.size = a.size;
         if (a.mimeType !== undefined) item.mime_type = a.mimeType;
         return item;

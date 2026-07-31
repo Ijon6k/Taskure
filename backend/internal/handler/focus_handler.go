@@ -2,6 +2,7 @@ package handler
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/Ijon6k/Taskure/apps/api/internal/response"
 	"github.com/Ijon6k/Taskure/apps/api/internal/service"
@@ -17,23 +18,39 @@ func NewFocusHandler(service service.TaskService) *FocusHandler {
 	return &FocusHandler{service: service}
 }
 
+// clientLocation resolves the client timezone from tz_offset_minutes (minutes
+// east of UTC, as reported by JS Date.getTimezoneOffset() negated). Malformed
+// or out-of-range values fall back to UTC.
+func clientLocation(c *gin.Context) *time.Location {
+	offsetMinutes, err := strconv.Atoi(c.Query("tz_offset_minutes"))
+	if err != nil || offsetMinutes < -14*60 || offsetMinutes > 14*60 {
+		return time.UTC
+	}
+	return time.FixedZone("client", offsetMinutes*60)
+}
+
 func (h *FocusHandler) GetFocusTask(c *gin.Context) {
 	projectID := c.Query("project_id")
 	limitStr := c.Query("limit")
 	limit := 100
 	if limitStr != "" {
 		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			if l > 200 {
+				l = 200
+			}
 			limit = l
 		}
 	}
 
-	focus, err := h.service.GetFocusTask(projectID, limit)
+	loc := clientLocation(c)
+
+	focus, err := h.service.GetFocusTask(projectID, limit, loc)
 	if err != nil {
 		response.SafeError(c, 500, err)
 		return
 	}
 
-	vm := viewmodels.NewFocusViewModel(*focus)
+	vm := viewmodels.NewFocusViewModel(*focus, loc)
 	response.OK(c, vm)
 }
 

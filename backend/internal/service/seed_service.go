@@ -18,7 +18,6 @@ type seedService struct {
 	projectRepo   repository.ProjectRepository
 	columnRepo    repository.ColumnRepository
 	taskRepo      repository.TaskRepository
-	taskService   TaskService
 }
 
 func NewSeedService(
@@ -26,14 +25,12 @@ func NewSeedService(
 	projectRepo repository.ProjectRepository,
 	columnRepo repository.ColumnRepository,
 	taskRepo repository.TaskRepository,
-	taskService TaskService,
 ) SeedService {
 	return &seedService{
 		workspaceRepo: workspaceRepo,
 		projectRepo:   projectRepo,
 		columnRepo:    columnRepo,
 		taskRepo:      taskRepo,
-		taskService:   taskService,
 	}
 }
 
@@ -59,9 +56,9 @@ func (s *seedService) SeedDemoData() ([]string, error) {
 	// DEMO PROJECT 1: Welcome & Getting Started (Intro Project)
 	// ============================================================
 	p1Settings := map[string]interface{}{
-		"target_goal":    "Master all Kanban features and set up your team workflow in 5 minutes.",
-		"target_date":    today.AddDate(0, 3, 0).Format("2006-01-02"),
-		"tags":           []string{"guide", "onboarding", "tips"},
+		"target_goal": "Master all Kanban features and set up your team workflow in 5 minutes.",
+		"target_date": today.AddDate(0, 3, 0).Format("2006-01-02"),
+		"tags":        []string{"guide", "onboarding", "tips"},
 		"resources": []map[string]string{
 			{"title": "Keyboard Shortcuts Guide", "url": "https://github.com"},
 			{"title": "Kanban Best Practices", "url": "https://kanbanize.com"},
@@ -156,9 +153,9 @@ func (s *seedService) SeedDemoData() ([]string, error) {
 	// DEMO PROJECT 2: Product Roadmap 2026 (Generic Theme Project)
 	// ============================================================
 	p2Settings := map[string]interface{}{
-		"target_goal":    "Ship core v2.0 features, 99.9% uptime, and sub-100ms response time.",
-		"target_date":    today.AddDate(0, 6, 0).Format("2006-01-02"),
-		"tags":           []string{"roadmap", "product", "q3-goals"},
+		"target_goal": "Ship core v2.0 features, 99.9% uptime, and sub-100ms response time.",
+		"target_date": today.AddDate(0, 6, 0).Format("2006-01-02"),
+		"tags":        []string{"roadmap", "product", "q3-goals"},
 		"resources": []map[string]string{
 			{"title": "OpenAPI Spec Documentation", "url": "https://swagger.io"},
 			{"title": "Figma Design System Tokens", "url": "https://figma.com"},
@@ -266,10 +263,6 @@ func (s *seedService) SeedDemoData() ([]string, error) {
 	_ = s.taskRepo.CreateTask(&t2_5)
 	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Define CSS variables in globals.css", IsCompleted: true, Position: 0, TaskID: t2_5.ID})
 	_ = s.taskRepo.AddChecklistItem(&models.ChecklistItem{Title: "Update cards, dropdowns, and modals", IsCompleted: true, Position: 1, TaskID: t2_5.ID})
-
-	if s.taskService != nil {
-		s.taskService.InvalidateFocusCache()
-	}
 
 	return []string{p1.Name, p2.Name}, nil
 }

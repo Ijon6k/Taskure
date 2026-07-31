@@ -11,18 +11,9 @@ import (
 )
 
 var (
-	ErrFileTooLarge    = errors.New("file size exceeds maximum allowed limit of 50MB")
-	ErrInvalidMimeType = errors.New("file type not allowed. Allowed types: PNG, JPEG, WebP, GIF, SVG, PDF")
+	ErrFileTooLarge         = errors.New("file size exceeds maximum allowed limit of 500MB")
+	ErrExecutableNotAllowed = errors.New("executable files are not allowed for security reasons")
 )
-
-var AllowedMimeTypes = map[string]bool{
-	"image/png":       true,
-	"image/jpeg":      true,
-	"image/webp":      true,
-	"image/gif":       true,
-	"image/svg+xml":  true,
-	"application/pdf": true,
-}
 
 func IsUUID(s string) bool {
 	_, err := uuid.Parse(s)
@@ -41,8 +32,6 @@ func FormatFileSize(b int64) string {
 	}
 	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), "KMGTPE"[exp])
 }
-
-var ErrExecutableNotAllowed = errors.New("executable files are not allowed for security reasons")
 
 func ValidateUploadHeader(header *multipart.FileHeader) error {
 	const MaxSize = 500 * 1024 * 1024 // 500MB

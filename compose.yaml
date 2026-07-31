@@ -63,8 +63,6 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:-kanban}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
       - POSTGRES_DB=${POSTGRES_DB:-kanban}
-      # - REDIS_HOST=redis
-      # - REDIS_PORT=6379
       - MINIO_ENDPOINT=minio:9000
       - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin}
@@ -73,20 +71,22 @@ services:
       - JWT_SECRET=${JWT_SECRET:-changeme}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      # Soft memory ceiling for the Go GC; keeps RSS comfortably under the
+      # container limit even while background variant workers decode bitmaps.
+      - GOMEMLIMIT=384MiB
+      - VARIANT_WORKERS=2
     depends_on:
       postgres:
         condition: service_healthy
       minio:
         condition: service_started
-      # redis:
-      #   condition: service_healthy
     networks:
       - kanban-network
     restart: unless-stopped
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 512M
 
   ai:
     build:
@@ -102,8 +102,6 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:-kanban}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
       - POSTGRES_DB=${POSTGRES_DB:-kanban}
-      # - REDIS_HOST=redis
-      # - REDIS_PORT=6379
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
     depends_on:

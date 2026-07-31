@@ -7,10 +7,10 @@ import (
 	"io"
 	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/Ijon6k/Taskure/apps/api/internal/focusengine"
+	"github.com/Ijon6k/Taskure/apps/api/internal/imageutil"
 	"github.com/Ijon6k/Taskure/apps/api/internal/models"
 	"github.com/Ijon6k/Taskure/apps/api/internal/repository"
 	"github.com/Ijon6k/Taskure/apps/api/internal/storage"
@@ -38,13 +38,14 @@ type AddChecklistInput struct {
 }
 
 type AttachmentItem struct {
-	ID        string `json:"id"`
-	Type      string `json:"type"`
-	Title     string `json:"title"`
-	URL       string `json:"url"`
-	Size      string `json:"size"`
-	MimeType  string `json:"mimeType"`
-	ObjectKey string `json:"object_key,omitempty"`
+	ID         string `json:"id"`
+	Type       string `json:"type"`
+	Title      string `json:"title"`
+	URL        string `json:"url"`
+	PreviewURL string `json:"preview_url,omitempty"`
+	Size       string `json:"size"`
+	MimeType   string `json:"mimeType"`
+	ObjectKey  string `json:"object_key,omitempty"`
 }
 
 type TaskService interface {
@@ -64,46 +65,41 @@ type TaskService interface {
 	DeleteChecklistItem(id string) error
 
 	// Focus Engine
-	GetFocusTask(projectID string, limit int) (*focusengine.FocusResult, error)
+	GetFocusTask(projectID string, limit int, loc *time.Location) (*focusengine.FocusResult, error)
 	GetFocusOverview() (*repository.FocusOverviewResult, error)
-	InvalidateFocusCache()
 }
 
 type taskService struct {
-	taskRepo         repository.TaskRepository
-	projectRepo      repository.ProjectRepository
-	columnRepo       repository.ColumnRepository
-	storage          storage.StorageService
-	cacheMu          sync.RWMutex
-	focusCache       *focusengine.FocusResult
-	focusCacheExpiry time.Time
+	taskRepo    repository.TaskRepository
+	projectRepo repository.ProjectRepository
+	columnRepo  repository.ColumnRepository
+	variantJobs repository.VariantJobRepository
+	storage     storage.StorageService
 }
 
-func NewTaskService(taskRepo repository.TaskRepository, projectRepo repository.ProjectRepository, columnRepo repository.ColumnRepository, storage storage.StorageService) TaskService {
+func NewTaskService(taskRepo repository.TaskRepository, projectRepo repository.ProjectRepository, columnRepo repository.ColumnRepository, variantJobs repository.VariantJobRepository, storage storage.StorageService) TaskService {
 	return &taskService{
 		taskRepo:    taskRepo,
 		projectRepo: projectRepo,
 		columnRepo:  columnRepo,
+		variantJobs: variantJobs,
 		storage:     storage,
 	}
 }
-
-func (s *taskService) InvalidateFocusCache() {
-	s.cacheMu.Lock()
-	defer s.cacheMu.Unlock()
-	s.focusCache = nil
-	s.focusCacheExpiry = time.Time{}
-}
-
-func (s *taskService) invalidateFocusCache() {
-	s.InvalidateFocusCache()
-}
-
 
 func (s *taskService) CreateTask(projectIDOrPublicID string, input CreateTaskInput) (*models.Task, error) {
 	project, err := s.projectRepo.FindProject(projectIDOrPublicID)
 	if err != nil {
 		return nil, err
+	}
+
+	// Reject columns that do not belong to this project (cross-project injection).
+	col, err := s.columnRepo.FindColumnByID(input.ColumnID)
+	if err != nil {
+		return nil, fmt.Errorf("column not found: %w", err)
+	}
+	if col.ProjectID != project.ID {
+		return nil, fmt.Errorf("column %s does not belong to project %s", input.ColumnID, project.ID)
 	}
 
 	priority := input.Priority
@@ -136,7 +132,6 @@ func (s *taskService) CreateTask(projectIDOrPublicID string, input CreateTaskInp
 		return nil, err
 	}
 
-	s.invalidateFocusCache()
 	return s.taskRepo.FindTask(task.PublicID)
 
 }
@@ -195,12 +190,37 @@ func (s *taskService) UpdateTask(idOrPublicID string, updates map[string]interfa
 		}
 		delete(updates, "attachments")
 	}
-
 	if err := s.taskRepo.UpdateTask(task, updates); err != nil {
 		return nil, err
 	}
-	s.invalidateFocusCache()
+
 	return s.taskRepo.FindTask(task.ID)
+}
+
+// extractAttachmentKeys returns the object-storage keys referenced by a task's
+// attachments_json payload, falling back to parsing the URL for legacy entries
+// that predate the object_key field.
+func extractAttachmentKeys(attsJSON datatypes.JSON) []string {
+	if len(attsJSON) == 0 {
+		return nil
+	}
+	var items []AttachmentItem
+	if err := json.Unmarshal(attsJSON, &items); err != nil {
+		return nil
+	}
+	keys := make([]string, 0, len(items))
+	for _, att := range items {
+		key := att.ObjectKey
+		if key == "" && strings.Contains(att.URL, "/storage/") {
+			if parts := strings.Split(att.URL, "/storage/kanban-uploads/"); len(parts) > 1 {
+				key = parts[1]
+			}
+		}
+		if key != "" {
+			keys = append(keys, key)
+		}
+	}
+	return keys
 }
 
 func (s *taskService) MoveTask(idOrPublicID string, input MoveTaskInput) (*models.Task, error) {
@@ -214,27 +234,28 @@ func (s *taskService) MoveTask(idOrPublicID string, input MoveTaskInput) (*model
 		"position":  input.Position,
 	}
 
-	// Look up target column's behavior directly
+	// Look up target column's behavior directly and reject cross-project moves.
 	col, err := s.columnRepo.FindColumnByID(input.ColumnID)
-	if err == nil && col != nil {
-		if col.Behavior == models.ColumnBehaviorCompleted {
-			updates["status"] = "done"
+	if err != nil {
+		return nil, err
+	}
+	if col.ProjectID != task.ProjectID {
+		return nil, fmt.Errorf("column %s does not belong to task's project", input.ColumnID)
+	}
+	if col.Behavior == models.ColumnBehaviorCompleted {
+		updates["status"] = "done"
+	} else {
+		if input.Status != "" {
+			updates["status"] = input.Status
 		} else {
-			if input.Status != "" {
-				updates["status"] = input.Status
-			} else {
-				updates["status"] = "in_progress"
-			}
+			updates["status"] = "in_progress"
 		}
-	} else if input.Status != "" {
-		updates["status"] = input.Status
 	}
 
 	if err := s.taskRepo.UpdateTask(task, updates); err != nil {
 		return nil, err
 	}
 
-	s.invalidateFocusCache()
 	return s.taskRepo.FindTask(task.ID)
 }
 
@@ -243,8 +264,16 @@ func (s *taskService) DeleteTask(idOrPublicID string) error {
 	if err != nil {
 		return err
 	}
-	s.invalidateFocusCache()
-	return s.taskRepo.DeleteTask(task)
+	// Collect object keys first; the task row still holds them until deletion.
+	keys := extractAttachmentKeys(task.AttachmentsJSON)
+	if err := s.taskRepo.DeleteTask(task); err != nil {
+		return err
+	}
+	// Best-effort cleanup of orphaned objects and pending variant jobs after
+	// the DB delete succeeds.
+	_ = s.variantJobs.DeleteByObjectKeys(keys)
+	deleteObjects(context.Background(), s.storage, keys)
+	return nil
 }
 
 func (s *taskService) AddChecklistItem(taskIDOrPublicID string, input AddChecklistInput) (*models.ChecklistItem, error) {
@@ -269,7 +298,6 @@ func (s *taskService) AddChecklistItem(taskIDOrPublicID string, input AddCheckli
 		return nil, err
 	}
 
-	s.invalidateFocusCache()
 	return &item, nil
 }
 
@@ -282,16 +310,14 @@ func (s *taskService) UpdateChecklistItem(id string, updates map[string]interfac
 	if err := s.taskRepo.UpdateChecklistItem(item, updates); err != nil {
 		return nil, err
 	}
-	s.invalidateFocusCache()
 	return item, nil
 }
 
 func (s *taskService) DeleteChecklistItem(id string) error {
-	s.invalidateFocusCache()
 	return s.taskRepo.DeleteChecklistItem(id)
 }
 
-func (s *taskService) GetFocusTask(projectID string, limit int) (*focusengine.FocusResult, error) {
+func (s *taskService) GetFocusTask(projectID string, limit int, loc *time.Location) (*focusengine.FocusResult, error) {
 	if limit <= 0 {
 		limit = 100
 	}
@@ -300,20 +326,59 @@ func (s *taskService) GetFocusTask(projectID string, limit int) (*focusengine.Fo
 		return nil, err
 	}
 
-	projects, err := s.projectRepo.GetAllProjects()
+	projects, err := s.projectRepo.GetFocusProjects()
 	if err != nil {
 		return nil, err
 	}
 
-	projectMap := make(map[string]models.Project)
+	projectMap := make(map[string]models.Project, len(projects)*2)
+	activeProjectIDs := make(map[string]bool, len(projects)*2)
 	for _, p := range projects {
 		projectMap[p.ID] = p
 		if p.PublicID != "" {
 			projectMap[p.PublicID] = p
 		}
+		// The engine's active set excludes archived projects; mirror that here
+		// so the per-column totals fallback runs exactly when Evaluate will use
+		// it (otherwise archived-only pending tasks would zero the totals).
+		if p.IsArchived || strings.EqualFold(p.Status, "archived") {
+			continue
+		}
+		activeProjectIDs[p.ID] = true
+		if p.PublicID != "" {
+			activeProjectIDs[p.PublicID] = true
+		}
 	}
 
-	result := focusengine.Evaluate(pendingTasks, projectMap, time.Now())
+	hasActivePending := false
+	for _, t := range pendingTasks {
+		if activeProjectIDs[t.ProjectID] {
+			hasActivePending = true
+			break
+		}
+	}
+
+	// Per-column totals only back the empty-focus fallback (no pending task in
+	// an active project). Skip the query when the focus list will be populated.
+	if !hasActivePending {
+		columnIDs := make([]string, 0, len(projects)*3)
+		for _, p := range projects {
+			for _, col := range p.Columns {
+				columnIDs = append(columnIDs, col.ID)
+			}
+		}
+		counts, err := s.projectRepo.GetColumnTaskCounts(columnIDs)
+		if err != nil {
+			return nil, err
+		}
+		for i := range projects {
+			for j := range projects[i].Columns {
+				projects[i].Columns[j].TaskCount = counts[projects[i].Columns[j].ID]
+			}
+		}
+	}
+
+	result := focusengine.Evaluate(pendingTasks, projectMap, time.Now(), loc)
 	return &result, nil
 }
 
@@ -359,14 +424,29 @@ func (s *taskService) UploadAttachment(ctx context.Context, taskIDOrPublicID str
 		}
 	}
 
+	// Variants are generated by the background worker; the preview URL is a
+	// width request on the original, so it is deterministic and never 404s: the
+	// serve path streams the generated 2000px webp once ready and falls back to
+	// the original (short-cached) while the job is still pending. Oversized
+	// uploads skip variant generation to protect worker memory.
+	previewURL := ""
+	if s.storage != nil && imageutil.IsPreviewableImage(contentType) && fileSize <= imageutil.MaxVariantSourceBytes {
+		previewURL = fmt.Sprintf("%s?w=%d", s.storage.GetPublicURL(uploadResult.ObjectKey), storage.PreviewWidth)
+		job := &models.ImageVariantJob{ObjectKey: uploadResult.ObjectKey}
+		// Enqueue is best-effort: a failed insert leaves the original upload
+		// intact and simply means the image is served at original size.
+		_ = s.variantJobs.Create(job)
+	}
+
 	attItem := AttachmentItem{
-		ID:        "att_" + uuid.New().String()[:8],
-		Type:      "file",
-		Title:     fileName,
-		URL:       uploadResult.PublicURL,
-		Size:      formatFileSize(fileSize),
-		MimeType:  contentType,
-		ObjectKey: uploadResult.ObjectKey,
+		ID:         "att_" + uuid.New().String()[:8],
+		Type:       "file",
+		Title:      fileName,
+		URL:        uploadResult.PublicURL,
+		PreviewURL: previewURL,
+		Size:       formatFileSize(fileSize),
+		MimeType:   contentType,
+		ObjectKey:  uploadResult.ObjectKey,
 	}
 
 	var currentAtts []AttachmentItem
@@ -420,7 +500,17 @@ func (s *taskService) DeleteAttachment(ctx context.Context, taskIDOrPublicID str
 	}
 
 	if targetObjectKey != "" && s.storage != nil {
-		_ = s.storage.DeleteFile(ctx, targetObjectKey)
+		// Fail the request if the object cannot be removed so the metadata row
+		// is not left pointing at a dangling key (and cleanup stays retryable).
+		if err := s.storage.DeleteFile(ctx, targetObjectKey); err != nil {
+			return nil, fmt.Errorf("failed to delete attachment object: %w", err)
+		}
+		// Derived preview/thumbnail keys are cleaned up best-effort, as is any
+		// pending variant job for the original.
+		_ = s.variantJobs.DeleteByObjectKeys([]string{targetObjectKey})
+		for _, key := range storage.RelatedKeys(targetObjectKey) {
+			_ = s.storage.DeleteFile(ctx, key)
+		}
 	}
 
 	attsBytes, err := json.Marshal(updatedAtts)
@@ -438,4 +528,3 @@ func (s *taskService) DeleteAttachment(ctx context.Context, taskIDOrPublicID str
 
 	return s.taskRepo.FindTask(task.ID)
 }
-

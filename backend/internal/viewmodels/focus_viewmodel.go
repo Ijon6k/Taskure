@@ -56,22 +56,29 @@ type FocusViewModel struct {
 	Recommendations     []FocusItemView  `json:"recommendations"`
 }
 
-func DeriveReasonTag(item focusengine.FocusItem, now time.Time) string {
+// DeriveReasonTag picks a human-facing explanation for why a task surfaced.
+// Deadline windows are resolved in loc (the client's timezone) so the tag
+// always matches the date the user sees for the same task.
+func DeriveReasonTag(item focusengine.FocusItem, now time.Time, loc *time.Location) string {
 	task := item.Task
 
 	// 1. Deadline Rules (Overdue, Due today, Near deadline)
 	if task.DueDate != nil {
-		todayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-		todayEnd := todayStart.Add(24 * time.Hour)
-		due := *task.DueDate
+		if loc == nil {
+			loc = time.UTC
+		}
+		nowInTz := now.In(loc)
+		dueInTz := task.DueDate.In(loc)
+		todayStart := time.Date(nowInTz.Year(), nowInTz.Month(), nowInTz.Day(), 0, 0, 0, 0, loc)
+		tomorrowStart := todayStart.AddDate(0, 0, 1)
+		dayAfterStart := todayStart.AddDate(0, 0, 3)
 
-		if due.Before(todayStart) {
+		switch {
+		case dueInTz.Before(todayStart):
 			return "Overdue"
-		}
-		if due.Equal(todayStart) || (due.After(todayStart) && due.Before(todayEnd)) {
+		case dueInTz.Before(tomorrowStart):
 			return "Due today"
-		}
-		if due.After(todayEnd) && due.Before(todayStart.Add(3*24*time.Hour)) {
+		case !dueInTz.After(dayAfterStart):
 			return "Near deadline"
 		}
 	}
@@ -122,7 +129,10 @@ func deriveStateCode(res focusengine.FocusResult) string {
 	return "ACTIVE"
 }
 
-func NewFocusViewModel(res focusengine.FocusResult) FocusViewModel {
+func NewFocusViewModel(res focusengine.FocusResult, loc *time.Location) FocusViewModel {
+	if loc == nil {
+		loc = time.UTC
+	}
 	now := time.Now()
 	vm := FocusViewModel{
 		StateCode:           deriveStateCode(res),
@@ -134,22 +144,22 @@ func NewFocusViewModel(res focusengine.FocusResult) FocusViewModel {
 			ActionableTasksCount:  res.ActionableCandidatesCount,
 			CompletedTasksToday:   res.CompletedTasksTodayCount,
 		},
-		Recommendations:     make([]FocusItemView, 0),
+		Recommendations: make([]FocusItemView, 0),
 	}
 
 	if res.Hero != nil {
-		heroView := MapFocusItemView(*res.Hero, now)
+		heroView := MapFocusItemView(*res.Hero, now, loc)
 		vm.Hero = &heroView
 	}
 
 	for _, item := range res.Recommendations {
-		vm.Recommendations = append(vm.Recommendations, MapFocusItemView(item, now))
+		vm.Recommendations = append(vm.Recommendations, MapFocusItemView(item, now, loc))
 	}
 
 	return vm
 }
 
-func MapFocusItemView(item focusengine.FocusItem, now time.Time) FocusItemView {
+func MapFocusItemView(item focusengine.FocusItem, now time.Time, loc *time.Location) FocusItemView {
 	taskID := item.Task.PublicID
 	if taskID == "" {
 		taskID = item.Task.ID
@@ -198,6 +208,6 @@ func MapFocusItemView(item focusengine.FocusItem, now time.Time) FocusItemView {
 			Color: item.Project.Color,
 			Icon:  item.Project.Icon,
 		},
-		ReasonTag: DeriveReasonTag(item, now),
+		ReasonTag: DeriveReasonTag(item, now, loc),
 	}
 }

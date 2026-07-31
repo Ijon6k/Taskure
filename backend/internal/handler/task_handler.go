@@ -6,6 +6,7 @@ import (
 	"github.com/Ijon6k/Taskure/apps/api/internal/models"
 	"github.com/Ijon6k/Taskure/apps/api/internal/response"
 	"github.com/Ijon6k/Taskure/apps/api/internal/service"
+	"github.com/Ijon6k/Taskure/apps/api/internal/util"
 	"github.com/gin-gonic/gin"
 )
 
@@ -135,6 +136,11 @@ func (h *TaskHandler) UploadTaskAttachment(c *gin.Context) {
 		return
 	}
 
+	if err := util.ValidateUploadHeader(fileHeader); err != nil {
+		response.BadRequest(c, err)
+		return
+	}
+
 	file, err := fileHeader.Open()
 	if err != nil {
 		response.InternalServerError(c, err)
@@ -142,12 +148,14 @@ func (h *TaskHandler) UploadTaskAttachment(c *gin.Context) {
 	}
 	defer file.Close()
 
-	contentType := fileHeader.Header.Get("Content-Type")
-	if contentType == "" {
-		contentType = "application/octet-stream"
+	declared := fileHeader.Header.Get("Content-Type")
+	reader, contentType, err := prepareUpload(file, declared)
+	if err != nil {
+		response.BadRequest(c, err)
+		return
 	}
 
-	task, err := h.service.UploadAttachment(c.Request.Context(), idParam, fileHeader.Filename, file, fileHeader.Size, contentType)
+	task, err := h.service.UploadAttachment(c.Request.Context(), idParam, fileHeader.Filename, reader, fileHeader.Size, contentType)
 	if err != nil {
 		response.InternalServerError(c, err)
 		return

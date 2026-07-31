@@ -2,7 +2,7 @@
 
 import { Link2, FileText, GitBranch, ExternalLink, Trash2, Edit3, Check, CheckSquare } from "lucide-react";
 import { ProjectAsset } from "../types";
-import { getThumbnailUrl } from "@/lib/image-url";
+import { ThumbnailImage } from "@/components/ui/thumbnail-image";
 
 interface AssetListRowProps {
   asset: ProjectAsset;
@@ -72,14 +72,16 @@ export function AssetListRow({
                 onPreview(asset);
               }
             }}
-            className="w-7 h-7 rounded-md bg-surface-l0 overflow-hidden shrink-0 cursor-pointer border border-theme-subtle"
+            className="w-7 h-7 rounded-md bg-surface-l0 overflow-hidden shrink-0 cursor-pointer border border-theme-subtle relative"
           >
-            <img
-              src={getThumbnailUrl(asset.url, 100)}
+            <ThumbnailImage
+              src={asset.url}
               alt={asset.title}
+              width={100}
               loading="lazy"
-              decoding="async"
-              className="w-full h-full object-cover"
+              expectsVariants={Boolean(asset.previewUrl)}
+              className="absolute inset-0"
+              imgClassName="w-full h-full object-cover"
             />
           </div>
         ) : (

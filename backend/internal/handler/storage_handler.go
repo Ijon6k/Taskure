@@ -1,265 +1,186 @@
 package handler
 
 import (
-	"bytes"
-	"container/list"
 	"context"
 	"crypto/md5"
 	"fmt"
-	"image"
-	_ "image/gif"
-	_ "image/jpeg"
-	_ "image/png"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
-	"sync"
-	"time"
 
 	"github.com/Ijon6k/Taskure/apps/api/internal/storage"
-	"github.com/chai2010/webp"
 	"github.com/gin-gonic/gin"
-	"golang.org/x/image/draw"
-	_ "golang.org/x/image/webp"
 )
 
-type cachedImage struct {
-	data        []byte
-	contentType string
-	etag        string
-}
-
-// Bounded Concurrency Semaphore to prevent CPU chokes (max 4 concurrent resizes)
-var resizeSem = make(chan struct{}, 4)
-
-type cacheEntry struct {
-	key   string
-	value *cachedImage
-}
-
-type lruCache struct {
-	mu      sync.Mutex
-	maxSize int
-	items   map[string]*list.Element
-	order   *list.List // front = most recent
-}
-
-func newLRUCache(maxSize int) *lruCache {
-	return &lruCache{
-		maxSize: maxSize,
-		items:   make(map[string]*list.Element),
-		order:   list.New(),
-	}
-}
-
-func (c *lruCache) Get(key string) (*cachedImage, bool) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if elem, ok := c.items[key]; ok {
-		c.order.MoveToFront(elem)
-		return elem.Value.(*cacheEntry).value, true
-	}
-	return nil, false
-}
-
-func (c *lruCache) Set(key string, value *cachedImage) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if elem, ok := c.items[key]; ok {
-		c.order.MoveToFront(elem)
-		elem.Value.(*cacheEntry).value = value
-		return
-	}
-	if c.order.Len() >= c.maxSize {
-		oldest := c.order.Back()
-		if oldest != nil {
-			c.order.Remove(oldest)
-			delete(c.items, oldest.Value.(*cacheEntry).key)
-		}
-	}
-	entry := &cacheEntry{key: key, value: value}
-	elem := c.order.PushFront(entry)
-	c.items[key] = elem
-}
-
 type StorageHandler struct {
-	storage  storage.StorageService
-	ramCache *lruCache
+	storage storage.StorageService
 }
 
 func NewStorageHandler(storage storage.StorageService) *StorageHandler {
-	return &StorageHandler{
-		storage:  storage,
-		ramCache: newLRUCache(1000),
+	return &StorageHandler{storage: storage}
+}
+
+// thumbBase strips every derived suffix (".webp", "_preview.webp", "_<w>.webp")
+// plus any original extension, returning the extension-free object base. The
+// ".webp" branch also strips the preceding original extension so legacy
+// double-suffixed URLs ("file.jpg.webp") collapse to the same base the worker
+// keys variants under ("file").
+func thumbBase(relPath string) string {
+	lower := strings.ToLower(relPath)
+	switch {
+	case strings.HasSuffix(lower, "_preview.webp"):
+		return strings.TrimSuffix(relPath, "_preview.webp")
+	case strings.HasSuffix(lower, ".webp"):
+		base := strings.TrimSuffix(relPath, ".webp")
+		return strings.TrimSuffix(base, filepath.Ext(base))
+	default:
+		return strings.TrimSuffix(relPath, filepath.Ext(relPath))
 	}
+}
+
+// generatedThumbWidth returns the width embedded in a persisted thumb key
+// (e.g. "file_400.webp" -> 400), or 0 if relPath is not such a key.
+func generatedThumbWidth(relPath string) int {
+	lower := strings.ToLower(relPath)
+	if !strings.HasSuffix(lower, ".webp") || strings.HasSuffix(lower, "_preview.webp") {
+		return 0
+	}
+	stem := strings.TrimSuffix(relPath, ".webp")
+	idx := strings.LastIndexByte(stem, '_')
+	if idx < 0 {
+		return 0
+	}
+	w, err := strconv.Atoi(stem[idx+1:])
+	if err != nil {
+		return 0
+	}
+	if w <= 0 || !storage.IsThumbWidth(w) {
+		return 0
+	}
+	return w
+}
+
+func (h *StorageHandler) objectExists(ctx context.Context, objectKey string) bool {
+	if h.storage != nil {
+		ok, err := h.storage.ObjectExists(ctx, objectKey)
+		return err == nil && ok
+	}
+	// Local fallback storage (no MinIO configured).
+	if strings.Contains(objectKey, "..") {
+		return false
+	}
+	fi, err := os.Stat(filepath.Join("storage", "kanban-uploads", objectKey))
+	return err == nil && !fi.IsDir()
+}
+
+// serveObject streams an object with cache headers, honoring If-None-Match.
+func (h *StorageHandler) serveObject(c *gin.Context, objectKey, contentType, etag string) {
+	c.Header("Cache-Control", "public, max-age=31536000, immutable")
+	if etag != "" {
+		c.Header("ETag", etag)
+		if c.GetHeader("If-None-Match") == etag {
+			c.Status(http.StatusNotModified)
+			return
+		}
+	}
+
+	reader, err := h.getObjectReader(c.Request.Context(), objectKey)
+	if err != nil {
+		c.String(http.StatusNotFound, "File not found")
+		return
+	}
+	defer reader.Close()
+
+	c.Header("Content-Type", contentType)
+	if _, err := io.Copy(c.Writer, reader); err != nil {
+		c.AbortWithStatus(http.StatusNotFound)
+	}
+}
+
+// serveGeneratedOrOriginal serves a generated webp key (preview/thumb) directly
+// when it exists, a preview for legacy ".webp" requests, and otherwise streams
+// the original file. variantReq marks a request for a derived variant (a "?w="
+// query or a generated key); its original fallback is short-cached so the
+// generated variant is picked up once the background worker has produced it.
+func (h *StorageHandler) serveGeneratedOrOriginal(c *gin.Context, relPath string, variantReq bool) {
+	if generatedThumbWidth(relPath) != 0 || strings.HasSuffix(strings.ToLower(relPath), "_preview.webp") {
+		if h.objectExists(c.Request.Context(), relPath) {
+			h.serveObject(c, relPath, "image/webp", "")
+			return
+		}
+	}
+	if strings.HasSuffix(strings.ToLower(relPath), ".webp") {
+		base := strings.TrimSuffix(relPath, ".webp")
+		previewKey := base + "_preview.webp"
+		if h.objectExists(c.Request.Context(), previewKey) {
+			h.serveObject(c, previewKey, "image/webp", "")
+			return
+		}
+	}
+	h.serveOriginal(c, relPath, variantReq)
 }
 
 func (h *StorageHandler) ServeStorageFile(c *gin.Context) {
 	relPath := c.Param("filepath")
 	relPath = strings.TrimPrefix(relPath, "/")
 
+	// Reject path traversal attempts up front; object keys never contain "..".
+	if relPath == "" || strings.Contains(relPath, "..") {
+		c.String(http.StatusNotFound, "File not found")
+		return
+	}
+
 	// Strip bucket prefixes if present
 	relPath = strings.TrimPrefix(relPath, "kanban-uploads/")
 	relPath = strings.TrimPrefix(relPath, "kanban-assets/")
-
-	// Support .webp extension in URL for frontend thumbnail requests (e.g. file.webp or file.jpg.webp)
-	origRelPath := relPath
-	if strings.HasSuffix(relPath, ".webp") {
-		baseWithoutExt := strings.TrimSuffix(relPath, ".webp")
-		exts := []string{"", ".jpg", ".png", ".jpeg", ".gif"}
-		for _, ext := range exts {
-			candidate := baseWithoutExt + ext
-			if reader, err := h.getObjectReader(c.Request.Context(), candidate); err == nil {
-				if img, _, decodeErr := image.Decode(reader); decodeErr == nil && img != nil {
-					origRelPath = candidate
-					reader.Close()
-					break
-				}
-				reader.Close()
-			}
-		}
-	}
 
 	wStr := c.Query("w")
 	if wStr == "" {
 		wStr = c.Query("width")
 	}
 
-	// 1. If NO width parameter is requested, serve exact original file directly
+	// No width requested: serve the exact original (or a generated webp key).
 	if wStr == "" {
-		h.serveOriginal(c, origRelPath)
+		h.serveGeneratedOrOriginal(c, relPath, false)
 		return
 	}
 
 	targetW, err := strconv.Atoi(wStr)
 	if err != nil || targetW <= 0 || targetW > 3840 {
-		h.serveOriginal(c, origRelPath)
+		h.serveGeneratedOrOriginal(c, relPath, true)
 		return
 	}
 
-	// Compute unique cache key and ETag
-	cacheKey := fmt.Sprintf("w%d_%s.webp", targetW, strings.ReplaceAll(origRelPath, "/", "_"))
-	etag := fmt.Sprintf("\"%x\"", md5.Sum([]byte(cacheKey)))
-
-	// Check HTTP 304 Not Modified (If-None-Match header)
-	if clientETag := c.GetHeader("If-None-Match"); clientETag == etag {
-		c.Header("Cache-Control", "public, max-age=31536000, immutable")
-		c.Header("ETag", etag)
-		c.Status(http.StatusNotModified)
+	base := thumbBase(relPath)
+	if base == "" {
+		h.serveGeneratedOrOriginal(c, relPath, true)
 		return
 	}
 
-	// 2. RAM Memory Cache Hit (0.1ms Response)
-	if cached, ok := h.ramCache.Get(cacheKey); ok && cached != nil {
-		c.Header("Cache-Control", "public, max-age=31536000, immutable")
-		c.Header("ETag", cached.etag)
-		c.Header("X-Thumbnail-Cache", "HIT-RAM")
-		c.Data(http.StatusOK, cached.contentType, cached.data)
+	thumbKey := fmt.Sprintf("%s_%d.webp", base, targetW)
+	etag := fmt.Sprintf("\"%x\"", md5.Sum([]byte(thumbKey)))
+
+	// All variants are generated by the background worker, so serving a
+	// thumbnail is a pure read: no decoding or resizing happens on the request
+	// path.
+	if h.objectExists(c.Request.Context(), thumbKey) {
+		h.serveObject(c, thumbKey, "image/webp", etag)
 		return
 	}
 
-	// 3. Local Disk Cache Hit
-	cacheDir := filepath.Join(os.TempDir(), "kanban_thumb_cache")
-	_ = os.MkdirAll(cacheDir, 0755)
-
-	cachePath := filepath.Join(cacheDir, cacheKey)
-
-	if stat, err := os.Stat(cachePath); err == nil && stat.Size() > 0 {
-		if data, err := os.ReadFile(cachePath); err == nil && len(data) > 0 {
-			contentType := "image/webp"
-			item := &cachedImage{data: data, contentType: contentType, etag: etag}
-			h.ramCache.Set(cacheKey, item)
-
-			c.Header("Cache-Control", "public, max-age=31536000, immutable")
-			c.Header("ETag", etag)
-			c.Header("X-Thumbnail-Cache", "HIT-DISK")
-			c.Data(http.StatusOK, contentType, data)
-			return
-		}
-	}
-
-	// 4. Cache Miss — acquire concurrency semaphore slot to protect CPU
-	resizeSem <- struct{}{}
-	defer func() { <-resizeSem }()
-
-	// Double-check RAM cache in case another goroutine generated it while waiting
-	if cached, ok := h.ramCache.Get(cacheKey); ok && cached != nil {
-		c.Header("Cache-Control", "public, max-age=31536000, immutable")
-		c.Header("ETag", cached.etag)
-		c.Header("X-Thumbnail-Cache", "HIT-RAM")
-		c.Data(http.StatusOK, cached.contentType, cached.data)
-		return
-	}
-
-	reader, err := h.getObjectReader(c.Request.Context(), origRelPath)
-	if err != nil {
-		c.String(http.StatusNotFound, "Object not found")
-		return
-	}
-	defer reader.Close()
-
-	// Decode original image using registered decoders (png, jpeg, gif, webp)
-	img, _, err := image.Decode(reader)
-	if err != nil {
-		// Non-image asset -> serve original
-		h.serveOriginal(c, relPath)
-		return
-	}
-
-	origW := img.Bounds().Dx()
-	origH := img.Bounds().Dy()
-
-	if origW == 0 || origH == 0 {
-		h.serveOriginal(c, relPath)
-		return
-	}
-
-	var dstImg image.Image = img
-	if origW > targetW {
-		targetH := (origH * targetW) / origW
-		if targetH <= 0 {
-			targetH = 1
-		}
-		rgba := image.NewRGBA(image.Rect(0, 0, targetW, targetH))
-		// Fast SIMD / Vectorized Scaling via golang.org/x/image/draw BiLinear
-		draw.BiLinear.Scale(rgba, rgba.Bounds(), img, img.Bounds(), draw.Over, nil)
-		dstImg = rgba
-	}
-
-	// Encode to WebP format (80% Quality) for super lightweight thumbnail delivery
-	var buf bytes.Buffer
-	contentType := "image/webp"
-
-	encodeErr := webp.Encode(&buf, dstImg, &webp.Options{Quality: 80})
-	if encodeErr != nil {
-		h.serveOriginal(c, relPath)
-		return
-	}
-
-	encodedBytes := buf.Bytes()
-
-	// Save to disk cache asynchronously
-	go func() {
-		_ = os.WriteFile(cachePath, encodedBytes, 0644)
-		// Trigger eventual cleanup (non-blocking, best-effort)
-		go cleanupDiskCache(cacheDir, 500*1024*1024) // 500MB max
-	}()
-
-	// Save to RAM Memory Cache
-	item := &cachedImage{data: encodedBytes, contentType: contentType, etag: etag}
-	h.ramCache.Set(cacheKey, item)
-
-	c.Header("Cache-Control", "public, max-age=31536000, immutable")
-	c.Header("ETag", etag)
-	c.Header("X-Thumbnail-Cache", "MISS")
-	c.Data(http.StatusOK, contentType, encodedBytes)
+	// Missing variant: the worker may still be producing it. Signal "not ready"
+	// (uncached 404) instead of streaming the full-size original, so thumbnail
+	// requests never drag the page down. The frontend retries until the variant
+	// appears and falls back to the original for legacy files that never get
+	// one.
+	c.Header("Cache-Control", "no-store")
+	c.String(http.StatusNotFound, "Variant not ready")
 }
 
-func (h *StorageHandler) serveOriginal(c *gin.Context, relPath string) {
+func (h *StorageHandler) serveOriginal(c *gin.Context, relPath string, variantReq bool) {
 	ctx := c.Request.Context()
 	reader, err := h.getObjectReader(ctx, relPath)
 	if err != nil {
@@ -280,17 +201,31 @@ func (h *StorageHandler) serveOriginal(c *gin.Context, relPath string) {
 		c.Header("Content-Type", "image/webp")
 	case ".svg":
 		c.Header("Content-Type", "image/svg+xml")
+		// Sandbox SVG responses so any embedded script cannot run in the app origin.
+		c.Header("Content-Security-Policy", "sandbox")
 	case ".pdf":
 		c.Header("Content-Type", "application/pdf")
 	default:
 		c.Header("Content-Type", "application/octet-stream")
 	}
 
-	c.Header("Cache-Control", "public, max-age=31536000, immutable")
-	_, _ = io.Copy(c.Writer, reader)
+	// A variant request answered with the original must not be cached long-term,
+	// otherwise the generated variant would never be picked up once ready.
+	if variantReq {
+		c.Header("Cache-Control", "public, max-age=60")
+	} else {
+		c.Header("Cache-Control", "public, max-age=31536000, immutable")
+	}
+	if _, err := io.Copy(c.Writer, reader); err != nil {
+		c.AbortWithStatus(http.StatusNotFound)
+	}
 }
 
 func (h *StorageHandler) getObjectReader(ctx context.Context, objectKey string) (io.ReadCloser, error) {
+	// Defense in depth: never hand a relative path to the local fallback.
+	if strings.Contains(objectKey, "..") {
+		return nil, fmt.Errorf("invalid object key %s", objectKey)
+	}
 	if h.storage != nil {
 		if reader, err := h.storage.GetObject(ctx, objectKey); err == nil {
 			return reader, nil
@@ -301,44 +236,4 @@ func (h *StorageHandler) getObjectReader(ctx context.Context, objectKey string) 
 		return f, nil
 	}
 	return nil, fmt.Errorf("object %s not found", objectKey)
-}
-
-func cleanupDiskCache(cacheDir string, maxSize int64) {
-	entries, err := os.ReadDir(cacheDir)
-	if err != nil {
-		return
-	}
-	var totalSize int64
-	type fileInfo struct {
-		path    string
-		size    int64
-		modTime time.Time
-	}
-	var files []fileInfo
-	for _, entry := range entries {
-		info, err := entry.Info()
-		if err != nil {
-			continue
-		}
-		totalSize += info.Size()
-		files = append(files, fileInfo{
-			path:    filepath.Join(cacheDir, entry.Name()),
-			size:    info.Size(),
-			modTime: info.ModTime(),
-		})
-	}
-	if totalSize <= maxSize {
-		return
-	}
-	// Sort by modification time (oldest first)
-	sort.Slice(files, func(i, j int) bool {
-		return files[i].modTime.Before(files[j].modTime)
-	})
-	for _, f := range files {
-		if totalSize <= maxSize {
-			break
-		}
-		os.Remove(f.path)
-		totalSize -= f.size
-	}
 }

@@ -40,14 +40,6 @@ func NewContainer(
 
 // RegisterRoutes registers all /api endpoints onto the Gin RouterGroup.
 func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
-	r.GET("/hello", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Hello World! Kanban Go API Backend is running smoothly.",
-			"status":  "ok",
-			"service": "kanban-api",
-		})
-	})
-
 	r.GET("/storage/*filepath", c.StorageHandler.ServeStorageFile)
 
 	workspaces := r.Group("/workspaces")
@@ -83,13 +75,14 @@ func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 		tasks.PATCH("/:id", c.TaskHandler.UpdateTask)
 		tasks.DELETE("/:id", c.TaskHandler.DeleteTask)
 		tasks.POST("/:id/checklist", c.ChecklistHandler.AddChecklistItem)
-		}
+	}
 
 	// Upload routes with rate limiting
 	projectUpload := r.Group("/projects")
 	projectUpload.Use(middleware.UploadRateLimiter())
 	{
 		projectUpload.POST("/:id/resources/upload", c.ProjectHandler.UploadProjectResource)
+		projectUpload.DELETE("/:id/resources/:resourceId", c.ProjectHandler.DeleteProjectResource)
 	}
 
 	taskUpload := r.Group("/tasks")

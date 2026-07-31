@@ -4,7 +4,6 @@ package response
 import (
 	"errors"
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -77,7 +76,7 @@ func IsNotFound(err error) bool {
 // SafeError returns a safe error message based on the environment.
 func SafeError(c *gin.Context, statusCode int, err error) {
 	msg := "An internal server error occurred"
-	if os.Getenv("GIN_MODE") != "release" {
+	if gin.IsDebugging() {
 		msg = err.Error()
 	}
 	Error(c, statusCode, msg)

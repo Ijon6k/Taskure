@@ -94,6 +94,17 @@ func (s *minioStorageService) GetObject(ctx context.Context, objectName string) 
 	return obj, nil
 }
 
+func (s *minioStorageService) ObjectExists(ctx context.Context, objectName string) (bool, error) {
+	_, err := s.client.StatObject(ctx, s.bucket, objectName, minio.StatObjectOptions{})
+	if err == nil {
+		return true, nil
+	}
+	if minio.ToErrorResponse(err).Code == "NoSuchKey" {
+		return false, nil
+	}
+	return false, fmt.Errorf("failed to stat object '%s' in minio: %w", objectName, err)
+}
+
 func (s *minioStorageService) DeleteFile(ctx context.Context, objectName string) error {
 	err := s.client.RemoveObject(ctx, s.bucket, objectName, minio.RemoveObjectOptions{})
 	if err != nil {

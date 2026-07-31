@@ -130,7 +130,6 @@ interface CustomServiceOption {
 
 const CUSTOM_SERVICES: CustomServiceOption[] = [
   { id: "postgres", name: "PostgreSQL (Database)", checked: true },
-  { id: "redis", name: "Redis (Cache)", checked: true },
   { id: "minio", name: "MinIO (Object Storage)", checked: true },
   { id: "api", name: "Go API Backend", checked: true },
   { id: "ai", name: "Python AI Service", checked: true },
@@ -544,7 +543,7 @@ function runDockerCompose(args: string[]) {
 
 function runFrontendFastMode() {
   print(`\n${CYAN}Starting pre-built production backend containers in Docker (Fast Mode)...${RESET}`);
-  runProdDockerCompose(["up", "-d", "postgres", "redis", "minio", "api", "ai"]);
+  runProdDockerCompose(["up", "-d", "postgres", "minio", "api", "ai"]);
 
   print(`\n${GREEN}Backend infrastructure is ready on port ${PORT_API}.${RESET}`);
   print(`${CYAN}Launching Next.js frontend on host via Bun (http://localhost:${PORT_WEB})...${RESET}\n`);
@@ -566,7 +565,7 @@ function runFrontendFastMode() {
 
 function runFrontendDevMode() {
   print(`\n${CYAN}Starting backend infrastructure containers in Docker...${RESET}`);
-  runDockerCompose(["up", "-d", "postgres", "redis", "minio", "api"]);
+  runDockerCompose(["up", "-d", "postgres", "minio", "api"]);
 
   print(`\n${GREEN}Backend infrastructure is ready on port ${PORT_API}.${RESET}`);
   print(`${CYAN}Launching Next.js frontend on host via Bun (http://localhost:${PORT_WEB})...${RESET}\n`);

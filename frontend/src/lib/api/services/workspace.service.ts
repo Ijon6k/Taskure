@@ -10,7 +10,8 @@ export const workspaceService = {
   },
 
   getFocusTask: () => {
-    return fetcher<FocusResponse>("/focus");
+    const tzOffsetMinutes = -new Date().getTimezoneOffset();
+    return fetcher<FocusResponse>(`/focus?tz_offset_minutes=${tzOffsetMinutes}`);
   },
 
   getFocusOverview: () => {

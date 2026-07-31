@@ -9,14 +9,14 @@ import (
 )
 
 type ProjectRepository interface {
-	ListProjects(workspaceID string, status string, search string, pinned bool) ([]models.Project, error)
 	ListProjectsLight(workspaceID string, status string, search string, pinned bool, limit int, offset int) ([]models.Project, int64, error)
 	CreateProject(project *models.Project) error
 	CreateProjectWithDefaultColumns(project *models.Project, defaultCols []models.Column) error
 	FindProject(idOrPublicID string) (*models.Project, error)
 	UpdateProject(project *models.Project, updates map[string]interface{}) error
 	DeleteProject(project *models.Project) error
-	GetAllProjects() ([]models.Project, error)
+	GetFocusProjects() ([]models.Project, error)
+	GetColumnTaskCounts(columnIDs []string) (map[string]int, error)
 	GetFocusOverview() (*FocusOverviewResult, error)
 	FindProjectLight(idOrPublicID string) (*models.Project, error)
 }
@@ -27,38 +27,6 @@ type projectRepository struct {
 
 func NewProjectRepository(db *gorm.DB) ProjectRepository {
 	return &projectRepository{db: db}
-}
-
-func (r *projectRepository) ListProjects(workspaceID string, status string, search string, pinned bool) ([]models.Project, error) {
-	query := r.db.Where("workspace_id = ?", workspaceID)
-
-	if status != "" && status != "all" {
-		if status == "archived" {
-			query = query.Where("is_archived = ? OR status = ?", true, "archived")
-		} else {
-			query = query.Where("status = ?", status)
-		}
-	}
-
-	if search != "" {
-		s := "%" + strings.ToLower(search) + "%"
-		query = query.Where("LOWER(name) LIKE ? OR LOWER(description) LIKE ?", s, s)
-	}
-
-	if pinned {
-		query = query.Where("is_pinned = ?", true)
-	}
-
-	var projects []models.Project
-	err := query.Preload("Columns", func(db *gorm.DB) *gorm.DB {
-		return db.Order("position asc")
-	}).Preload("Columns.Tasks", func(db *gorm.DB) *gorm.DB {
-		return db.Order("position asc")
-	}).
-		Order("is_pinned desc, created_at desc").
-		Find(&projects).Error
-
-	return projects, err
 }
 
 func (r *projectRepository) ListProjectsLight(workspaceID string, status string, search string, pinned bool, limit int, offset int) ([]models.Project, int64, error) {
@@ -96,10 +64,30 @@ func (r *projectRepository) ListProjectsLight(workspaceID string, status string,
 	var projects []models.Project
 	err := query.Preload("Columns", func(db *gorm.DB) *gorm.DB {
 		return db.Order("position asc")
-	}).Preload("Columns.Tasks", func(db *gorm.DB) *gorm.DB {
-		return db.Select("id", "column_id", "project_id", "status", "position").Order("position asc")
 	}).Order("is_pinned desc, created_at desc").Find(&projects).Error
-	return projects, total, err
+	if err != nil {
+		return nil, total, err
+	}
+
+	// Attach per-column task counts so cards can render progress distribution
+	// without pulling the full task rows (one aggregate query total).
+	if len(projects) > 0 {
+		columnIDs := make([]string, 0, len(projects)*3)
+		for i := range projects {
+			for j := range projects[i].Columns {
+				columnIDs = append(columnIDs, projects[i].Columns[j].ID)
+			}
+		}
+		if counts, err := r.GetColumnTaskCounts(columnIDs); err == nil {
+			for i := range projects {
+				for j := range projects[i].Columns {
+					projects[i].Columns[j].TaskCount = counts[projects[i].Columns[j].ID]
+				}
+			}
+		}
+	}
+
+	return projects, total, nil
 }
 
 func (r *projectRepository) CreateProject(project *models.Project) error {
@@ -158,14 +146,40 @@ func (r *projectRepository) DeleteProject(project *models.Project) error {
 	})
 }
 
-func (r *projectRepository) GetAllProjects() ([]models.Project, error) {
+// GetFocusProjects loads projects with their columns (column behaviors only),
+// without preloading every task row — used by the focus engine.
+func (r *projectRepository) GetFocusProjects() ([]models.Project, error) {
 	var projects []models.Project
 	err := r.db.Preload("Columns", func(db *gorm.DB) *gorm.DB {
 		return db.Order("position asc")
-	}).Preload("Columns.Tasks", func(db *gorm.DB) *gorm.DB {
-		return db.Order("position asc")
 	}).Find(&projects).Error
 	return projects, err
+}
+
+// GetColumnTaskCounts returns the number of tasks per column for the given
+// column IDs, so the focus engine can report workspace totals without loading
+// the full task rows.
+func (r *projectRepository) GetColumnTaskCounts(columnIDs []string) (map[string]int, error) {
+	counts := make(map[string]int)
+	if len(columnIDs) == 0 {
+		return counts, nil
+	}
+	var rows []struct {
+		ColumnID string
+		Count    int
+	}
+	err := r.db.Model(&models.Task{}).
+		Select("column_id, COUNT(*) AS count").
+		Where("column_id IN ?", columnIDs).
+		Group("column_id").
+		Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	for _, row := range rows {
+		counts[row.ColumnID] = row.Count
+	}
+	return counts, nil
 }
 
 func (r *projectRepository) FindProjectLight(idOrPublicID string) (*models.Project, error) {

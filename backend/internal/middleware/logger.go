@@ -5,11 +5,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 )
 
 // Logger returns a gin.HandlerFunc that logs requests using zerolog.
-func Logger() gin.HandlerFunc {
+func Logger(logger zerolog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		path := c.Request.URL.Path
@@ -32,11 +32,11 @@ func Logger() gin.HandlerFunc {
 			path = path + "?" + rawQuery
 		}
 
-		event := log.Info()
+		event := logger.Info()
 		if statusCode >= 500 {
-			event = log.Error()
+			event = logger.Error()
 		} else if statusCode >= 400 {
-			event = log.Warn()
+			event = logger.Warn()
 		}
 
 		event.
@@ -45,7 +45,7 @@ func Logger() gin.HandlerFunc {
 			Str("path", path).
 			Int("status", statusCode).
 			Str("ip", clientIP).
-			Dur("latency_ms", latency).
+			Int64("latency_ms", latency.Milliseconds()).
 			Msg("HTTP request")
 	}
 }

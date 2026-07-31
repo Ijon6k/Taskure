@@ -3,16 +3,17 @@ package config
 
 import (
 	"os"
+	"strconv"
 )
 
 // Config holds runtime configuration loaded from env vars.
 type Config struct {
-	AppEnv        string
-	APIHost       string
-	APIPort       string
-	JWTSecret     string
-	JWTExpiryHrs  int
-	CORSOrigins   string
+	AppEnv       string
+	APIHost      string
+	APIPort      string
+	JWTSecret    string
+	JWTExpiryHrs int
+	CORSOrigins  string
 
 	PostgresHost     string
 	PostgresPort     string
@@ -29,6 +30,11 @@ type Config struct {
 
 	OpenAIKey    string
 	AnthropicKey string
+
+	// VariantWorkers is the number of concurrent background image-variant
+	// workers. Each holds the decoded bitmap of one image, so keep this small
+	// relative to the container memory limit.
+	VariantWorkers int
 }
 
 // Load reads configuration from env vars, falling back to defaults.
@@ -56,6 +62,13 @@ func Load() Config {
 
 		OpenAIKey:    getenv("OPENAI_API_KEY", ""),
 		AnthropicKey: getenv("ANTHROPIC_API_KEY", ""),
+
+		VariantWorkers: 2,
+	}
+	if v := os.Getenv("VARIANT_WORKERS"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			cfg.VariantWorkers = n
+		}
 	}
 	return cfg
 }

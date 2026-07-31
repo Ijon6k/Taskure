@@ -3,6 +3,7 @@ package db
 
 import (
 	"log"
+	"time"
 
 	"github.com/Ijon6k/Taskure/apps/api/internal/config"
 	"github.com/Ijon6k/Taskure/apps/api/internal/models"
@@ -21,6 +22,16 @@ func Connect(cfg config.Config) (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Bound the connection pool so bursts cannot exhaust the database.
+	sqlDB, err := conn.DB()
+	if err != nil {
+		return nil, err
+	}
+	sqlDB.SetMaxOpenConns(25)
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetConnMaxLifetime(30 * time.Minute)
+	sqlDB.SetConnMaxIdleTime(5 * time.Minute)
 
 	// Ensure the pgvector extension exists.
 	if err := conn.Exec("CREATE EXTENSION IF NOT EXISTS vector").Error; err != nil {

@@ -12,6 +12,7 @@ export interface ProjectAsset {
   id: string;
   title: string;
   url: string;
+  previewUrl?: string | undefined;
   kind: AssetKind;
   size?: string | undefined;
   mimeType?: string | undefined;

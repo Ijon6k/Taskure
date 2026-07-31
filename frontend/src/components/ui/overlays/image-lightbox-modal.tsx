@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Image as ImageIcon, ExternalLink, X } from "lucide-react";
-import { getPreviewUrl } from "@/lib/image-url";
+import { getOriginalUrl } from "@/lib/image-url";
 
 interface ImageLightboxModalProps {
   isOpen: boolean;
@@ -17,6 +17,15 @@ export function ImageLightboxModal({
   title = "Image Preview",
   onClose,
 }: ImageLightboxModalProps) {
+  const [currentSrc, setCurrentSrc] = useState<string | null>(null);
+  const usedOriginalFallback = useRef(false);
+
+  // Reset the displayed image whenever a different attachment is opened.
+  useEffect(() => {
+    usedOriginalFallback.current = false;
+    setCurrentSrc(imageUrl || null);
+  }, [imageUrl]);
+
   // ESC key to close image preview
   useEffect(() => {
     if (!isOpen) return;
@@ -30,6 +39,8 @@ export function ImageLightboxModal({
   }, [isOpen, onClose]);
 
   if (!isOpen || !imageUrl) return null;
+
+  const displaySrc = currentSrc || imageUrl;
 
   return (
     <div
@@ -48,7 +59,7 @@ export function ImageLightboxModal({
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             <a
-              href={imageUrl}
+              href={getOriginalUrl(imageUrl)}
               target="_blank"
               rel="noreferrer"
               className="p-1.5 rounded-md hover:bg-surface-hover text-theme-secondary hover:text-theme-primary transition-colors flex items-center gap-1 text-xs"
@@ -71,8 +82,15 @@ export function ImageLightboxModal({
         {/* Image Preview Container */}
         <div className="w-full bg-surface-l1 border-x border-b border-theme-default rounded-b-md p-4 flex items-center justify-center overflow-hidden max-h-[78vh]">
           <img
-            src={getPreviewUrl(imageUrl)}
+            src={displaySrc}
             alt={title || "Preview"}
+            onError={() => {
+              // Variant may still be generating; fall back to the original once.
+              if (!usedOriginalFallback.current) {
+                usedOriginalFallback.current = true;
+                setCurrentSrc(getOriginalUrl(imageUrl));
+              }
+            }}
             className="max-h-[72vh] max-w-full object-contain rounded-md shadow-2xl"
           />
         </div>

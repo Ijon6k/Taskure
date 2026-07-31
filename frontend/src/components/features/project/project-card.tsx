@@ -70,7 +70,8 @@ export const ProjectCard = memo(function ProjectCard({
       id: col.id,
       name: col.name,
       color: col.color,
-      count: (col.tasks || []).length,
+      // Board responses carry the full tasks array; list responses carry task_count.
+      count: col.tasks ? col.tasks.length : (col.task_count ?? 0),
       behavior: col.behavior,
     }));
     const total = cols.reduce((sum, c) => sum + c.count, 0);

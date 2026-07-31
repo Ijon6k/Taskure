@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Image as ImageIcon, ExternalLink, X } from "lucide-react";
 import { ProjectAsset } from "../types";
+import { getOriginalUrl, getPreviewUrl } from "@/lib/image-url";
 
 interface AssetLightboxModalProps {
   asset: ProjectAsset | null;
@@ -13,6 +14,9 @@ export function AssetLightboxModal({
   asset,
   onClose,
 }: AssetLightboxModalProps) {
+  const [imgSrc, setImgSrc] = useState<string | undefined>(undefined);
+  const usedOriginalFallback = useRef(false);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && asset) {
@@ -22,6 +26,13 @@ export function AssetLightboxModal({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [asset, onClose]);
+
+  // Reset the displayed image whenever a different asset is opened.
+  useEffect(() => {
+    if (!asset) return;
+    usedOriginalFallback.current = false;
+    setImgSrc(asset.previewUrl || getPreviewUrl(asset.url));
+  }, [asset]);
 
   if (!asset) return null;
 
@@ -70,8 +81,15 @@ export function AssetLightboxModal({
         {/* Photo Canvas */}
         <div className="w-full bg-surface-l0 border-x border-b border-theme-subtle rounded-b-md p-4 flex items-center justify-center overflow-hidden max-h-[82vh]">
           <img
-            src={asset.url}
+            src={imgSrc}
             alt={asset.title}
+            onError={() => {
+              // Variant may still be generating; fall back to the original once.
+              if (asset && !usedOriginalFallback.current) {
+                usedOriginalFallback.current = true;
+                setImgSrc(getOriginalUrl(asset.url));
+              }
+            }}
             className="max-h-[76vh] max-w-full object-contain rounded-md shadow-2xl"
           />
         </div>

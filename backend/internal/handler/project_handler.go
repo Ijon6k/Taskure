@@ -1,8 +1,11 @@
 package handler
 
 import (
+	"errors"
+
 	"github.com/Ijon6k/Taskure/apps/api/internal/response"
 	"github.com/Ijon6k/Taskure/apps/api/internal/service"
+	"github.com/Ijon6k/Taskure/apps/api/internal/util"
 	"github.com/gin-gonic/gin"
 )
 
@@ -93,10 +96,32 @@ func (h *ProjectHandler) DeleteProject(c *gin.Context) {
 	response.Message(c, "Project deleted successfully")
 }
 
+func (h *ProjectHandler) DeleteProjectResource(c *gin.Context) {
+	idParam := c.Param("id")
+	resourceIDParam := c.Param("resourceId")
+
+	project, err := h.service.DeleteResource(c.Request.Context(), idParam, resourceIDParam)
+	if err != nil {
+		if response.IsNotFound(err) || errors.Is(err, service.ErrResourceNotFound) {
+			response.NotFound(c, "Resource not found")
+			return
+		}
+		response.InternalServerError(c, err)
+		return
+	}
+
+	response.OK(c, project)
+}
+
 func (h *ProjectHandler) UploadProjectResource(c *gin.Context) {
 	idParam := c.Param("id")
 	fileHeader, err := c.FormFile("file")
 	if err != nil {
+		response.BadRequest(c, err)
+		return
+	}
+
+	if err := util.ValidateUploadHeader(fileHeader); err != nil {
 		response.BadRequest(c, err)
 		return
 	}
@@ -108,12 +133,14 @@ func (h *ProjectHandler) UploadProjectResource(c *gin.Context) {
 	}
 	defer file.Close()
 
-	contentType := fileHeader.Header.Get("Content-Type")
-	if contentType == "" {
-		contentType = "application/octet-stream"
+	declared := fileHeader.Header.Get("Content-Type")
+	reader, contentType, err := prepareUpload(file, declared)
+	if err != nil {
+		response.BadRequest(c, err)
+		return
 	}
 
-	project, err := h.service.UploadResource(c.Request.Context(), idParam, fileHeader.Filename, file, fileHeader.Size, contentType)
+	project, err := h.service.UploadResource(c.Request.Context(), idParam, fileHeader.Filename, reader, fileHeader.Size, contentType)
 	if err != nil {
 		response.InternalServerError(c, err)
 		return

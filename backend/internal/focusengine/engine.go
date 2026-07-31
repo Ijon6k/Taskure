@@ -26,7 +26,12 @@ func priorityRank(priority string) int {
 
 // Evaluate evaluates workspace tasks and project metadata into quantitative domain facts.
 // The Focus Engine is strictly isolated from presentation state codes (FRESH, ARCHIVED, EMPTY, etc.).
-func Evaluate(tasks []models.Task, projectMap map[string]models.Project, now time.Time) FocusResult {
+// loc is the client timezone; all calendar-day comparisons are resolved against it.
+func Evaluate(tasks []models.Task, projectMap map[string]models.Project, now time.Time, loc *time.Location) FocusResult {
+	if loc == nil {
+		loc = time.UTC
+	}
+
 	var items []FocusItem
 
 	totalProjectsCount := len(projectMap)
@@ -88,7 +93,8 @@ func Evaluate(tasks []models.Task, projectMap map[string]models.Project, now tim
 	var totalTasksWorkspace int
 	var completedTasksTodayCount int
 
-	todayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	nowInTz := now.In(loc)
+	todayStart := time.Date(nowInTz.Year(), nowInTz.Month(), nowInTz.Day(), 0, 0, 0, 0, loc)
 
 	for _, task := range tasks {
 		if activeProjectsMap[task.ProjectID] {
@@ -102,9 +108,9 @@ func Evaluate(tasks []models.Task, projectMap map[string]models.Project, now tim
 	if totalTasksWorkspace == 0 {
 		for _, proj := range uniqueActiveProjects {
 			for _, col := range proj.Columns {
-				totalTasksWorkspace += len(col.Tasks)
+				totalTasksWorkspace += col.TaskCount
 				if !strings.EqualFold(proj.Status, "paused") {
-					totalTasksParticipating += len(col.Tasks)
+					totalTasksParticipating += col.TaskCount
 				}
 			}
 		}
@@ -142,7 +148,7 @@ func Evaluate(tasks []models.Task, projectMap map[string]models.Project, now tim
 			continue
 		}
 
-		score := EvaluateScore(task, now)
+		score := EvaluateScore(task, now, loc)
 		items = append(items, FocusItem{
 			Task:    task,
 			Project: proj,
@@ -213,7 +219,7 @@ func Evaluate(tasks []models.Task, projectMap map[string]models.Project, now tim
 	var recommendations []FocusItem
 	addedTaskIDs := make(map[string]bool)
 	seenProjects := make(map[string]bool)
-	if hero != nil && hero.Task.ProjectID != "" {
+	if hero.Task.ProjectID != "" {
 		seenProjects[hero.Task.ProjectID] = true
 	}
 

@@ -18,6 +18,7 @@ import (
 	"github.com/Ijon6k/Taskure/apps/api/internal/repository"
 	"github.com/Ijon6k/Taskure/apps/api/internal/service"
 	"github.com/Ijon6k/Taskure/apps/api/internal/storage"
+	"github.com/Ijon6k/Taskure/apps/api/internal/worker"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
@@ -54,12 +55,22 @@ func main() {
 	projectRepo := repository.NewProjectRepository(conn)
 	columnRepo := repository.NewColumnRepository(conn)
 	taskRepo := repository.NewTaskRepository(conn)
+	variantJobRepo := repository.NewVariantJobRepository(conn)
+
+	// Start the background image-variant worker when object storage is
+	// available. Without storage there are no objects to process.
+	var variantWorker *worker.VariantWorker
+	workerCtx, workerCancel := context.WithCancel(context.Background())
+	if storageSvc != nil {
+		variantWorker = worker.NewVariantWorker(variantJobRepo, storageSvc, logger, cfg.VariantWorkers)
+		variantWorker.Start(workerCtx)
+	}
 
 	workspaceService := service.NewWorkspaceService(workspaceRepo)
-	taskService := service.NewTaskService(taskRepo, projectRepo, columnRepo, storageSvc)
-	projectService := service.NewProjectService(projectRepo, workspaceRepo, columnRepo, taskService, storageSvc)
-	columnService := service.NewColumnService(columnRepo, projectRepo, taskService)
-	seedService := service.NewSeedService(workspaceRepo, projectRepo, columnRepo, taskRepo, taskService)
+	taskService := service.NewTaskService(taskRepo, projectRepo, columnRepo, variantJobRepo, storageSvc)
+	projectService := service.NewProjectService(projectRepo, workspaceRepo, columnRepo, variantJobRepo, storageSvc)
+	columnService := service.NewColumnService(columnRepo, projectRepo)
+	seedService := service.NewSeedService(workspaceRepo, projectRepo, columnRepo, taskRepo)
 
 	// Backfill missing NanoIDs on startup
 	_ = workspaceService.BackfillNanoIDs()
@@ -72,29 +83,17 @@ func main() {
 	// HTTP Handler Container
 	container := handler.NewContainer(workspaceService, projectService, columnService, taskService, seedService, storageSvc)
 
-	gin.SetMode(gin.ReleaseMode)
+	if cfg.AppEnv == "production" {
+		gin.SetMode(gin.ReleaseMode)
+	} else {
+		gin.SetMode(gin.DebugMode)
+	}
 	router := gin.New()
 
 	router.Use(middleware.Recovery())
-	router.Use(middleware.Logger())
+	router.Use(middleware.Logger(logger))
 	router.Use(middleware.CORS(cfg.CORSOrigins))
 	router.Use(middleware.MaxBodySize(500 * 1024 * 1024))
-
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Hello World! Kanban Go API Backend is running smoothly.",
-			"status":  "ok",
-			"service": "kanban-api",
-		})
-	})
-
-	router.GET("/hello", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Hello World! Kanban Go API Backend is running smoothly.",
-			"status":  "ok",
-			"service": "kanban-api",
-		})
-	})
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
@@ -109,8 +108,9 @@ func main() {
 	container.RegisterRoutes(apiGroup)
 
 	srv := &http.Server{
-		Addr:    fmt.Sprintf("%s:%s", cfg.APIHost, cfg.APIPort),
-		Handler: router,
+		Addr:              fmt.Sprintf("%s:%s", cfg.APIHost, cfg.APIPort),
+		Handler:           router,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	go func() {
@@ -129,5 +129,12 @@ func main() {
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		logger.Fatal().Err(err).Msg("server forced to shutdown")
+	}
+
+	// Stop the background variant workers (drain via context cancellation) and
+	// wait for them to finish so a mid-flight job is not cut off.
+	if variantWorker != nil {
+		workerCancel()
+		variantWorker.Wait()
 	}
 }

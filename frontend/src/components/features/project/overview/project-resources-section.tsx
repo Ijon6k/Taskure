@@ -73,12 +73,12 @@ export function ProjectResourcesSection({
 
   // Map Overview resources strictly into ProjectAsset array
   const overviewAssets = useMemo<ProjectAsset[]>(() => {
-    return resources.map((res) => {
+    return resources.map((res, index) => {
       const urlStr = res?.url ?? "";
       const isImg = isImageFileName(res?.title || "") || Boolean(urlStr.match(/\.(png|jpg|jpeg|gif|webp|svg)$/i));
       const kind: AssetKind = res?.type === "image" || isImg ? "image" : urlStr.startsWith("http") ? "link" : "file";
       return {
-        id: res?.id || `res-${Math.random()}`,
+        id: res?.id || `res-${index}`,
         title: res?.title || "Resource",
         url: normalizeStorageUrl(urlStr),
         kind,

@@ -5,6 +5,7 @@ export interface ResourceLinkItem {
   title: string;
   url: string;
   type?: "link" | "file" | "image" | undefined;
+  preview_url?: string | undefined;
   size?: string | undefined;
   mime_type?: string | undefined;
   created_at?: string | undefined;
@@ -47,6 +48,8 @@ export interface ColumnData {
   project_id: string;
   color?: string;
   tasks?: TaskData[];
+  /** Lightweight per-column task total from the project list endpoint. */
+  task_count?: number;
 }
 
 export interface ChecklistItemData {
@@ -70,6 +73,7 @@ export interface AttachmentData {
   type: "link" | "file";
   title: string;
   url?: string | undefined;
+  preview_url?: string | undefined;
   size?: string | undefined;
   file_size?: number | undefined;
   mime_type?: string | undefined;

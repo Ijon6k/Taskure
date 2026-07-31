@@ -45,6 +45,12 @@ export const projectsService = {
     });
   },
 
+  deleteResource: (id: string, resourceId: string) => {
+    return fetcher<ProjectData>(`/projects/${id}/resources/${resourceId}`, {
+      method: "DELETE",
+    });
+  },
+
   deleteProject: (id: string) => {
     return fetcher<{ message: string }>(`/projects/${id}`, {
       method: "DELETE",

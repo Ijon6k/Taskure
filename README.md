@@ -75,7 +75,6 @@ graph TD
     Nginx -->|/ai/*| AI[AI Service: Python 3.12 + FastAPI]
     Nginx -->|/storage/*| S3[MinIO S3 Object Storage]
     API --> DB[(PostgreSQL 16 + pgvector)]
-    API --> Cache[(Redis 7)]
     API --> S3
     AI --> DB
 ```
@@ -124,7 +123,6 @@ All services run inside a unified Docker bridge network (`kanban-network`).
 | **AI** | `5000` | `/ai/*` | Python FastAPI service for AI & SSE streaming |
 | **PostgreSQL** | `5432` | Internal | PostgreSQL 16 database with `pgvector` |
 | **MinIO** | `9000` / `9001` | `/storage/*` | S3-compatible object storage for file attachments |
-| **Redis** | `6379` | Internal | Redis 7 caching and message broker |
 
 ---
 
@@ -134,7 +132,7 @@ If you wish to modify the code locally without running full Docker containers fo
 
 ### 1. Start Infrastructure Dependencies
 ```bash
-docker compose up -d postgres minio redis
+docker compose up -d postgres minio
 ```
 
 ### 2. Run Backend (Go)
@@ -173,7 +171,7 @@ bun dev
 - **Frontend**: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, `@dnd-kit`, Zustand v5, React Query v5, Lucide Icons, Radix UI.
 - **Backend API**: Go 1.25, Gin Framework, GORM, MinIO Go SDK, Zerolog, JWT.
 - **AI Service**: Python 3.12, FastAPI, Uvicorn, OpenAI SDK, Anthropic SDK.
-- **Database & Storage**: PostgreSQL 16 (`pgvector`), MinIO S3, Redis 7.
+- **Database & Storage**: PostgreSQL 16 (`pgvector`), MinIO S3.
 - **DevOps & Proxy**: Nginx 1.26 Alpine, Docker Compose.
 
 ---

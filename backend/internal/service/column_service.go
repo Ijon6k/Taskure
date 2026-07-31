@@ -20,18 +20,15 @@ type ColumnService interface {
 type columnService struct {
 	columnRepo  repository.ColumnRepository
 	projectRepo repository.ProjectRepository
-	taskService TaskService
 }
 
 func NewColumnService(
 	columnRepo repository.ColumnRepository,
 	projectRepo repository.ProjectRepository,
-	taskService TaskService,
 ) ColumnService {
 	return &columnService{
 		columnRepo:  columnRepo,
 		projectRepo: projectRepo,
-		taskService: taskService,
 	}
 }
 
@@ -62,10 +59,6 @@ func (s *columnService) CreateColumn(projectIDOrPublicID string, input CreateCol
 	if err := s.columnRepo.CreateColumn(&col); err != nil {
 		return nil, err
 	}
-
-	if s.taskService != nil {
-		s.taskService.InvalidateFocusCache()
-	}
 	return &col, nil
 }
 
@@ -78,15 +71,9 @@ func (s *columnService) UpdateColumn(id string, updates map[string]interface{}) 
 	if err := s.columnRepo.UpdateColumn(col, updates); err != nil {
 		return nil, err
 	}
-	if s.taskService != nil {
-		s.taskService.InvalidateFocusCache()
-	}
 	return col, nil
 }
 
 func (s *columnService) DeleteColumn(id string) error {
-	if s.taskService != nil {
-		s.taskService.InvalidateFocusCache()
-	}
 	return s.columnRepo.DeleteColumn(id)
 }

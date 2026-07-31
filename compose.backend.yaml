@@ -21,8 +21,6 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:-kanban}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
       - POSTGRES_DB=${POSTGRES_DB:-kanban}
-      # - REDIS_HOST=redis
-      # - REDIS_PORT=6379
       - MINIO_ENDPOINT=minio:9000
       - JWT_SECRET=${JWT_SECRET:-changeme}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
@@ -52,8 +50,6 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:-kanban}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
       - POSTGRES_DB=${POSTGRES_DB:-kanban}
-      # - REDIS_HOST=redis
-      # - REDIS_PORT=6379
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
     depends_on:

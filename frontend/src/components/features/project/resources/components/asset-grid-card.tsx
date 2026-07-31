@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { Eye, ExternalLink, Trash2, Edit3, Check, CheckSquare } from "lucide-react";
 import { ProjectAsset } from "../types";
-
-import { getThumbnailUrl } from "@/lib/image-url";
+import { ThumbnailImage } from "@/components/ui/thumbnail-image";
 
 interface AssetGridCardProps {
   asset: ProjectAsset;
@@ -27,8 +25,6 @@ export function AssetGridCard({
   isSelected = false,
   onToggleSelect,
 }: AssetGridCardProps) {
-  const [isLoaded, setIsLoaded] = useState(false);
-
   const handleClick = () => {
     if (isSelecting && onToggleSelect && asset.source.kind === "overview") {
       onToggleSelect(asset.id);
@@ -36,10 +32,6 @@ export function AssetGridCard({
       onPreview(asset);
     }
   };
-
-  const thumbUrl = asset.kind === "image" && asset.url
-    ? getThumbnailUrl(asset.url, 400)
-    : asset.url;
 
   const taskTitleShort = asset.source.label.replace(/^Task:\s*/i, "Task • ");
 
@@ -59,24 +51,20 @@ export function AssetGridCard({
         }`}
       >
         {asset.url ? (
-          <>
-            {!isLoaded && (
+          <ThumbnailImage
+            src={asset.url}
+            alt={asset.title}
+            width={400}
+            loading="lazy"
+            expectsVariants={Boolean(asset.previewUrl)}
+            className="absolute inset-0"
+            imgClassName="w-full h-full object-cover group-hover:scale-102"
+            skeleton={
               <div className="absolute inset-0 bg-surface-l2 animate-pulse flex items-center justify-center z-10">
                 <span className="w-5 h-5 rounded-full border-2 border-theme-subtle border-t-brand-accent animate-spin" />
               </div>
-            )}
-            <img
-              src={thumbUrl}
-              alt={asset.title}
-              loading="lazy"
-              decoding="async"
-              onLoad={() => setIsLoaded(true)}
-              onError={() => setIsLoaded(true)}
-              className={`w-full h-full object-cover group-hover:scale-102 transition-all duration-300 ${
-                isLoaded ? "opacity-100" : "opacity-0"
-              }`}
-            />
-          </>
+            }
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-theme-tertiary font-mono text-xs">
             No Preview

@@ -106,7 +106,7 @@ export function ProjectResourcesTab({
 
   return (
     <div className="flex-1 overflow-y-auto font-sans flex flex-col items-center text-theme-primary">
-      <PageContainer variant="wide" className="!space-y-8">
+      <PageContainer variant="wide" className="space-y-8!">
         {/* Workspace Editorial Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">

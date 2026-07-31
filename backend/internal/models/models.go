@@ -89,17 +89,17 @@ func (w *Workspace) BeforeCreate(tx *gorm.DB) error {
 
 type Project struct {
 	PublicBase
-	Name        string         `gorm:"not null;size:100" json:"name"`
-	Description string         `gorm:"size:500" json:"description,omitempty"`
-	WorkspaceID string         `gorm:"type:uuid;not null;index" json:"workspace_id"`
-	OwnerID     string         `gorm:"type:uuid;not null;index" json:"owner_id"`
-	Icon        string         `gorm:"size:10" json:"icon,omitempty"`
-	Color       string         `gorm:"size:7" json:"color,omitempty"`
-	Status      string         `gorm:"size:20;default:'active';index" json:"status"`
-	IsPinned    bool           `gorm:"default:false;index" json:"is_pinned"`
-	IsArchived  bool           `gorm:"default:false;index" json:"is_archived"`
-	FocusEnabled bool          `gorm:"not null;default:true;index" json:"focus_enabled"`
-	Settings    datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"settings"`
+	Name         string         `gorm:"not null;size:100" json:"name"`
+	Description  string         `gorm:"size:500" json:"description,omitempty"`
+	WorkspaceID  string         `gorm:"type:uuid;not null;index" json:"workspace_id"`
+	OwnerID      string         `gorm:"type:uuid;not null;index" json:"owner_id"`
+	Icon         string         `gorm:"size:10" json:"icon,omitempty"`
+	Color        string         `gorm:"size:7" json:"color,omitempty"`
+	Status       string         `gorm:"size:20;default:'active';index" json:"status"`
+	IsPinned     bool           `gorm:"default:false;index" json:"is_pinned"`
+	IsArchived   bool           `gorm:"default:false;index" json:"is_archived"`
+	FocusEnabled bool           `gorm:"not null;default:true;index" json:"focus_enabled"`
+	Settings     datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"settings"`
 
 	Columns     []Column         `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"columns,omitempty"`
 	Tasks       []Task           `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"tasks,omitempty"`
@@ -139,25 +139,30 @@ type Column struct {
 	WipLimit  *int   `json:"wip_limit,omitempty"`
 
 	Tasks []Task `gorm:"foreignKey:ColumnID;constraint:OnDelete:CASCADE" json:"tasks,omitempty"`
+
+	// TaskCount is a non-persisted aggregate used by the focus engine and the
+	// lightweight project list to report per-column task totals without
+	// preloading every task row.
+	TaskCount int `gorm:"-" json:"task_count,omitempty"`
 }
 
 // --- Task ---
 
 type Task struct {
 	PublicBase
-	Title          string     `gorm:"not null;size:200" json:"title"`
-	Description    string     `gorm:"type:text" json:"description,omitempty"`
-	ColumnID       string     `gorm:"type:uuid;not null;index:idx_task_column_position,priority:1;index:idx_task_column_position_single" json:"column_id"`
-	ProjectID      string     `gorm:"type:uuid;not null;index:idx_task_project_status,priority:1;index" json:"project_id"`
-	AssigneeID     *string    `gorm:"type:uuid;index" json:"assignee_id,omitempty"`
-	Priority       string     `gorm:"size:20;default:'medium';index" json:"priority"`
-	Status         string     `gorm:"size:20;default:'todo';index" json:"status"`
-	Position       int        `gorm:"not null;default:0" json:"position"`
-	DueDate        *time.Time `json:"due_date,omitempty"`
-	StartDate      *time.Time `json:"start_date,omitempty"`
-	EstimatedHours *float64   `json:"estimated_hours,omitempty"`
-	ActualHours    *float64   `json:"actual_hours,omitempty"`
-	Tags           datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"tags"`
+	Title           string         `gorm:"not null;size:200" json:"title"`
+	Description     string         `gorm:"type:text" json:"description,omitempty"`
+	ColumnID        string         `gorm:"type:uuid;not null;index:idx_task_column_position,priority:1;index:idx_task_column_position_single" json:"column_id"`
+	ProjectID       string         `gorm:"type:uuid;not null;index:idx_task_project_status,priority:1;index" json:"project_id"`
+	AssigneeID      *string        `gorm:"type:uuid;index" json:"assignee_id,omitempty"`
+	Priority        string         `gorm:"size:20;default:'medium';index" json:"priority"`
+	Status          string         `gorm:"size:20;default:'todo';index" json:"status"`
+	Position        int            `gorm:"not null;default:0" json:"position"`
+	DueDate         *time.Time     `json:"due_date,omitempty"`
+	StartDate       *time.Time     `json:"start_date,omitempty"`
+	EstimatedHours  *float64       `json:"estimated_hours,omitempty"`
+	ActualHours     *float64       `json:"actual_hours,omitempty"`
+	Tags            datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"tags"`
 	AttachmentsJSON datatypes.JSON `gorm:"column:attachments_json;type:jsonb;default:'[]'" json:"attachments"`
 
 	Labels         []Label         `gorm:"many2many:task_labels;constraint:OnDelete:CASCADE" json:"labels,omitempty"`
@@ -290,6 +295,28 @@ type Discussion struct {
 	Mentions  datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"mentions"`
 }
 
+// --- ImageVariantJob ---
+
+// Image variant job status values.
+const (
+	VariantJobPending    = "pending"
+	VariantJobProcessing = "processing"
+	VariantJobDone       = "done"
+	VariantJobFailed     = "failed"
+)
+
+// ImageVariantJob is a queued image-variant generation request. Uploads persist
+// only the original object and enqueue a job; the background worker builds the
+// derived WebP widths later so the request path stays small and fast.
+type ImageVariantJob struct {
+	Base
+	ObjectKey   string     `gorm:"not null;size:500;index" json:"object_key"`
+	Status      string     `gorm:"not null;size:20;default:'pending';index:idx_variant_job_queue,priority:1" json:"status"`
+	Attempts    int        `gorm:"not null;default:0" json:"attempts"`
+	LastError   string     `gorm:"size:500" json:"last_error,omitempty"`
+	ProcessedAt *time.Time `json:"processed_at,omitempty"`
+}
+
 // --- Activity ---
 
 type Activity struct {
@@ -304,13 +331,13 @@ type Activity struct {
 // --- PATCH Input Structs ---
 
 type UpdateTaskInput struct {
-	Title       *string                    `json:"title,omitempty"`
-	Description *string                    `json:"description,omitempty"`
-	Priority    *string                    `json:"priority,omitempty"`
-	Status      *string                    `json:"status,omitempty"`
-	DueDate     *time.Time                 `json:"due_date,omitempty"`
-	Tags        []string                   `json:"tags,omitempty"`
-	Attachments []map[string]interface{}   `json:"attachments,omitempty"`
+	Title       *string                  `json:"title,omitempty"`
+	Description *string                  `json:"description,omitempty"`
+	Priority    *string                  `json:"priority,omitempty"`
+	Status      *string                  `json:"status,omitempty"`
+	DueDate     *time.Time               `json:"due_date,omitempty"`
+	Tags        []string                 `json:"tags,omitempty"`
+	Attachments []map[string]interface{} `json:"attachments,omitempty"`
 }
 
 type UpdateProjectInput struct {
@@ -358,5 +385,6 @@ func AllModels() []any {
 		&ProjectContext{},
 		&Discussion{},
 		&Activity{},
+		&ImageVariantJob{},
 	}
 }
