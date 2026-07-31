@@ -63,7 +63,7 @@ out/
 # Logs
 *.log
 logs/
-
+.trae
 # Database
 *.sqlite
 *.sqlite3

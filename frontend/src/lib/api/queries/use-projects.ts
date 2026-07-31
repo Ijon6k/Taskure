@@ -31,6 +31,17 @@ export function useProject(id: string) {
   });
 }
 
+export function useProjectBoard(id: string) {
+  return useQuery({
+    queryKey: [...PROJECT_KEYS.all, "board", id],
+    queryFn: () => projectsService.getProjectBoard(id),
+    enabled: Boolean(id),
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 15,
+    refetchOnWindowFocus: false,
+  });
+}
+
 export function useCreateProject() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -50,6 +61,7 @@ export function useUpdateProject() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.all });
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: [...PROJECT_KEYS.all, "board", variables.id] });
       invalidateFocusQueries(queryClient);
     },
   });
@@ -59,8 +71,9 @@ export function useDeleteProject() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => projectsService.deleteProject(id),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: PROJECT_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: [...PROJECT_KEYS.all, "board", variables] });
       invalidateFocusQueries(queryClient);
     },
   });

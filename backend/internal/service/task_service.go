@@ -64,7 +64,7 @@ type TaskService interface {
 	DeleteChecklistItem(id string) error
 
 	// Focus Engine
-	GetFocusTask() (*focusengine.FocusResult, error)
+	GetFocusTask(projectID string, limit int) (*focusengine.FocusResult, error)
 	GetFocusOverview() (*repository.FocusOverviewResult, error)
 	InvalidateFocusCache()
 }
@@ -72,16 +72,18 @@ type TaskService interface {
 type taskService struct {
 	taskRepo         repository.TaskRepository
 	projectRepo      repository.ProjectRepository
+	columnRepo       repository.ColumnRepository
 	storage          storage.StorageService
 	cacheMu          sync.RWMutex
 	focusCache       *focusengine.FocusResult
 	focusCacheExpiry time.Time
 }
 
-func NewTaskService(taskRepo repository.TaskRepository, projectRepo repository.ProjectRepository, storage storage.StorageService) TaskService {
+func NewTaskService(taskRepo repository.TaskRepository, projectRepo repository.ProjectRepository, columnRepo repository.ColumnRepository, storage storage.StorageService) TaskService {
 	return &taskService{
 		taskRepo:    taskRepo,
 		projectRepo: projectRepo,
+		columnRepo:  columnRepo,
 		storage:     storage,
 	}
 }
@@ -212,21 +214,16 @@ func (s *taskService) MoveTask(idOrPublicID string, input MoveTaskInput) (*model
 		"position":  input.Position,
 	}
 
-	// Look up target column's behavior from task's project
-	project, err := s.projectRepo.FindProject(task.ProjectID)
-	if err == nil && project != nil {
-		for _, col := range project.Columns {
-			if col.ID == input.ColumnID {
-				if col.Behavior == models.ColumnBehaviorCompleted {
-					updates["status"] = "done"
-				} else {
-					if input.Status != "" {
-						updates["status"] = input.Status
-					} else {
-						updates["status"] = "in_progress"
-					}
-				}
-				break
+	// Look up target column's behavior directly
+	col, err := s.columnRepo.FindColumnByID(input.ColumnID)
+	if err == nil && col != nil {
+		if col.Behavior == models.ColumnBehaviorCompleted {
+			updates["status"] = "done"
+		} else {
+			if input.Status != "" {
+				updates["status"] = input.Status
+			} else {
+				updates["status"] = "in_progress"
 			}
 		}
 	} else if input.Status != "" {
@@ -294,8 +291,11 @@ func (s *taskService) DeleteChecklistItem(id string) error {
 	return s.taskRepo.DeleteChecklistItem(id)
 }
 
-func (s *taskService) GetFocusTask() (*focusengine.FocusResult, error) {
-	pendingTasks, err := s.taskRepo.GetPendingTasks()
+func (s *taskService) GetFocusTask(projectID string, limit int) (*focusengine.FocusResult, error) {
+	if limit <= 0 {
+		limit = 100
+	}
+	pendingTasks, err := s.taskRepo.GetPendingTasks(projectID, limit)
 	if err != nil {
 		return nil, err
 	}

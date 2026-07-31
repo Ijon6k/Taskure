@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { ProjectData, ResourceLinkItem, api } from "@/lib/api";
+import { normalizeStorageUrl } from "@/lib/image-url";
 import { ProjectAsset, GroupByOption, AssetGroup, AssetKind } from "../types";
 import { UploadQueueItem } from "../components/upload-queue-card";
 import { toast } from "sonner";
@@ -54,17 +55,18 @@ export function useProjectAssets(
   const overviewAssets = useMemo<ProjectAsset[]>(() => {
     const raw: ResourceLinkItem[] = project?.settings?.resources ?? [];
     return raw.map((res) => {
-      const isImg = isImageFileName(res.title) || res.url.match(/\.(png|jpg|jpeg|gif|webp|svg)$/i);
-      const kind: AssetKind = res.type === "image" || isImg ? "image" : res.url.startsWith("http") ? "link" : "file";
+      const urlStr = res?.url ?? "";
+      const isImg = isImageFileName(res?.title || "") || Boolean(urlStr.match(/\.(png|jpg|jpeg|gif|webp|svg)$/i));
+      const kind: AssetKind = res?.type === "image" || isImg ? "image" : urlStr.startsWith("http") ? "link" : "file";
 
       return {
-        id: res.id,
-        title: res.title,
-        url: res.url,
+        id: res?.id || `res-${Math.random()}`,
+        title: res?.title || "Resource",
+        url: normalizeStorageUrl(urlStr),
         kind,
-        size: res.size,
-        mimeType: res.mime_type,
-        createdAt: res.created_at,
+        size: res?.size,
+        mimeType: res?.mime_type,
+        createdAt: res?.created_at,
         source: {
           kind: "overview",
           label: "Project Overview",
@@ -86,7 +88,7 @@ export function useProjectAssets(
           return {
             id: att.id,
             title: att.title || "Task Attachment",
-            url: att.url || "",
+            url: normalizeStorageUrl(att.url || ""),
             kind,
             size: att.size,
             mimeType: att.mime_type,

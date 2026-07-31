@@ -133,7 +133,7 @@ type Column struct {
 	InternalBase
 	Name      string `gorm:"not null;size:50" json:"name"`
 	Behavior  string `gorm:"size:20;not null;default:'active';index" json:"behavior"`
-	Position  int    `gorm:"not null;default:0" json:"position"`
+	Position  int    `gorm:"not null;default:0;index:idx_column_project_position,priority:2" json:"position"`
 	ProjectID string `gorm:"type:uuid;not null;index:idx_column_project_position,priority:1" json:"project_id"`
 	Color     string `gorm:"size:7" json:"color,omitempty"`
 	WipLimit  *int   `json:"wip_limit,omitempty"`
@@ -147,8 +147,8 @@ type Task struct {
 	PublicBase
 	Title          string     `gorm:"not null;size:200" json:"title"`
 	Description    string     `gorm:"type:text" json:"description,omitempty"`
-	ColumnID       string     `gorm:"type:uuid;not null;index:idx_task_column_position,priority:1" json:"column_id"`
-	ProjectID      string     `gorm:"type:uuid;not null;index" json:"project_id"`
+	ColumnID       string     `gorm:"type:uuid;not null;index:idx_task_column_position,priority:1;index:idx_task_column_position_single" json:"column_id"`
+	ProjectID      string     `gorm:"type:uuid;not null;index:idx_task_project_status,priority:1;index" json:"project_id"`
 	AssigneeID     *string    `gorm:"type:uuid;index" json:"assignee_id,omitempty"`
 	Priority       string     `gorm:"size:20;default:'medium';index" json:"priority"`
 	Status         string     `gorm:"size:20;default:'todo';index" json:"status"`
@@ -299,6 +299,47 @@ type Activity struct {
 	EntityID   string         `gorm:"type:uuid;not null;index" json:"entity_id"`
 	ActorID    string         `gorm:"type:uuid;not null;index" json:"actor_id"`
 	Metadata   datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"metadata"`
+}
+
+// --- PATCH Input Structs ---
+
+type UpdateTaskInput struct {
+	Title       *string                    `json:"title,omitempty"`
+	Description *string                    `json:"description,omitempty"`
+	Priority    *string                    `json:"priority,omitempty"`
+	Status      *string                    `json:"status,omitempty"`
+	DueDate     *time.Time                 `json:"due_date,omitempty"`
+	Tags        []string                   `json:"tags,omitempty"`
+	Attachments []map[string]interface{}   `json:"attachments,omitempty"`
+}
+
+type UpdateProjectInput struct {
+	Name         *string `json:"name,omitempty"`
+	Description  *string `json:"description,omitempty"`
+	Color        *string `json:"color,omitempty"`
+	Icon         *string `json:"icon,omitempty"`
+	Status       *string `json:"status,omitempty"`
+	IsPinned     *bool   `json:"is_pinned,omitempty"`
+	IsArchived   *bool   `json:"is_archived,omitempty"`
+	FocusEnabled *bool   `json:"focus_enabled,omitempty"`
+}
+
+type UpdateColumnInput struct {
+	Name     *string `json:"name,omitempty"`
+	Color    *string `json:"color,omitempty"`
+	Position *int    `json:"position,omitempty"`
+	Behavior *string `json:"behavior,omitempty"`
+}
+
+type UpdateChecklistItemInput struct {
+	Title       *string `json:"title,omitempty"`
+	IsCompleted *bool   `json:"is_completed,omitempty"`
+	Position    *int    `json:"position,omitempty"`
+}
+
+type UpdateWorkspaceInput struct {
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
 }
 
 // AllModels returns every model registered with GORM AutoMigrate.

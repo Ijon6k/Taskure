@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"net/http"
+
+	"github.com/Ijon6k/Taskure/apps/api/internal/models"
 	"github.com/Ijon6k/Taskure/apps/api/internal/response"
 	"github.com/Ijon6k/Taskure/apps/api/internal/service"
 	"github.com/gin-gonic/gin"
@@ -35,7 +38,11 @@ func (h *TaskHandler) GetTask(c *gin.Context) {
 	idParam := c.Param("id")
 	task, err := h.service.GetTask(idParam)
 	if err != nil {
-		response.NotFound(c, "Task not found")
+		if response.IsNotFound(err) {
+			response.NotFound(c, "Task not found")
+		} else {
+			response.SafeError(c, http.StatusInternalServerError, err)
+		}
 		return
 	}
 
@@ -44,18 +51,44 @@ func (h *TaskHandler) GetTask(c *gin.Context) {
 
 func (h *TaskHandler) UpdateTask(c *gin.Context) {
 	idParam := c.Param("id")
-	var updates map[string]interface{}
-	if err := c.ShouldBindJSON(&updates); err != nil {
+	var input models.UpdateTaskInput
+	if err := c.ShouldBindJSON(&input); err != nil {
 		response.BadRequest(c, err)
 		return
 	}
 
-	task, err := h.service.UpdateTask(idParam, updates)
-	if err != nil {
-		response.NotFound(c, "Task not found")
-		return
+	updates := make(map[string]interface{})
+	if input.Title != nil {
+		updates["title"] = *input.Title
+	}
+	if input.Description != nil {
+		updates["description"] = *input.Description
+	}
+	if input.Priority != nil {
+		updates["priority"] = *input.Priority
+	}
+	if input.Status != nil {
+		updates["status"] = *input.Status
+	}
+	if input.DueDate != nil {
+		updates["due_date"] = *input.DueDate
+	}
+	if input.Tags != nil {
+		updates["tags"] = input.Tags
+	}
+	if input.Attachments != nil {
+		updates["attachments"] = input.Attachments
 	}
 
+	task, err := h.service.UpdateTask(idParam, updates)
+	if err != nil {
+		if response.IsNotFound(err) {
+			response.NotFound(c, "Task not found")
+		} else {
+			response.SafeError(c, http.StatusInternalServerError, err)
+		}
+		return
+	}
 	response.OK(c, task)
 }
 
@@ -69,7 +102,11 @@ func (h *TaskHandler) MoveTask(c *gin.Context) {
 
 	task, err := h.service.MoveTask(idParam, input)
 	if err != nil {
-		response.NotFound(c, "Task not found")
+		if response.IsNotFound(err) {
+			response.NotFound(c, "Task not found")
+		} else {
+			response.SafeError(c, http.StatusInternalServerError, err)
+		}
 		return
 	}
 
@@ -79,7 +116,11 @@ func (h *TaskHandler) MoveTask(c *gin.Context) {
 func (h *TaskHandler) DeleteTask(c *gin.Context) {
 	idParam := c.Param("id")
 	if err := h.service.DeleteTask(idParam); err != nil {
-		response.InternalServerError(c, err)
+		if response.IsNotFound(err) {
+			response.NotFound(c, "Task not found")
+		} else {
+			response.SafeError(c, http.StatusInternalServerError, err)
+		}
 		return
 	}
 

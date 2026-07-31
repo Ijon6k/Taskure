@@ -69,10 +69,10 @@ export interface AttachmentData {
   id: string;
   type: "link" | "file";
   title: string;
-  url?: string;
-  size?: string;
-  file_size?: number;
-  mime_type?: string;
+  url?: string | undefined;
+  size?: string | undefined;
+  file_size?: number | undefined;
+  mime_type?: string | undefined;
 }
 
 export interface ProjectContextData {

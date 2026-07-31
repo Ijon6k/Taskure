@@ -55,6 +55,17 @@ func (h *ProjectHandler) GetProject(c *gin.Context) {
 	response.OK(c, project)
 }
 
+func (h *ProjectHandler) GetProjectBoard(c *gin.Context) {
+	idParam := c.Param("id")
+	project, err := h.service.GetProjectBoard(idParam)
+	if err != nil {
+		response.NotFound(c, "Project not found")
+		return
+	}
+
+	response.OK(c, project)
+}
+
 func (h *ProjectHandler) UpdateProject(c *gin.Context) {
 	idParam := c.Param("id")
 	var updates map[string]interface{}

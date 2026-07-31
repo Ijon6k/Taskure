@@ -31,6 +31,7 @@ type ProjectService interface {
 	ListProjects(status string, search string, pinned bool) ([]models.Project, error)
 	CreateProject(input CreateProjectInput) (*models.Project, error)
 	GetProject(idOrPublicID string) (*models.Project, error)
+	GetProjectBoard(idOrPublicID string) (*models.Project, error)
 	UpdateProject(idOrPublicID string, updates map[string]interface{}) (*models.Project, error)
 	DeleteProject(idOrPublicID string) error
 
@@ -67,7 +68,8 @@ func (s *projectService) ListProjects(status string, search string, pinned bool)
 	if err != nil {
 		return nil, err
 	}
-	return s.projectRepo.ListProjects(ws.ID, status, search, pinned)
+	projects, _, err := s.projectRepo.ListProjectsLight(ws.ID, status, search, pinned, 0, 0)
+	return projects, err
 }
 
 func (s *projectService) CreateProject(input CreateProjectInput) (*models.Project, error) {
@@ -127,6 +129,10 @@ func (s *projectService) CreateProject(input CreateProjectInput) (*models.Projec
 }
 
 func (s *projectService) GetProject(idOrPublicID string) (*models.Project, error) {
+	return s.projectRepo.FindProject(idOrPublicID)
+}
+
+func (s *projectService) GetProjectBoard(idOrPublicID string) (*models.Project, error) {
 	return s.projectRepo.FindProject(idOrPublicID)
 }
 

@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { ResourceLinkItem, api } from "@/lib/api";
+import { normalizeStorageUrl } from "@/lib/image-url";
 import { AutoResizeTextarea } from "@/components/ui/auto-resize-textarea";
 import { AssetGridCard } from "../resources/components/asset-grid-card";
 import { AssetListRow } from "../resources/components/asset-list-row";
@@ -73,16 +74,17 @@ export function ProjectResourcesSection({
   // Map Overview resources strictly into ProjectAsset array
   const overviewAssets = useMemo<ProjectAsset[]>(() => {
     return resources.map((res) => {
-      const isImg = isImageFileName(res.title) || res.url.match(/\.(png|jpg|jpeg|gif|webp|svg)$/i);
-      const kind: AssetKind = res.type === "image" || isImg ? "image" : res.url.startsWith("http") ? "link" : "file";
+      const urlStr = res?.url ?? "";
+      const isImg = isImageFileName(res?.title || "") || Boolean(urlStr.match(/\.(png|jpg|jpeg|gif|webp|svg)$/i));
+      const kind: AssetKind = res?.type === "image" || isImg ? "image" : urlStr.startsWith("http") ? "link" : "file";
       return {
-        id: res.id,
-        title: res.title,
-        url: res.url,
+        id: res?.id || `res-${Math.random()}`,
+        title: res?.title || "Resource",
+        url: normalizeStorageUrl(urlStr),
         kind,
-        size: res.size,
-        mimeType: res.mime_type,
-        createdAt: res.created_at,
+        size: res?.size,
+        mimeType: res?.mime_type,
+        createdAt: res?.created_at,
         source: {
           kind: "overview",
           label: "Project Overview",

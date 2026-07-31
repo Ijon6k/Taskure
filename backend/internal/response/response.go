@@ -2,9 +2,12 @@
 package response
 
 import (
+	"errors"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type ErrorResponse struct {
@@ -64,4 +67,18 @@ func InternalServerError(c *gin.Context, err error) {
 		msg = err.Error()
 	}
 	Error(c, http.StatusInternalServerError, msg)
+}
+
+// IsNotFound returns true if the error is a record-not-found error.
+func IsNotFound(err error) bool {
+	return errors.Is(err, gorm.ErrRecordNotFound)
+}
+
+// SafeError returns a safe error message based on the environment.
+func SafeError(c *gin.Context, statusCode int, err error) {
+	msg := "An internal server error occurred"
+	if os.Getenv("GIN_MODE") != "release" {
+		msg = err.Error()
+	}
+	Error(c, statusCode, msg)
 }

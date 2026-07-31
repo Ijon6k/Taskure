@@ -12,6 +12,7 @@ import { workspaceService } from "./api/services/workspace.service";
 export const api = {
   getProjects: projectsService.getProjects,
   getProject: projectsService.getProject,
+  getProjectBoard: projectsService.getProjectBoard,
   createProject: projectsService.createProject,
   updateProject: projectsService.updateProject,
   uploadProjectResource: projectsService.uploadResource,

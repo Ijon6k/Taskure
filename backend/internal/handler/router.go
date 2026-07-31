@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/Ijon6k/Taskure/apps/api/internal/middleware"
 	"github.com/Ijon6k/Taskure/apps/api/internal/service"
 	"github.com/Ijon6k/Taskure/apps/api/internal/storage"
 	"github.com/gin-gonic/gin"
@@ -60,8 +61,8 @@ func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 		projects.GET("", c.ProjectHandler.ListProjects)
 		projects.POST("", c.ProjectHandler.CreateProject)
 		projects.GET("/:id", c.ProjectHandler.GetProject)
+		projects.GET("/:id/board", c.ProjectHandler.GetProjectBoard)
 		projects.PATCH("/:id", c.ProjectHandler.UpdateProject)
-		projects.POST("/:id/resources/upload", c.ProjectHandler.UploadProjectResource)
 		projects.DELETE("/:id", c.ProjectHandler.DeleteProject)
 
 		// Column & Task creation scoped under project
@@ -82,8 +83,20 @@ func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 		tasks.PATCH("/:id", c.TaskHandler.UpdateTask)
 		tasks.DELETE("/:id", c.TaskHandler.DeleteTask)
 		tasks.POST("/:id/checklist", c.ChecklistHandler.AddChecklistItem)
-		tasks.POST("/:id/attachments", c.TaskHandler.UploadTaskAttachment)
-		tasks.DELETE("/:id/attachments/:attachmentId", c.TaskHandler.DeleteTaskAttachment)
+		}
+
+	// Upload routes with rate limiting
+	projectUpload := r.Group("/projects")
+	projectUpload.Use(middleware.UploadRateLimiter())
+	{
+		projectUpload.POST("/:id/resources/upload", c.ProjectHandler.UploadProjectResource)
+	}
+
+	taskUpload := r.Group("/tasks")
+	taskUpload.Use(middleware.UploadRateLimiter())
+	{
+		taskUpload.POST("/:id/attachments", c.TaskHandler.UploadTaskAttachment)
+		taskUpload.DELETE("/:id/attachments/:attachmentId", c.TaskHandler.DeleteTaskAttachment)
 	}
 
 	checklist := r.Group("/checklist")
@@ -94,5 +107,9 @@ func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 
 	r.GET("/focus", c.FocusHandler.GetFocusTask)
 	r.GET("/focus/overview", c.FocusHandler.GetFocusOverview)
-	r.POST("/seed", c.SeedHandler.SeedDemoData)
+	seed := r.Group("/seed")
+	seed.Use(middleware.SeedRateLimiter())
+	{
+		seed.POST("", c.SeedHandler.SeedDemoData)
+	}
 }

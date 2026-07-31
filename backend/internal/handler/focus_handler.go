@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"strconv"
+
 	"github.com/Ijon6k/Taskure/apps/api/internal/response"
 	"github.com/Ijon6k/Taskure/apps/api/internal/service"
 	"github.com/Ijon6k/Taskure/apps/api/internal/viewmodels"
@@ -16,9 +18,18 @@ func NewFocusHandler(service service.TaskService) *FocusHandler {
 }
 
 func (h *FocusHandler) GetFocusTask(c *gin.Context) {
-	focus, err := h.service.GetFocusTask()
+	projectID := c.Query("project_id")
+	limitStr := c.Query("limit")
+	limit := 100
+	if limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			limit = l
+		}
+	}
+
+	focus, err := h.service.GetFocusTask(projectID, limit)
 	if err != nil {
-		response.InternalServerError(c, err)
+		response.SafeError(c, 500, err)
 		return
 	}
 

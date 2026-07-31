@@ -80,7 +80,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const getProjectNavUrl = useCallback((projectId: string) => {
     return defaultProjectView === "overview"
-      ? `/projects/${projectId}`
+      ? `/projects/${projectId}/overview`
       : `/projects/${projectId}/board`;
   }, [defaultProjectView]);
 

@@ -20,10 +20,6 @@ type Config struct {
 	PostgresPassword string
 	PostgresDB       string
 
-	RedisHost     string
-	RedisPort     string
-	RedisPassword string
-
 	MinIOEndpoint  string
 	MinIOUser      string
 	MinIOPassword  string
@@ -31,13 +27,13 @@ type Config struct {
 	MinIOPublicURL string
 	MinIOUseSSL    bool
 
-	OpenAIKey      string
-	AnthropicKey   string
+	OpenAIKey    string
+	AnthropicKey string
 }
 
 // Load reads configuration from env vars, falling back to defaults.
 func Load() Config {
-	return Config{
+	cfg := Config{
 		AppEnv:       getenv("APP_ENV", "development"),
 		APIHost:      getenv("API_HOST", "0.0.0.0"),
 		APIPort:      getenv("API_PORT", "4000"),
@@ -51,20 +47,17 @@ func Load() Config {
 		PostgresPassword: getenv("POSTGRES_PASSWORD", "changeme"),
 		PostgresDB:       getenv("POSTGRES_DB", "kanban"),
 
-		RedisHost:     getenv("REDIS_HOST", "redis"),
-		RedisPort:     getenv("REDIS_PORT", "6379"),
-		RedisPassword: getenv("REDIS_PASSWORD", ""),
-
 		MinIOEndpoint:  getenvFirst([]string{"MINIO_ENDPOINT", "S3_ENDPOINT"}, "minio:9000"),
 		MinIOUser:      getenvFirst([]string{"MINIO_ACCESS_KEY", "MINIO_ROOT_USER", "MINIO_USER", "AWS_ACCESS_KEY_ID"}, "minioadmin"),
 		MinIOPassword:  getenvFirst([]string{"MINIO_SECRET_KEY", "MINIO_ROOT_PASSWORD", "MINIO_PASSWORD", "AWS_SECRET_ACCESS_KEY"}, "minioadmin"),
 		MinIOBucket:    getenvFirst([]string{"MINIO_BUCKET", "S3_BUCKET"}, "kanban-uploads"),
-		MinIOPublicURL: getenvFirst([]string{"MINIO_PUBLIC_URL", "S3_PUBLIC_URL"}, "http://localhost:1106/storage/kanban-uploads"),
+		MinIOPublicURL: getenvFirst([]string{"MINIO_PUBLIC_URL", "S3_PUBLIC_URL"}, "/storage/kanban-uploads"),
 		MinIOUseSSL:    getenvFirst([]string{"MINIO_USE_SSL", "S3_USE_SSL"}, "false") == "true",
 
 		OpenAIKey:    getenv("OPENAI_API_KEY", ""),
 		AnthropicKey: getenv("ANTHROPIC_API_KEY", ""),
 	}
+	return cfg
 }
 
 // PostgresDSN returns a postgres connection string suitable for GORM.

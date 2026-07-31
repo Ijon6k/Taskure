@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Edit3, CheckCircle2, LayoutGrid, Plus, Check, X } from "lucide-react";
 import { api, ProjectData, TaskData, ResourceLinkItem } from "@/lib/api";
 import { computeTaskStats } from "@/lib/helpers";
@@ -44,11 +44,32 @@ export function ProjectOverviewTab({
   const [strategyNotes, setStrategyNotes] = useState(settings.strategy_notes ?? "");
   const [saving, setSaving] = useState(false);
 
-  if (!project) return null;
+  // Sync state when project data loads
+  const settingsJson = JSON.stringify(project?.settings || {});
+  const projectVersion = `${project?.id}-${project?.name}-${project?.updated_at}-${settingsJson}`;
 
-  const stats = computeTaskStats(project.columns || []);
+  useEffect(() => {
+    if (!isEditingInline && project) {
+      setName(project.name || "");
+      setDescription(project.description || "");
+      setStatus(project.status || "active");
+      const st = project.settings ?? {};
+      setTargetGoal(st.target_goal ?? "");
+      setTargetDate(st.target_date ?? "");
+      setTagsInput((st.tags ?? []).join(", "));
+      setResources(st.resources ?? []);
+      setStrategyNotes(st.strategy_notes ?? "");
+    }
+  }, [projectVersion, isEditingInline]);
 
-  const priorityOrder: Record<string, number> = { urgent: 1, high: 2, medium: 3, low: 4 };
+  const stats = useMemo(() => {
+    return computeTaskStats(project?.columns || []);
+  }, [project?.columns]);
+
+  const priorityOrder: Record<string, number> = useMemo(
+    () => ({ urgent: 1, high: 2, medium: 3, low: 4 }),
+    []
+  );
 
   const completedColumnIds = useMemo(() => {
     const set = new Set<string>();
@@ -62,7 +83,7 @@ export function ProjectOverviewTab({
 
   const { sortedActiveTasks, focusTask, upcomingTasks, completedTasks } = useMemo(() => {
     const isCompletedTask = (t: TaskData) =>
-      completedColumnIds.has(t.column_id) || t.status === "done" || Boolean((t as any).is_completed);
+      completedColumnIds.has(t.column_id) || t.status === "done" || Boolean((t as TaskData & { is_completed?: boolean }).is_completed);
 
     const activeTasks = stats.allTasks.filter((t) => !isCompletedTask(t));
 
@@ -77,7 +98,9 @@ export function ProjectOverviewTab({
       ).slice(0, 5),
       completedTasks: stats.allTasks.filter(isCompletedTask).slice(0, 5),
     };
-  }, [stats.allTasks, completedColumnIds]);
+  }, [stats.allTasks, completedColumnIds, priorityOrder]);
+
+  if (!project) return null;
 
   const handleStartEdit = () => {
     setName(project.name || "");

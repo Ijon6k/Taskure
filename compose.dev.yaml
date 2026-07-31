@@ -81,15 +81,6 @@ services:
       - services
       - db
 
-  # redis:  # Uncomment when adding RAG ingestion queues or AI rate limiting
-  #   container_name: kanban-redis-dev
-  #   ports:
-  #     - "${PORT_REDIS:-6379}:6379"
-  #   profiles:
-  #     - full
-  #     - services
-  #     - db
-
   minio:
     container_name: kanban-minio-dev
     ports:

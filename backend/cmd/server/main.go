@@ -56,7 +56,7 @@ func main() {
 	taskRepo := repository.NewTaskRepository(conn)
 
 	workspaceService := service.NewWorkspaceService(workspaceRepo)
-	taskService := service.NewTaskService(taskRepo, projectRepo, storageSvc)
+	taskService := service.NewTaskService(taskRepo, projectRepo, columnRepo, storageSvc)
 	projectService := service.NewProjectService(projectRepo, workspaceRepo, columnRepo, taskService, storageSvc)
 	columnService := service.NewColumnService(columnRepo, projectRepo, taskService)
 	seedService := service.NewSeedService(workspaceRepo, projectRepo, columnRepo, taskRepo, taskService)
@@ -76,8 +76,9 @@ func main() {
 	router := gin.New()
 
 	router.Use(middleware.Recovery())
-	router.Use(middleware.Logger(logger))
+	router.Use(middleware.Logger())
 	router.Use(middleware.CORS(cfg.CORSOrigins))
+	router.Use(middleware.MaxBodySize(500 * 1024 * 1024))
 
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{

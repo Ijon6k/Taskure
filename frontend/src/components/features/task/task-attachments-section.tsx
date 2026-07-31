@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Link2, Upload, Plus, Trash2, ExternalLink, FileText, Image as ImageIcon, Eye, X } from "lucide-react";
 import { toast } from "sonner";
+import { getThumbnailUrl, getPreviewUrl } from "@/lib/image-url";
+import { ImageLightboxModal } from "@/components/ui/overlays/image-lightbox-modal";
 
 export interface AttachmentItem {
   id: string;
@@ -224,7 +226,7 @@ export function TaskAttachmentsSection({
                       title="Click to expand image preview"
                     >
                       <img
-                        src={item.url}
+                        src={getThumbnailUrl(item.url)}
                         alt={item.title}
                         className="w-full h-full object-cover transition-transform duration-200 group-hover/thumb:scale-105"
                       />
@@ -305,55 +307,13 @@ export function TaskAttachmentsSection({
         </div>
       )}
 
-      {/* Image Preview Lightbox Pop-up Modal */}
-      {previewImage && (
-        <div
-          className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-4 select-none animate-in fade-in duration-150"
-          onClick={() => setPreviewImage(null)}
-        >
-          <div
-            className="relative max-w-4xl max-h-[90vh] w-full flex flex-col items-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Top Header Bar */}
-            <div className="w-full flex items-center justify-between py-2.5 px-4 bg-surface-l5 border border-theme-default rounded-t-md text-theme-primary">
-              <div className="flex items-center gap-2 min-w-0 pr-4">
-                <ImageIcon className="w-4 h-4 text-brand-accent shrink-0" />
-                <span className="text-sm font-medium truncate">{previewImage.title}</span>
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <a
-                  href={previewImage.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="p-1.5 rounded-md hover:bg-surface-hover text-theme-secondary hover:text-theme-primary transition-colors flex items-center gap-1 text-xs"
-                  title="Open original image"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Open original</span>
-                </a>
-                <button
-                  type="button"
-                  onClick={() => setPreviewImage(null)}
-                  className="p-1.5 rounded-md hover:bg-surface-hover text-theme-secondary hover:text-theme-primary transition-colors"
-                  title="Close preview (Esc)"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Image Preview Container */}
-            <div className="w-full bg-surface-l1 border-x border-b border-theme-default rounded-b-md p-4 flex items-center justify-center overflow-hidden max-h-[78vh]">
-              <img
-                src={previewImage.url}
-                alt={previewImage.title}
-                className="max-h-[72vh] max-w-full object-contain rounded-md shadow-2xl"
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Reusable Image Preview Lightbox Modal */}
+      <ImageLightboxModal
+        isOpen={Boolean(previewImage)}
+        imageUrl={previewImage?.url}
+        title={previewImage?.title}
+        onClose={() => setPreviewImage(null)}
+      />
     </div>
   );
 }

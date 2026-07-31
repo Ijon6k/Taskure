@@ -91,23 +91,6 @@ services:
         limits:
           memory: 512M
 
-  redis:
-    image: redis:7.4-alpine
-    container_name: kanban-redis
-    ports:
-      - "${PORT_REDIS:-6379}:6379"
-    volumes:
-      - redis-data:/data
-    command: redis-server --appendonly yes
-    networks:
-      - kanban-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   minio:
     image: minio/minio:RELEASE.2025-01-20T14-49-07Z
     container_name: kanban-minio
@@ -130,7 +113,6 @@ services:
 
 volumes:
   postgres-data:
-  redis-data:
   minio-data:
 
 networks:

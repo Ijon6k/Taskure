@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { api, TaskData, ChecklistItemData, ColumnData, useProject } from "@/lib/api";
+import { api, TaskData, ChecklistItemData, ColumnData, AttachmentData, useProject } from "@/lib/api";
 import { AttachmentItem } from "../task-attachments-section";
 import { extractTaskTags } from "@/lib/tags";
 import { toast } from "sonner";
@@ -265,7 +265,18 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
     setTaskAttachments(newAtts);
     if (!task) return;
     try {
-      const updated = await api.updateTask(task.id, { attachments: newAtts as any });
+      const toApiAttachment = (a: AttachmentItem): AttachmentData => {
+        const item: AttachmentData = {
+          id: a.id,
+          type: a.type,
+          title: a.title,
+        };
+        if (a.url !== undefined) item.url = a.url;
+        if (a.size !== undefined) item.size = a.size;
+        if (a.mimeType !== undefined) item.mime_type = a.mimeType;
+        return item;
+      };
+      const updated = await api.updateTask(task.id, { attachments: newAtts.map(toApiAttachment) });
       setTask(updated);
       onTaskUpdated?.();
     } catch (e) {

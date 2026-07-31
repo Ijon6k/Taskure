@@ -2,6 +2,7 @@ package repository
 
 import (
 	"github.com/Ijon6k/Taskure/apps/api/internal/models"
+	"github.com/Ijon6k/Taskure/apps/api/internal/util"
 	"gorm.io/gorm"
 )
 
@@ -11,7 +12,7 @@ type TaskRepository interface {
 	FindTask(idOrPublicID string) (*models.Task, error)
 	UpdateTask(task *models.Task, updates map[string]interface{}) error
 	DeleteTask(task *models.Task) error
-	GetPendingTasks() ([]models.Task, error)
+	GetPendingTasks(projectID string, limit int) ([]models.Task, error)
 
 	// Checklist
 	AddChecklistItem(item *models.ChecklistItem) error
@@ -45,7 +46,7 @@ func (r *taskRepository) FindTask(idOrPublicID string) (*models.Task, error) {
 		return db.Order("position asc")
 	}).Preload("Labels")
 
-	if isUUID(idOrPublicID) {
+	if util.IsUUID(idOrPublicID) {
 		query = query.Where("id = ? OR public_id = ?", idOrPublicID, idOrPublicID)
 	} else {
 		query = query.Where("public_id = ?", idOrPublicID)
@@ -66,11 +67,31 @@ func (r *taskRepository) DeleteTask(task *models.Task) error {
 	return r.db.Delete(task).Error
 }
 
-func (r *taskRepository) GetPendingTasks() ([]models.Task, error) {
+func (r *taskRepository) GetPendingTasks(projectID string, limit int) ([]models.Task, error) {
 	var tasks []models.Task
-	err := r.db.Preload("Column").Preload("ChecklistItems", func(db *gorm.DB) *gorm.DB {
-		return db.Order("position asc")
-	}).Preload("Labels").Find(&tasks).Error
+	query := r.db.Where("status != ?", "done")
+	if projectID != "" {
+		if util.IsUUID(projectID) {
+			query = query.Where("project_id = ?", projectID)
+		} else {
+			var proj models.Project
+			if err := r.db.Select("id").Where("public_id = ?", projectID).First(&proj).Error; err == nil {
+				query = query.Where("project_id = ?", proj.ID)
+			} else {
+				query = query.Where("project_id = ?", projectID)
+			}
+		}
+	}
+	if limit <= 0 {
+		limit = 100
+	}
+	err := query.Limit(limit).
+		Preload("Column").
+		Preload("ChecklistItems", func(db *gorm.DB) *gorm.DB {
+			return db.Order("position asc")
+		}).
+		Preload("Labels").
+		Find(&tasks).Error
 	return tasks, err
 }
 

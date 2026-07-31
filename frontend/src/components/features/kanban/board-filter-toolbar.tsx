@@ -11,8 +11,8 @@ interface BoardFilterToolbarProps {
   filters: BoardFilterState;
   onChangeFilters: (filters: BoardFilterState) => void;
   boardTags: string[]; // Dynamic board tags attached ONLY to tasks on this board
-  onExportJson?: () => void;
-  onImportJson?: () => void;
+  onExportJson?: (() => void) | undefined;
+  onImportJson?: (() => void) | undefined;
 }
 
 export function BoardFilterToolbar({

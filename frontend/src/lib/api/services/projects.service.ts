@@ -15,6 +15,10 @@ export const projectsService = {
     return fetcher<ProjectData>(`/projects/${id}`);
   },
 
+  getProjectBoard: (id: string) => {
+    return fetcher<ProjectData>(`/projects/${id}/board`);
+  },
+
   createProject: (data: CreateProjectInput) => {
     return fetcher<ProjectData>("/projects", {
       method: "POST",

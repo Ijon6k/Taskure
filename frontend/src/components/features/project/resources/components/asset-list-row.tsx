@@ -2,6 +2,7 @@
 
 import { Link2, FileText, GitBranch, ExternalLink, Trash2, Edit3, Check, CheckSquare } from "lucide-react";
 import { ProjectAsset } from "../types";
+import { getThumbnailUrl } from "@/lib/image-url";
 
 interface AssetListRowProps {
   asset: ProjectAsset;
@@ -74,7 +75,7 @@ export function AssetListRow({
             className="w-7 h-7 rounded-md bg-surface-l0 overflow-hidden shrink-0 cursor-pointer border border-theme-subtle"
           >
             <img
-              src={asset.url && !asset.url.startsWith("data:") ? `${asset.url}${asset.url.includes("?") ? "&" : "?"}w=100` : asset.url}
+              src={getThumbnailUrl(asset.url, 100)}
               alt={asset.title}
               loading="lazy"
               decoding="async"

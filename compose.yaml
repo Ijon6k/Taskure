@@ -53,8 +53,8 @@ services:
       dockerfile: Dockerfile
       target: runner
     container_name: kanban-api
-    ports:
-      - "${PORT_API:-4000}:4000"
+    expose:
+      - "4000"
 
     environment:
       - APP_ENV=production
@@ -69,7 +69,7 @@ services:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin}
       - MINIO_BUCKET=${MINIO_BUCKET:-kanban-uploads}
-      - MINIO_PUBLIC_URL=http://localhost:1106/storage/kanban-uploads
+      - MINIO_PUBLIC_URL=/storage/kanban-uploads
       - JWT_SECRET=${JWT_SECRET:-changeme}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
@@ -94,8 +94,8 @@ services:
       dockerfile: Dockerfile
       target: runner
     container_name: kanban-ai
-    ports:
-      - "${PORT_AI:-5000}:5000"
+    expose:
+      - "5000"
     environment:
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
@@ -139,22 +139,6 @@ services:
         limits:
           memory: 512M
 
-  redis:
-    image: redis:7.4-alpine
-    container_name: kanban-redis
-    volumes:
-      - redis-data:/data
-    command: redis-server --appendonly yes
-    networks:
-      - kanban-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-
   minio:
     image: minio/minio:RELEASE.2025-01-20T14-49-07Z
     container_name: kanban-minio
@@ -175,7 +159,6 @@ services:
 
 volumes:
   postgres-data:
-  redis-data:
   minio-data:
 
 
