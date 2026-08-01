@@ -54,6 +54,7 @@ type TaskService interface {
 	UpdateTask(idOrPublicID string, updates map[string]interface{}) (*models.Task, error)
 	MoveTask(idOrPublicID string, input MoveTaskInput) (*models.Task, error)
 	DeleteTask(idOrPublicID string) error
+	GetSuggestedTags(projectIDOrPublicID string, limit int) ([]string, error)
 
 	// Attachments (MinIO S3)
 	UploadAttachment(ctx context.Context, taskIDOrPublicID string, fileName string, reader io.Reader, fileSize int64, contentType string) (*models.Task, error)
@@ -102,9 +103,9 @@ func (s *taskService) CreateTask(projectIDOrPublicID string, input CreateTaskInp
 		return nil, fmt.Errorf("column %s does not belong to project %s", input.ColumnID, project.ID)
 	}
 
-	priority := input.Priority
+	priority := strings.ToLower(strings.TrimSpace(input.Priority))
 	if priority == "" {
-		priority = "medium"
+		priority = "none"
 	}
 
 	count, err := s.taskRepo.GetCountByColumnID(input.ColumnID)
@@ -132,8 +133,13 @@ func (s *taskService) CreateTask(projectIDOrPublicID string, input CreateTaskInp
 		return nil, err
 	}
 
-	return s.taskRepo.FindTask(task.PublicID)
+	// Record tag usage only after the task persists, so a failed insert never
+	// pollutes the suggestion stats.
+	if len(input.Tags) > 0 {
+		_ = s.taskRepo.RecordTagUsage(project.ID, input.Tags)
+	}
 
+	return s.taskRepo.FindTask(task.PublicID)
 }
 
 func (s *taskService) GetTask(idOrPublicID string) (*models.Task, error) {
@@ -160,6 +166,7 @@ func (s *taskService) UpdateTask(idOrPublicID string, updates map[string]interfa
 	}
 
 	// Safely serialize tags slice into JSONB (handles []interface{} from Gin JSON map binding)
+	var recordedTags []string
 	if tagsRaw, ok := updates["tags"]; ok {
 		var tagStrings []string
 		if tagsInterface, isSlice := tagsRaw.([]interface{}); isSlice {
@@ -176,6 +183,7 @@ func (s *taskService) UpdateTask(idOrPublicID string, updates map[string]interfa
 			if tagsJSON, err := json.Marshal(tagStrings); err == nil {
 				updates["tags"] = datatypes.JSON(tagsJSON)
 			}
+			recordedTags = tagStrings
 		} else {
 			updates["tags"] = datatypes.JSON([]byte("[]"))
 		}
@@ -194,7 +202,29 @@ func (s *taskService) UpdateTask(idOrPublicID string, updates map[string]interfa
 		return nil, err
 	}
 
+	// Record tag usage only after the update persists, so a failed write never
+	// pollutes the suggestion stats.
+	if len(recordedTags) > 0 {
+		_ = s.taskRepo.RecordTagUsage(task.ProjectID, recordedTags)
+	}
+
 	return s.taskRepo.FindTask(task.ID)
+}
+
+func (s *taskService) GetSuggestedTags(projectIDOrPublicID string, limit int) ([]string, error) {
+	project, err := s.projectRepo.FindProject(projectIDOrPublicID)
+	if err != nil {
+		return nil, err
+	}
+	stats, err := s.taskRepo.GetSuggestedTags(project.ID, limit)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]string, 0, len(stats))
+	for _, st := range stats {
+		result = append(result, st.TagName)
+	}
+	return result, nil
 }
 
 // extractAttachmentKeys returns the object-storage keys referenced by a task's

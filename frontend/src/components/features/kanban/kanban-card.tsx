@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo } from "react";
+import { memo, useMemo, useCallback } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Paperclip } from "lucide-react";
@@ -12,23 +12,11 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { DueDateText } from "@/components/ui/due-date-text";
 import { TaskCardTagText } from "./task-card-tag-text";
 
-interface KanbanCardProps {
+interface KanbanCardViewProps {
   task: TaskData;
-  onClick: () => void;
 }
 
-export const KanbanCard = memo(function KanbanCard({ task, onClick }: KanbanCardProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: task.id,
-    data: { task },
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.3 : 1,
-  };
-
+export const KanbanCardView = memo(function KanbanCardView({ task }: KanbanCardViewProps) {
   const { checklistItems, completedChecklist, checklistPercent, tags, attachmentCount } = useMemo(() => {
     const items = task.checklist_items || [];
     const completed = items.filter((i: ChecklistItemData) => i.is_completed).length;
@@ -44,16 +32,8 @@ export const KanbanCard = memo(function KanbanCard({ task, onClick }: KanbanCard
     };
   }, [task]);
 
-
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      onClick={onClick}
-      className="w-full p-4 bg-surface-l3 rounded-md shadow-elevation-l3 hover:shadow-elevation-hover hover:bg-surface-hover cursor-grab active:cursor-grabbing transition-all duration-150 active:scale-[0.99] space-y-3 select-none group"
-    >
+    <div className="w-full p-4 bg-surface-l3 rounded-md shadow-elevation-l3 hover:shadow-elevation-hover hover:bg-surface-hover transition-all duration-150 space-y-3 select-none group">
       {/* Top Header: Priority Badge (Left) vs Text-Only Tag (Right) */}
       <div className="flex items-center justify-between gap-2 min-h-[22px]">
         <PriorityBadge priority={task.priority} />
@@ -96,5 +76,36 @@ export const KanbanCard = memo(function KanbanCard({ task, onClick }: KanbanCard
       )}
     </div>
   );
+});
+
+interface SortableKanbanCardProps {
+  task: TaskData;
+  onTaskClick: (task: TaskData) => void;
 }
-);
+
+export function SortableKanbanCard({ task, onTaskClick }: SortableKanbanCardProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: task.id,
+    data: { task },
+  });
+
+  const handleClick = useCallback(() => onTaskClick(task), [onTaskClick, task]);
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.3 : 1,
+      }}
+      {...attributes}
+      {...listeners}
+      onClick={handleClick}
+      data-task-id={task.id}
+      className="cursor-grab active:cursor-grabbing transition-all duration-150 active:scale-[0.99]"
+    >
+      <KanbanCardView task={task} />
+    </div>
+  );
+}

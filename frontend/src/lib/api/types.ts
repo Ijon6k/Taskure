@@ -1,3 +1,5 @@
+import type { TaskPriority } from "@/lib/helpers";
+
 // ─── Project Settings (stored in JSONB column) ───────────────────────────────
 
 export interface ResourceLinkItem {
@@ -94,7 +96,7 @@ export interface TaskData {
   description?: string;
   column_id: string;
   project_id: string;
-  priority: "urgent" | "high" | "medium" | "low";
+  priority: TaskPriority;
   status: "todo" | "in_progress" | "done";
   position: number;
   due_date?: string;
@@ -117,7 +119,7 @@ export interface FocusChecklistItemView {
 export interface FocusTaskView {
   id: string;
   title: string;
-  priority: "urgent" | "high" | "medium" | "low";
+  priority: TaskPriority;
   due_date?: string;
   project_id: string;
   checklist_summary?: {

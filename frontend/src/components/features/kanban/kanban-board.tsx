@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { DndContext, DragOverlay } from "@dnd-kit/core";
+import { DndContext, DragOverlay, DragStartEvent, DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { ColumnData, TaskData, api } from "@/lib/api";
 import { KanbanColumn } from "./kanban-column";
-import { KanbanCard } from "./kanban-card";
+import { KanbanCardView } from "./kanban-card";
 import { TrashZone } from "./trash-zone";
 import { ReorderColumnsModal } from "./reorder-columns-modal";
 import { EmptyBoardChoiceState } from "./empty-board-choice-state";
@@ -44,6 +44,46 @@ export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, o
     }
   }, [initialColumns]);
 
+  // High-performance horizontal mouse wheel scrolling (60/120/144 FPS smooth batching, 0 React re-renders)
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    let accumulatedDelta = 0;
+    let rafId: number | null = null;
+
+    const handleWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLElement | null;
+      // Ultra-fast O(1) attribute lookup to check if mouse is inside a column
+      const isInsideColumn = !!target?.closest('[data-kanban-column]');
+
+      if (!isInsideColumn) {
+        let delta = e.deltaY;
+        if (e.deltaMode === 1) delta *= 40;
+        else if (e.deltaMode === 2) delta *= container.clientWidth;
+
+        if (delta !== 0) {
+          e.preventDefault();
+          accumulatedDelta += delta;
+
+          if (rafId === null) {
+            rafId = requestAnimationFrame(() => {
+              container.scrollLeft += accumulatedDelta;
+              accumulatedDelta = 0;
+              rafId = null;
+            });
+          }
+        }
+      }
+    };
+
+    container.addEventListener("wheel", handleWheel, { passive: false });
+    return () => {
+      container.removeEventListener("wheel", handleWheel);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
+  }, []);
+
   // Modular Dnd Hook
   const {
     sensors,
@@ -58,6 +98,43 @@ export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, o
     setColumns,
     onRefreshProject,
   });
+
+  // Measure the source element width so the DragOverlay matches the real column/card width
+  const [activeTaskWidth, setActiveTaskWidth] = useState<number | undefined>(undefined);
+  const [activeColumnWidth, setActiveColumnWidth] = useState<number | undefined>(undefined);
+
+  const measureActiveSource = useCallback((activeId: string, type?: string) => {
+    if (type === "column") {
+      const el = document.getElementById(`kanban-column-${activeId}`);
+      if (el) setActiveColumnWidth(el.getBoundingClientRect().width);
+    } else {
+      const el = document.querySelector(`[data-task-id="${globalThis.CSS.escape(activeId)}"]`);
+      if (el) setActiveTaskWidth(el.getBoundingClientRect().width);
+    }
+  }, []);
+
+  const handleDragStartWithMeasure = useCallback(
+    (event: DragStartEvent) => {
+      handleDragStart(event);
+      measureActiveSource(event.active.id as string, event.active.data.current?.type);
+    },
+    [handleDragStart, measureActiveSource]
+  );
+
+  const handleDragEndWithMeasure = useCallback(
+    (event: DragEndEvent) => {
+      setActiveTaskWidth(undefined);
+      setActiveColumnWidth(undefined);
+      handleDragEnd(event);
+    },
+    [handleDragEnd]
+  );
+
+  const handleDragCancelWithMeasure = useCallback(() => {
+    setActiveTaskWidth(undefined);
+    setActiveColumnWidth(undefined);
+    handleDragCancel();
+  }, [handleDragCancel]);
 
   const handleApplyStarterTemplate = async () => {
     if (isSubmittingTemplate) return;
@@ -141,7 +218,12 @@ export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, o
   const refreshProject = useMemo(() => onRefreshProject || noop, [onRefreshProject]);
 
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStartWithMeasure}
+      onDragEnd={handleDragEndWithMeasure}
+      onDragCancel={handleDragCancelWithMeasure}
+    >
       <div className="flex flex-col h-full overflow-hidden">
         {/* Mobile Sticky Column Selector Tab Bar */}
         <KanbanMobileTabBar
@@ -165,7 +247,11 @@ export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, o
           ) : (
             <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
               {columns.map((col, idx) => (
-                <div key={col.id} id={`kanban-column-${col.id}`} className="snap-center shrink-0 w-[calc(100vw-2rem)] md:w-80 max-w-full h-full max-h-full flex flex-col">
+                <div
+                  key={col.id}
+                  id={`kanban-column-${col.id}`}
+                  className="snap-center shrink-0 w-[calc(100vw-2.5rem)] md:w-[384px] md:min-w-[384px] h-full max-h-full flex flex-col"
+                >
                   <KanbanColumn
                     column={col}
                     tasks={col.tasks || []}
@@ -203,11 +289,17 @@ export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, o
 
               <DragOverlay>
                 {activeTask ? (
-                  <div className="opacity-90 scale-105 shadow-2xl pointer-events-none rotate-1 w-72">
-                    <KanbanCard task={activeTask} onClick={noop} />
+                  <div
+                    style={{ width: activeTaskWidth }}
+                    className="opacity-90 scale-105 shadow-2xl pointer-events-none rotate-1"
+                  >
+                    <KanbanCardView task={activeTask} />
                   </div>
                 ) : activeColumnId ? (
-                  <div className="opacity-95 scale-102 shadow-2xl pointer-events-none w-80">
+                  <div
+                    style={{ width: activeColumnWidth }}
+                    className="opacity-95 scale-102 shadow-2xl pointer-events-none"
+                  >
                     {(() => {
                       const col = columns.find((c) => c.id === activeColumnId);
                       if (!col) return null;

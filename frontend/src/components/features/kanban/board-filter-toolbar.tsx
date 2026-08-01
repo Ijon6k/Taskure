@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Upload, RotateCcw } from "lucide-react";
+import { DownloadSimple, UploadSimple, ArrowCounterClockwise } from "@phosphor-icons/react";
 import { BoardFilterState, DEFAULT_BOARD_FILTERS, countActiveFilters } from "@/lib/filter-tasks";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
@@ -30,14 +30,14 @@ export function BoardFilterToolbar({
 
   return (
     <div className="w-full shrink-0 border-b border-theme-subtle select-none">
-      <div className="px-3.5 sm:px-6 py-2 flex flex-wrap items-center justify-between gap-2">
+      <div className="px-3 md:px-6 py-2 flex items-center justify-between gap-1.5 md:gap-3 overflow-x-auto no-scrollbar scrollbar-none">
         {/* Left Controls: Search + Filter Popover + Sort Dropdown + Reset */}
-        <div className="flex items-center gap-2 flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 md:gap-2 flex-1 min-w-0">
           <SearchInput
             value={filters.searchQuery}
             onChange={(q) => onChangeFilters({ ...filters, searchQuery: q })}
             placeholder="Search tasks..."
-            className="w-full sm:w-[200px]"
+            className="flex-1 min-w-[120px] sm:w-[200px]"
           />
 
           {/* Unified Filter Popover Button */}
@@ -62,26 +62,36 @@ export function BoardFilterToolbar({
               className="text-theme-secondary hover:text-theme-primary shrink-0"
               title="Reset all filters"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
+              <ArrowCounterClockwise className="w-3.5 h-3.5" />
               <span>Reset</span>
             </Button>
           )}
         </div>
 
-        {/* Right Actions: Export / Import JSON */}
-        <div className="flex items-center gap-2 shrink-0">
+        {/* Right Actions: Export / Import JSON (Icon Only) */}
+        <div className="flex items-center gap-1.5 shrink-0">
           {onExportJson && (
-            <Button variant="secondary" size="sm" onClick={onExportJson}>
-              <Download className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Export JSON</span>
-            </Button>
+            <button
+              type="button"
+              onClick={onExportJson}
+              title="Export JSON"
+              aria-label="Export JSON"
+              className="w-8 h-8 rounded-[6px] bg-surface-l2 hover:bg-surface-l3 text-theme-secondary hover:text-theme-primary border border-theme-subtle/50 flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <DownloadSimple className="w-4 h-4" />
+            </button>
           )}
 
           {onImportJson && (
-            <Button variant="secondary" size="sm" onClick={onImportJson}>
-              <Upload className="w-3.5 h-3.5 text-brand-accent" />
-              <span className="hidden sm:inline">Import JSON</span>
-            </Button>
+            <button
+              type="button"
+              onClick={onImportJson}
+              title="Import JSON"
+              aria-label="Import JSON"
+              className="w-8 h-8 rounded-[6px] bg-surface-l2 hover:bg-surface-l3 text-theme-secondary hover:text-theme-primary border border-theme-subtle/50 flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <UploadSimple className="w-4 h-4 text-brand-accent" />
+            </button>
           )}
         </div>
       </div>

@@ -6,9 +6,11 @@ import { CSS } from "@dnd-kit/utilities";
 import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { Plus, GripVertical, CheckCircle2 } from "lucide-react";
 import { ColumnData, TaskData, api } from "@/lib/api";
-import { KanbanCard } from "./kanban-card";
+import { SortableKanbanCard } from "./kanban-card";
 import { ColumnContextMenu } from "./column-context-menu";
 import { extractTaskTags } from "@/lib/tags";
+import { SuggestedTagsBar } from "@/components/features/task/suggested-tags-bar";
+import { TaskPriorityPicker } from "@/components/features/task/task-priority-picker";
 import { toast } from "sonner";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useUIStore } from "@/store/use-ui-store";
@@ -61,6 +63,8 @@ function KanbanColumnInner({
 
   const [isAdding, setIsAdding] = useState(false);
   const [taskTitle, setTaskTitle] = useState("");
+  const [taskPriority, setTaskPriority] = useState("none");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [isRenaming, setIsRenaming] = useState(false);
@@ -71,8 +75,20 @@ function KanbanColumnInner({
     if (isAdding) {
       setIsAdding(false);
       setTaskTitle("");
+      setTaskPriority("none");
+      setSelectedTags([]);
     }
   }, { enabled: isAdding });
+
+  const handleToggleTag = useCallback((tagName: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tagName)
+        ? prev.filter((t) => t.toLowerCase() !== tagName.toLowerCase())
+        : [...prev, tagName]
+    );
+  }, []);
+
+  const handleTaskClick = useCallback((task: TaskData) => onTaskClick(task), [onTaskClick]);
 
   const filteredTasks = useMemo(() => {
     return tasks.filter((t) => {
@@ -95,10 +111,14 @@ function KanbanColumnInner({
       const created = await api.createTask(projectId, {
         title: taskTitle.trim(),
         column_id: column.id,
-        priority: "medium",
+        ...(taskPriority !== "none" ? { priority: taskPriority } : {}),
+        ...(selectedTags.length > 0 ? { tags: selectedTags } : {}),
       });
       toast.success(`Task "${created.title}" added to ${column.name}!`);
       setTaskTitle("");
+      setTaskPriority("none");
+      setSelectedTags([]);
+      setIsAdding(false);
       onRefreshProject();
     } catch (err) {
       toast.error("Failed to add task: " + (err as Error).message);
@@ -114,6 +134,8 @@ function KanbanColumnInner({
     } else if (e.key === "Escape") {
       setIsAdding(false);
       setTaskTitle("");
+      setTaskPriority("none");
+      setSelectedTags([]);
     }
   };
 
@@ -168,11 +190,12 @@ function KanbanColumnInner({
   return (
     <div
       ref={setNodeRef}
+      data-kanban-column="true"
       style={{
         ...style,
         borderColor: showOver ? "var(--brand-accent)" : "transparent",
       }}
-      className={`relative w-full md:w-80 md:min-w-80 shrink-0 flex flex-col max-h-full overflow-y-auto rounded-md bg-surface-l2 group/col ${
+      className={`relative w-full md:w-[384px] md:min-w-[384px] shrink-0 flex flex-col max-h-full overflow-y-auto rounded-md bg-surface-l2 group/col ${
         showOver ? "ring-2 ring-brand-accent/20 bg-surface-hover" : ""
       }`}
     >
@@ -258,15 +281,30 @@ function KanbanColumnInner({
               value={taskTitle}
               onChange={(e) => setTaskTitle(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Task title, then Enter..."
+              placeholder="What needs to be done?"
               className="w-full bg-transparent text-sm text-theme-primary placeholder-theme-tertiary outline-none resize-none"
             />
-            <div className="flex items-center justify-between pt-1 border-t border-theme-subtle">
-              <span className="text-xs text-theme-secondary">Press Enter to add</span>
-              <div className="flex items-center gap-2">
+            {/* Suggested Tags Chips */}
+            <SuggestedTagsBar
+              projectId={projectId}
+              selectedTags={selectedTags}
+              onToggleTag={handleToggleTag}
+            />
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-theme-subtle">
+              <TaskPriorityPicker
+                priority={taskPriority}
+                compact
+                onChange={setTaskPriority}
+              />
+              <div className="flex items-center gap-1.5 ml-auto">
                 <button
                   type="button"
-                  onClick={() => { setIsAdding(false); setTaskTitle(""); }}
+                  onClick={() => {
+                    setIsAdding(false);
+                    setTaskTitle("");
+                    setTaskPriority("none");
+                    setSelectedTags([]);
+                  }}
                   className="px-2.5 py-1 text-xs text-theme-secondary hover:text-theme-primary rounded-md"
                 >
                   Cancel
@@ -296,7 +334,7 @@ function KanbanColumnInner({
         {/* Task Cards Stack */}
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           {filteredTasks.map((task) => (
-            <KanbanCard key={task.id} task={task} onClick={() => onTaskClick(task)} />
+            <SortableKanbanCard key={task.id} task={task} onTaskClick={handleTaskClick} />
           ))}
         </SortableContext>
       </div>

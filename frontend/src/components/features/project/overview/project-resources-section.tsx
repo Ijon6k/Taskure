@@ -81,6 +81,7 @@ export function ProjectResourcesSection({
         id: res?.id || `res-${index}`,
         title: res?.title || "Resource",
         url: normalizeStorageUrl(urlStr),
+        previewUrl: res?.preview_url ? normalizeStorageUrl(res.preview_url) : undefined,
         kind,
         size: res?.size,
         mimeType: res?.mime_type,

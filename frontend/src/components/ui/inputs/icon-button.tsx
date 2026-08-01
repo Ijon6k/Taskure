@@ -4,7 +4,7 @@ import React, { ButtonHTMLAttributes } from "react";
 import { LucideIcon } from "lucide-react";
 
 export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  icon: LucideIcon;
+  icon: React.ComponentType<any>;
   variant?: "ghost" | "secondary" | "danger";
   size?: "sm" | "md";
   title?: string;

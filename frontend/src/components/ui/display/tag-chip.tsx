@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Tag as TagIcon, X } from "lucide-react";
+import { Tag as TagIcon, X } from "@phosphor-icons/react";
 import { getTagConfig } from "@/lib/tags";
 
 export interface TagChipProps {

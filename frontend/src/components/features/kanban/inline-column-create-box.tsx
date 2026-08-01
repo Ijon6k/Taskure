@@ -25,7 +25,7 @@ export function InlineColumnCreateBox({
 }: InlineColumnCreateBoxProps) {
   if (isAddingColumn) {
     return (
-      <div className="w-[calc(100vw-2rem)] md:w-80 shrink-0 p-3 bg-theme-elevated border border-accent rounded-md space-y-2.5 shadow-xl animate-in fade-in duration-100 snap-center">
+      <div className="w-[calc(100vw-2.5rem)] md:w-[384px] md:min-w-[384px] shrink-0 p-3 bg-theme-elevated border border-accent rounded-md space-y-2.5 shadow-xl animate-in fade-in duration-100 snap-center">
         <input
           type="text"
           autoFocus
@@ -64,7 +64,7 @@ export function InlineColumnCreateBox({
   return (
     <button
       onClick={onStartAdding}
-      className="w-[calc(100vw-2rem)] md:w-80 shrink-0 h-12 border border-dashed border-theme-default hover:border-theme-hover bg-theme-surface/30 hover:bg-theme-surface rounded-md flex items-center justify-center gap-2 text-theme-secondary hover:text-theme-primary text-xs font-medium transition-all group snap-center cursor-pointer"
+      className="w-[calc(100vw-2.5rem)] md:w-[384px] md:min-w-[384px] shrink-0 h-12 border border-dashed border-theme-default hover:border-theme-hover bg-theme-surface/30 hover:bg-theme-surface rounded-md flex items-center justify-center gap-2 text-theme-secondary hover:text-theme-primary text-xs font-medium transition-all group snap-center cursor-pointer"
     >
       <Plus className="w-4 h-4 text-brand-accent group-hover:scale-110 transition-transform" />
       <span>Add column</span>

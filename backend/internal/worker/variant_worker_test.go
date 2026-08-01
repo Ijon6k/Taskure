@@ -23,6 +23,7 @@ type fakeVariantRepo struct {
 	failed       bool
 	lastAttempts int
 	lastError    string
+	failedJobs   []models.ImageVariantJob
 }
 
 func (f *fakeVariantRepo) Create(job *models.ImageVariantJob) error { return nil }
@@ -50,6 +51,9 @@ func (f *fakeVariantRepo) MarkFailed(id string, attempts int, lastError string) 
 	return nil
 }
 func (f *fakeVariantRepo) ReclaimProcessing() error               { return nil }
+func (f *fakeVariantRepo) FailedJobs() ([]models.ImageVariantJob, error) {
+	return f.failedJobs, nil
+}
 func (f *fakeVariantRepo) DeleteByObjectKeys(keys []string) error { return nil }
 
 type fakeStorage struct {
@@ -197,5 +201,49 @@ func TestProcessNextEmptyQueue(t *testing.T) {
 	}
 	if repo.doneCalled || repo.requeued || repo.failed {
 		t.Error("no job should have been processed on an empty queue")
+	}
+}
+
+func TestReconcileRevivesFailedJobWhenVariantsMissing(t *testing.T) {
+	const objectKey = "tasks/task-id/img.png"
+	store := &fakeStorage{objects: map[string][]byte{objectKey: testPNG(t, 100, 100)}}
+	repo := &fakeVariantRepo{failedJobs: []models.ImageVariantJob{{Base: models.Base{ID: "1"}, ObjectKey: objectKey}}}
+
+	newTestWorker(repo, store).Reconcile(context.Background())
+
+	if !repo.requeued {
+		t.Fatal("expected failed job to be requeued when variants are missing")
+	}
+	if repo.lastAttempts != 0 {
+		t.Errorf("requeued attempts = %d, want 0", repo.lastAttempts)
+	}
+}
+
+func TestReconcileMarksReadyJobDone(t *testing.T) {
+	const objectKey = "tasks/task-id/img.png"
+	store := &fakeStorage{objects: map[string][]byte{
+		objectKey:                  testPNG(t, 100, 100),
+		storage.ThumbKey(objectKey, storage.PreviewWidth): []byte("webp"),
+	}}
+	repo := &fakeVariantRepo{failedJobs: []models.ImageVariantJob{{Base: models.Base{ID: "1"}, ObjectKey: objectKey}}}
+
+	newTestWorker(repo, store).Reconcile(context.Background())
+
+	if !repo.doneCalled {
+		t.Fatal("expected stale failed job to be marked done when variants exist")
+	}
+	if repo.requeued {
+		t.Error("job should not be requeued when variants already exist")
+	}
+}
+
+func TestReconcileSkipsDeletedSource(t *testing.T) {
+	store := &fakeStorage{}
+	repo := &fakeVariantRepo{failedJobs: []models.ImageVariantJob{{Base: models.Base{ID: "1"}, ObjectKey: "gone.png"}}}
+
+	newTestWorker(repo, store).Reconcile(context.Background())
+
+	if repo.requeued || repo.doneCalled {
+		t.Error("deleted sources should not be touched")
 	}
 }

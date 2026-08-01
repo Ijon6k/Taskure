@@ -51,8 +51,9 @@ func NewVariantWorker(repo repository.VariantJobRepository, storageSvc storage.S
 	}
 }
 
-// Start reclaims interrupted jobs and spawns the worker goroutines. It returns
-// immediately; Wait blocks until every worker has exited.
+// Start reclaims interrupted jobs, reconciles failed ones against storage, and
+// spawns the worker goroutines. It returns immediately; Wait blocks until every
+// worker has exited.
 func (w *VariantWorker) Start(ctx context.Context) {
 	if err := w.repo.ReclaimProcessing(); err != nil {
 		w.logger.Warn().Err(err).Msg("failed to reclaim interrupted variant jobs")
@@ -60,10 +61,58 @@ func (w *VariantWorker) Start(ctx context.Context) {
 		w.logger.Info().Msg("reclaimed interrupted variant jobs")
 	}
 
+	w.Reconcile(ctx)
+
 	w.logger.Info().Int("workers", w.workers).Msg("variant worker started")
 	for i := 0; i < w.workers; i++ {
 		w.wg.Add(1)
 		go w.run(ctx, i)
+	}
+}
+
+// Reconcile revives failed jobs whose source object still exists but whose
+// variants are still missing, so transient worker failures heal on the next
+// startup. Jobs that already produced variants are marked done, and jobs whose
+// source was deleted are left alone.
+func (w *VariantWorker) Reconcile(ctx context.Context) {
+	jobs, err := w.repo.FailedJobs()
+	if err != nil {
+		w.logger.Warn().Err(err).Msg("failed to load failed variant jobs")
+		return
+	}
+
+	revived := 0
+	for _, job := range jobs {
+		exists, err := w.storage.ObjectExists(ctx, job.ObjectKey)
+		if err != nil {
+			w.logger.Warn().Err(err).Str("object_key", job.ObjectKey).Msg("failed to check source object during reconcile")
+			continue
+		}
+		if !exists {
+			continue
+		}
+
+		previewReady, err := w.storage.ObjectExists(ctx, storage.ThumbKey(job.ObjectKey, storage.PreviewWidth))
+		if err != nil {
+			w.logger.Warn().Err(err).Str("object_key", job.ObjectKey).Msg("failed to check variant during reconcile")
+			continue
+		}
+		if previewReady {
+			if err := w.repo.MarkDone(job.ID); err != nil {
+				w.logger.Warn().Err(err).Str("object_key", job.ObjectKey).Msg("failed to mark stale variant job done")
+			}
+			continue
+		}
+
+		if err := w.repo.Requeue(job.ID, 0, ""); err != nil {
+			w.logger.Warn().Err(err).Str("object_key", job.ObjectKey).Msg("failed to requeue failed variant job")
+			continue
+		}
+		revived++
+	}
+
+	if revived > 0 {
+		w.logger.Info().Int("revived", revived).Msg("revived failed variant jobs")
 	}
 }
 

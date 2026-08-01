@@ -78,3 +78,14 @@ export function useDeleteProject() {
     },
   });
 }
+
+export function useSuggestedTags(projectId: string) {
+  return useQuery({
+    queryKey: [...PROJECT_KEYS.all, "suggested-tags", projectId],
+    queryFn: () => projectsService.getSuggestedTags(projectId),
+    enabled: Boolean(projectId),
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 15,
+    refetchOnWindowFocus: false,
+  });
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { CaretDown } from "@phosphor-icons/react";
 
 export interface ColumnStatItem {
   id: string;
@@ -117,7 +117,7 @@ export function ColumnDistributionBar({
             title={isCollapsed ? "Expand details" : "Collapse details"}
             aria-label={isCollapsed ? "Expand progress distribution" : "Collapse progress distribution"}
           >
-            <ChevronDown
+            <CaretDown
               className={`w-3.5 h-3.5 transition-transform duration-200 ${
                 isCollapsed ? "-rotate-90 text-theme-tertiary" : "rotate-0 text-theme-secondary"
               }`}

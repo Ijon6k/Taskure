@@ -1,9 +1,13 @@
 package repository
 
 import (
+	"strings"
+	"time"
+
 	"github.com/Ijon6k/Taskure/apps/api/internal/models"
 	"github.com/Ijon6k/Taskure/apps/api/internal/util"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type TaskRepository interface {
@@ -13,6 +17,10 @@ type TaskRepository interface {
 	UpdateTask(task *models.Task, updates map[string]interface{}) error
 	DeleteTask(task *models.Task) error
 	GetPendingTasks(projectID string, limit int) ([]models.Task, error)
+
+	// Tag Stats
+	RecordTagUsage(projectID string, tags []string) error
+	GetSuggestedTags(projectID string, limit int) ([]models.ProjectTagStat, error)
 
 	// Checklist
 	AddChecklistItem(item *models.ChecklistItem) error
@@ -119,4 +127,47 @@ func (r *taskRepository) UpdateChecklistItem(item *models.ChecklistItem, updates
 
 func (r *taskRepository) DeleteChecklistItem(id string) error {
 	return r.db.Delete(&models.ChecklistItem{}, "id = ?", id).Error
+}
+
+func (r *taskRepository) RecordTagUsage(projectID string, tags []string) error {
+	if projectID == "" || len(tags) == 0 {
+		return nil
+	}
+	now := time.Now()
+	for _, tag := range tags {
+		cleanTag := strings.TrimSpace(tag)
+		if cleanTag == "" {
+			continue
+		}
+		stat := models.ProjectTagStat{
+			ProjectID:  projectID,
+			TagName:    cleanTag,
+			UsageCount: 1,
+			LastUsedAt: now,
+		}
+		err := r.db.Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "project_id"}, {Name: "tag_name"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{
+				"usage_count":  gorm.Expr("project_tag_stats.usage_count + 1"),
+				"last_used_at": now,
+				"updated_at":   now,
+			}),
+		}).Create(&stat).Error
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *taskRepository) GetSuggestedTags(projectID string, limit int) ([]models.ProjectTagStat, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+	var stats []models.ProjectTagStat
+	err := r.db.Where("project_id = ?", projectID).
+		Order("usage_count DESC, last_used_at DESC").
+		Limit(limit).
+		Find(&stats).Error
+	return stats, err
 }

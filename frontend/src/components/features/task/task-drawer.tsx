@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Trash2, Edit3, Check, ArrowRightLeft, ChevronDown } from "lucide-react";
+import { X, Trash, PencilSimple, Check, ArrowsLeftRight } from "@phosphor-icons/react";
 import { ConfirmModal } from "@/components/modals/confirm-modal";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import { IconButton } from "@/components/ui/icon-button";
@@ -89,12 +89,12 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
                   </Button>
                 ) : (
                   <Button variant="secondary" size="sm" onClick={() => setIsEditing(true)}>
-                    <Edit3 className="w-3.5 h-3.5 text-brand-accent mr-1" />
+                    <PencilSimple className="w-3.5 h-3.5 text-brand-accent mr-1" />
                     <span>Edit Task</span>
                   </Button>
                 )}
                 <IconButton
-                  icon={Trash2}
+                  icon={Trash}
                   variant="danger"
                   size="sm"
                   title="Delete Task"
@@ -124,7 +124,7 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
                 {columns.length > 0 && (
                   <div className="flex items-center justify-between gap-3 p-3 rounded-md bg-theme-elevated border border-theme-default text-[15px]">
                     <span className="text-theme-secondary font-medium flex items-center gap-1.5">
-                      <ArrowRightLeft className="w-4 h-4 text-brand-accent" />
+                      <ArrowsLeftRight className="w-4 h-4 text-brand-accent" />
                       <span>Column:</span>
                     </span>
                     <Select value={task.column_id} onValueChange={handleColumnChange}>

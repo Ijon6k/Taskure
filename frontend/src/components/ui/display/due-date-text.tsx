@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar } from "lucide-react";
+import { Calendar } from "@phosphor-icons/react";
 import { getFormattedDueDate } from "@/lib/utils/date";
 
 interface DueDateTextProps {

@@ -176,3 +176,14 @@ func (h *TaskHandler) DeleteTaskAttachment(c *gin.Context) {
 
 	response.OK(c, task)
 }
+
+func (h *TaskHandler) GetSuggestedTags(c *gin.Context) {
+	projectIDParam := c.Param("id")
+	tags, err := h.service.GetSuggestedTags(projectIDParam, 10)
+	if err != nil {
+		response.InternalServerError(c, err)
+		return
+	}
+
+	response.OK(c, tags)
+}

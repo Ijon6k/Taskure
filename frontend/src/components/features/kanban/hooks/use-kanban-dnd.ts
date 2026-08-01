@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   DragStartEvent,
   DragEndEvent,
@@ -28,12 +28,22 @@ export function useKanbanDnd({
 }: UseKanbanDndOptions) {
   const [activeTask, setActiveTask] = useState<TaskData | null>(null);
   const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // TouchSensor configuration: 250ms long press with 5px tolerance prevents scrolling conflicts
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
-  );
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  const pointerSensor = useSensor(PointerSensor, { activationConstraint: { distance: 5 } });
+  const touchSensor = useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } });
+
+  // Disable DnD on mobile view (<768px) so swiping left/right & scrolling is 100% native and smooth
+  const sensors = useSensors(...(isMobile ? [] : [pointerSensor, touchSensor]));
 
   const columnIds = useMemo(() => columns.map((c) => c.id), [columns]);
 

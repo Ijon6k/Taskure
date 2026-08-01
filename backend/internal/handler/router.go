@@ -60,6 +60,7 @@ func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 		// Column & Task creation scoped under project
 		projects.POST("/:id/columns", c.ColumnHandler.CreateColumn)
 		projects.POST("/:id/tasks", c.TaskHandler.CreateTask)
+		projects.GET("/:id/suggested-tags", c.TaskHandler.GetSuggestedTags)
 	}
 
 	columns := r.Group("/columns")

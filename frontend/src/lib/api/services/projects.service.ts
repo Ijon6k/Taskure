@@ -56,4 +56,8 @@ export const projectsService = {
       method: "DELETE",
     });
   },
+
+  getSuggestedTags: (projectId: string) => {
+    return fetcher<string[]>(`/projects/${projectId}/suggested-tags`);
+  },
 };

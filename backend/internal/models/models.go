@@ -369,6 +369,16 @@ type UpdateWorkspaceInput struct {
 	Description *string `json:"description,omitempty"`
 }
 
+// --- ProjectTagStat ---
+
+type ProjectTagStat struct {
+	InternalBase
+	ProjectID  string    `gorm:"type:uuid;not null;uniqueIndex:idx_proj_tag_stat;index" json:"project_id"`
+	TagName    string    `gorm:"type:varchar(50);not null;uniqueIndex:idx_proj_tag_stat" json:"tag_name"`
+	UsageCount int       `gorm:"not null;default:0;index" json:"usage_count"`
+	LastUsedAt time.Time `gorm:"not null;index" json:"last_used_at"`
+}
+
 // AllModels returns every model registered with GORM AutoMigrate.
 func AllModels() []any {
 	return []any{
@@ -386,5 +396,6 @@ func AllModels() []any {
 		&Discussion{},
 		&Activity{},
 		&ImageVariantJob{},
+		&ProjectTagStat{},
 	}
 }

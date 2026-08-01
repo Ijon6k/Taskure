@@ -5,14 +5,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Database,
-  FolderKanban,
-  Home,
+  Kanban,
+  House,
   Keyboard,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Settings as SettingsIcon,
+  SidebarSimple,
+  Gear as SettingsIcon,
   X,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 
@@ -66,8 +65,8 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
   };
 
   const navItems = [
-    { label: "Home", href: "/", icon: Home, exact: true },
-    { label: "Projects", href: "/projects", icon: FolderKanban, exact: false },
+    { label: "Home", href: "/", icon: House, exact: true },
+    { label: "Projects", href: "/projects", icon: Kanban, exact: false },
     { label: "Settings", href: "/settings", icon: SettingsIcon, exact: true },
   ];
 
@@ -90,7 +89,7 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
             title="Expand sidebar"
           >
             {isLogoHovered ? (
-              <PanelLeftOpen className="w-[18px] h-[18px] text-theme-primary" />
+              <SidebarSimple className="w-[18px] h-[18px] text-theme-primary" />
             ) : (
               <span className="w-[28px] h-[28px] bg-brand-accent rounded-[6px] flex items-center justify-center text-black font-bold text-sm">
                 K
@@ -125,7 +124,7 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
                 aria-label="Collapse sidebar"
                 title="Collapse sidebar"
               >
-                <PanelLeftClose className="w-[17px] h-[17px]" />
+                <SidebarSimple className="w-[17px] h-[17px]" />
               </button>
             )}
           </>

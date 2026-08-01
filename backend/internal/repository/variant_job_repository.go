@@ -19,6 +19,7 @@ type VariantJobRepository interface {
 	Requeue(id string, attempts int, lastError string) error
 	MarkFailed(id string, attempts int, lastError string) error
 	ReclaimProcessing() error
+	FailedJobs() ([]models.ImageVariantJob, error)
 	DeleteByObjectKeys(keys []string) error
 }
 
@@ -96,6 +97,16 @@ func (r *variantJobRepository) ReclaimProcessing() error {
 	return r.db.Model(&models.ImageVariantJob{}).
 		Where("status = ?", models.VariantJobProcessing).
 		Update("status", models.VariantJobPending).Error
+}
+
+// FailedJobs returns permanently failed jobs, oldest first, so the worker can
+// reconcile them against the actual storage state on startup.
+func (r *variantJobRepository) FailedJobs() ([]models.ImageVariantJob, error) {
+	var jobs []models.ImageVariantJob
+	err := r.db.Where("status = ?", models.VariantJobFailed).
+		Order("created_at asc").
+		Find(&jobs).Error
+	return jobs, err
 }
 
 // DeleteByObjectKeys removes jobs for the given original object keys, keeping

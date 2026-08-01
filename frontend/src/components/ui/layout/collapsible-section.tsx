@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { CaretDown, CaretRight } from "@phosphor-icons/react";
 
 export interface CollapsibleSectionProps {
   title: string;
@@ -30,9 +30,9 @@ export function CollapsibleSection({
           className="flex items-center gap-1.5 text-[12px] font-medium text-theme-secondary uppercase tracking-[0.6px] hover:text-theme-primary transition-colors cursor-pointer select-none"
         >
           {isOpen ? (
-            <ChevronDown className="w-3.5 h-3.5 text-theme-tertiary" />
+            <CaretDown className="w-3.5 h-3.5 text-theme-tertiary" />
           ) : (
-            <ChevronRight className="w-3.5 h-3.5 text-theme-tertiary" />
+            <CaretRight className="w-3.5 h-3.5 text-theme-tertiary" />
           )}
           <span>{title}</span>
         </button>

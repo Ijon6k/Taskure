@@ -238,7 +238,7 @@ export function ProjectOverviewTab({
                 <span className="text-[15px] font-medium text-theme-primary truncate pr-3 tracking-tight">
                   {focusTask.title}
                 </span>
-                <PriorityBadge priority={focusTask.priority} showDot />
+                <PriorityBadge priority={focusTask.priority} showLabel />
               </>
             ) : (
               <span className="text-[13px] text-theme-tertiary">

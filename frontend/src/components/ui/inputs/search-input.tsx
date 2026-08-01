@@ -1,6 +1,6 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { MagnifyingGlass } from "@phosphor-icons/react";
 
 interface SearchInputProps {
   value: string;
@@ -19,7 +19,7 @@ export function SearchInput({
     <div
       className={`flex items-center gap-2.5 ${className}`}
     >
-      <Search className="w-4 h-4 text-theme-tertiary shrink-0" />
+      <MagnifyingGlass className="w-4 h-4 text-theme-tertiary shrink-0" />
       <input
         type="text"
         placeholder={placeholder}

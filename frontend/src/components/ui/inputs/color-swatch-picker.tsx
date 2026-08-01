@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Check } from "lucide-react";
+import { Check } from "@phosphor-icons/react";
 import { TAG_COLOR_PALETTE } from "@/lib/tags";
 
 export interface ColorSwatchPickerProps {
