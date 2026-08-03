@@ -1,5 +1,5 @@
 import { fetcher } from "../client";
-import { ProjectData, CreateProjectInput, UpdateProjectInput } from "../types";
+import { ProjectData, ProjectSummaryData, CreateProjectInput, UpdateProjectInput } from "../types";
 
 export const projectsService = {
   getProjects: (params?: { status?: string; search?: string; pinned?: boolean }) => {
@@ -8,7 +8,7 @@ export const projectsService = {
     if (params?.search) query.set("search", params.search);
     if (params?.pinned) query.set("pinned", "true");
     const qs = query.toString();
-    return fetcher<ProjectData[]>(`/projects${qs ? `?${qs}` : ""}`);
+    return fetcher<ProjectSummaryData[]>(`/projects/summary${qs ? `?${qs}` : ""}`);
   },
 
   getProject: (id: string) => {

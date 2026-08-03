@@ -54,6 +54,33 @@ export interface ColumnData {
   task_count?: number;
 }
 
+// ─── Lightweight list payload (GET /projects/summary) ────────────────────────
+// Only the fields the sidebar, switchers, cards and filters actually read.
+// The full ProjectData (with settings JSONB) is reserved for detail endpoints.
+
+export interface ColumnSummaryData {
+  id: string;
+  name: string;
+  behavior?: "active" | "completed";
+  color?: string;
+  /** Per-column task total used to render distribution bars. */
+  task_count: number;
+}
+
+export interface ProjectSummaryData {
+  id: string;
+  name: string;
+  description?: string;
+  color?: string;
+  icon?: string;
+  status?: "active" | "paused" | "archived" | string;
+  is_pinned?: boolean;
+  is_archived: boolean;
+  focus_enabled?: boolean;
+  updated_at: string;
+  columns?: ColumnSummaryData[];
+}
+
 export interface ChecklistItemData {
   id: string;
   title: string;

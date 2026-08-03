@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { ProjectData } from "@/lib/api";
+import { ProjectSummaryData } from "@/lib/api";
 import { useTheme } from "@/components/providers/theme-provider";
 
 interface RecentActivityProps {
-  projects: ProjectData[];
+  projects: ProjectSummaryData[];
   limit?: number;
   loading?: boolean;
 }

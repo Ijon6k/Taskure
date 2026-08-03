@@ -60,7 +60,8 @@ export async function exportFullWorkspaceJSON(): Promise<void> {
       const fullProj = await projectsService.getProjectBoard(p.id);
       fullProjects.push(fullProj);
     } catch {
-      fullProjects.push(p);
+      // Board failed — keep the summary entry so the backup still lists it.
+      fullProjects.push(p as ProjectData);
     }
   }
 

@@ -14,6 +14,7 @@ import (
 	"github.com/Ijon6k/Taskure/apps/api/internal/models"
 	"github.com/Ijon6k/Taskure/apps/api/internal/repository"
 	"github.com/Ijon6k/Taskure/apps/api/internal/storage"
+	"github.com/Ijon6k/Taskure/apps/api/internal/viewmodels"
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 )
@@ -59,6 +60,7 @@ type UpdateProjectInput struct {
 
 type ProjectService interface {
 	ListProjects(status string, search string, pinned bool) ([]models.Project, error)
+	ListProjectsSummary(status string, search string, pinned bool) ([]viewmodels.ProjectSummary, error)
 	CreateProject(input CreateProjectInput) (*models.Project, error)
 	GetProject(idOrPublicID string) (*models.Project, error)
 	GetProjectBoard(idOrPublicID string) (*models.Project, error)
@@ -101,6 +103,26 @@ func (s *projectService) ListProjects(status string, search string, pinned bool)
 	}
 	projects, _, err := s.projectRepo.ListProjectsLight(ws.ID, status, search, pinned, 0, 0)
 	return projects, err
+}
+
+// ListProjectsSummary returns the lightweight list payload: the same query as
+// ListProjects, mapped to a view that omits heavy, unused fields (settings
+// JSONB, workspace/owner ids, timestamps).
+func (s *projectService) ListProjectsSummary(status string, search string, pinned bool) ([]viewmodels.ProjectSummary, error) {
+	ws, err := s.workspaceRepo.EnsureUserAndWorkspace()
+	if err != nil {
+		return nil, err
+	}
+	projects, _, err := s.projectRepo.ListProjectsLight(ws.ID, status, search, pinned, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	summaries := make([]viewmodels.ProjectSummary, 0, len(projects))
+	for _, project := range projects {
+		summaries = append(summaries, viewmodels.MapProjectSummary(project))
+	}
+	return summaries, nil
 }
 
 func (s *projectService) CreateProject(input CreateProjectInput) (*models.Project, error) {

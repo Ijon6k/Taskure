@@ -31,6 +31,20 @@ func (h *ProjectHandler) ListProjects(c *gin.Context) {
 	response.OK(c, projects)
 }
 
+func (h *ProjectHandler) ListProjectsSummary(c *gin.Context) {
+	status := c.Query("status")
+	search := c.Query("search")
+	pinned := c.Query("pinned") == "true"
+
+	projects, err := h.service.ListProjectsSummary(status, search, pinned)
+	if err != nil {
+		response.InternalServerError(c, err)
+		return
+	}
+
+	response.OK(c, projects)
+}
+
 func (h *ProjectHandler) CreateProject(c *gin.Context) {
 	var input service.CreateProjectInput
 	if err := c.ShouldBindJSON(&input); err != nil {

@@ -54,6 +54,7 @@ func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 	projects := r.Group("/projects")
 	{
 		projects.GET("", c.ProjectHandler.ListProjects)
+		projects.GET("/summary", c.ProjectHandler.ListProjectsSummary)
 		projects.POST("", c.ProjectHandler.CreateProject)
 		projects.GET("/:id", c.ProjectHandler.GetProject)
 		projects.GET("/:id/board", c.ProjectHandler.GetProjectBoard)

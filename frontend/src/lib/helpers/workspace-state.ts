@@ -1,4 +1,4 @@
-import { ProjectData, FocusResponse, FocusItem } from "../api/types";
+import { ProjectSummaryData, FocusResponse, FocusItem } from "../api/types";
 
 // ─── 5-State Model ────────────────────────────────────────────────────────────
 // FRESH   — 0 active projects
@@ -23,7 +23,7 @@ export interface WorkspaceStateEvaluation {
 }
 
 export function deriveWorkspaceState(
-  projects: ProjectData[] = [],
+  projects: ProjectSummaryData[] = [],
   focusResp?: FocusResponse | null
 ): WorkspaceStateEvaluation {
   // Backend is the single source of truth — use preprocessed backend state directly

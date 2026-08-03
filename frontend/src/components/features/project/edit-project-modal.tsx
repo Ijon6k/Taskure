@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { X, Pin, Trash2, Check } from "lucide-react";
-import { useUpdateProject, useDeleteProject, ProjectData } from "@/lib/api";
+import { useUpdateProject, useDeleteProject } from "@/lib/api";
+import { EditableProject } from "@/store/use-ui-store";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Toggle } from "@/components/ui/toggle";
@@ -15,7 +16,7 @@ import { columnsService } from "@/lib/api/services/columns.service";
 
 interface EditProjectModalProps {
   isOpen: boolean;
-  project: ProjectData | null;
+  project: EditableProject | null;
   onClose: () => void;
   onSuccess?: () => void;
 }
@@ -126,7 +127,7 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
   };
 
   const taskCount = (project.columns || []).reduce(
-    (acc, col) => acc + (col.tasks ? col.tasks.length : (col.task_count ?? 0)),
+    (acc, col) => acc + (col.task_count ?? 0),
     0
   );
 

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Pin, FolderKanban, Upload } from "lucide-react";
-import { useProjects, projectsService, ProjectData } from "@/lib/api";
+import { useProjects, projectsService, ProjectData, ProjectSummaryData } from "@/lib/api";
 import { ProjectCard } from "@/components/features/project/project-card";
 import { SearchInput } from "@/components/ui/search-input";
 import { FilterPills } from "@/components/ui/filter-pills";
@@ -71,7 +71,7 @@ export default function ProjectsPage() {
     (p) => !p.is_pinned || p.status === "completed" || p.status === "archived" || p.is_archived
   );
 
-  const handleExportProject = async (project: ProjectData) => {
+  const handleExportProject = async (project: ProjectSummaryData) => {
     setExportingProjectId(project.id);
     try {
       // Board endpoint: the export needs full task rows.

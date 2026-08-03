@@ -1,5 +1,10 @@
 import { create } from "zustand";
-import { ProjectData } from "@/lib/api";
+import { ProjectSummaryData, ProjectData } from "@/lib/api";
+
+// EditableProject is whatever source opened the modal: a summary from the
+// list, or the full light payload from the project detail layout. Both
+// expose the fields the edit modal reads.
+export type EditableProject = ProjectSummaryData | ProjectData;
 
 interface UIStoreState {
   // Create Project Modal
@@ -9,8 +14,8 @@ interface UIStoreState {
 
   // Edit Project Modal
   isEditProjectOpen: boolean;
-  editingProject: ProjectData | null;
-  openEditProject: (project: ProjectData) => void;
+  editingProject: EditableProject | null;
+  openEditProject: (project: EditableProject) => void;
   closeEditProject: () => void;
 
   // Import JSON Modal

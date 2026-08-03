@@ -4,7 +4,7 @@ import { memo, useMemo } from "react";
 import Link from "next/link";
 import { Pin, MoreVertical, Download, Settings2, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { ProjectData, useUpdateProject } from "@/lib/api";
+import { ProjectSummaryData, useUpdateProject } from "@/lib/api";
 import { useTheme } from "@/components/providers/theme-provider";
 import { useUIStore } from "@/store/use-ui-store";
 import {
@@ -17,11 +17,11 @@ import {
 import { toast } from "sonner";
 
 interface ProjectCardProps {
-  project: ProjectData;
+  project: ProjectSummaryData;
   variant?: "grid" | "compact";
   className?: string;
-  onEdit?: (project: ProjectData) => void;
-  onExport?: (project: ProjectData) => void;
+  onEdit?: (project: ProjectSummaryData) => void;
+  onExport?: (project: ProjectSummaryData) => void;
   isExporting?: boolean;
 }
 
@@ -81,8 +81,8 @@ export const ProjectCard = memo(function ProjectCard({
       id: col.id,
       name: col.name,
       color: col.color,
-      // Board responses carry the full tasks array; list responses carry task_count.
-      count: col.tasks ? col.tasks.length : (col.task_count ?? 0),
+      // The summary payload carries per-column totals as task_count.
+      count: col.task_count ?? 0,
       behavior: col.behavior,
     }));
     const total = cols.reduce((sum, c) => sum + c.count, 0);
