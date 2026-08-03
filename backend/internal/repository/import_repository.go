@@ -1,8 +1,14 @@
 package repository
 
 import (
+	"encoding/json"
+	"strings"
+	"time"
+
 	"github.com/Ijon6k/Taskure/apps/api/internal/models"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // ImportTaskData is a task row plus its checklist items for bulk import. The
@@ -50,11 +56,50 @@ func NewImportRepository(db *gorm.DB) ImportRepository {
 	return &importRepository{db: db}
 }
 
+// recordTagUsageTx mirrors taskRepository.RecordTagUsage inside the import
+// transaction, so the suggested-tags feature stays accurate after bulk imports.
+func recordTagUsageTx(tx *gorm.DB, projectID string, tagsJSON datatypes.JSON) error {
+	if projectID == "" || len(tagsJSON) == 0 {
+		return nil
+	}
+	var tags []string
+	if err := json.Unmarshal(tagsJSON, &tags); err != nil {
+		return nil
+	}
+	now := time.Now()
+	for _, tag := range tags {
+		cleanTag := strings.TrimSpace(tag)
+		if cleanTag == "" {
+			continue
+		}
+		stat := models.ProjectTagStat{
+			ProjectID:  projectID,
+			TagName:    cleanTag,
+			UsageCount: 1,
+			LastUsedAt: now,
+		}
+		if err := tx.Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "project_id"}, {Name: "tag_name"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{
+				"usage_count":  gorm.Expr("project_tag_stats.usage_count + 1"),
+				"last_used_at": now,
+				"updated_at":   now,
+			}),
+		}).Create(&stat).Error; err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func createTaskTree(tx *gorm.DB, projectID string, tasks []ImportTaskData) error {
 	for i := range tasks {
 		task := &tasks[i].Task
 		task.ProjectID = projectID
 		if err := tx.Create(task).Error; err != nil {
+			return err
+		}
+		if err := recordTagUsageTx(tx, projectID, task.Tags); err != nil {
 			return err
 		}
 		for j := range tasks[i].Checklist {

@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"errors"
+
 	"github.com/Ijon6k/Taskure/apps/api/internal/response"
 	"github.com/Ijon6k/Taskure/apps/api/internal/service"
 	"github.com/gin-gonic/gin"
@@ -23,6 +25,10 @@ func (h *ImportHandler) ImportProject(c *gin.Context) {
 
 	result, err := h.service.ImportProject(input)
 	if err != nil {
+		if errors.Is(err, service.ErrImportValidation) {
+			response.BadRequest(c, err)
+			return
+		}
 		response.SafeError(c, 500, err)
 		return
 	}
@@ -43,6 +49,10 @@ func (h *ImportHandler) ReplaceBoard(c *gin.Context) {
 
 	counts, err := h.service.ReplaceBoard(idParam, input)
 	if err != nil {
+		if errors.Is(err, service.ErrImportValidation) {
+			response.BadRequest(c, err)
+			return
+		}
 		if response.IsNotFound(err) {
 			response.NotFound(c, "Project not found")
 			return

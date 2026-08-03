@@ -54,6 +54,17 @@ export function parseImportObject(raw: unknown): ParsedImport {
       throw new Error(`Duplicate column name "${column.name}" in JSON.`);
     }
     seenColumnNames.add(key);
+
+    // Duplicate task titles within a column can't round-trip (title-keyed
+    // replace), so reject them up front with a clear message.
+    const seenTaskTitles = new Set<string>();
+    for (const task of column.tasks) {
+      const taskKey = normalizeKey(task.title);
+      if (seenTaskTitles.has(taskKey)) {
+        throw new Error(`Duplicate task title "${task.title}" in column "${column.name}".`);
+      }
+      seenTaskTitles.add(taskKey);
+    }
   }
 
   return parsed;
@@ -129,7 +140,10 @@ function normalizeDueDate(value: string | undefined): string | undefined {
     const date = new Date(`${value}T00:00:00Z`);
     return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
   }
-  return Number.isNaN(Date.parse(value)) ? undefined : value;
+  // Anything else JS can parse (ISO with/without zone, space-separated, …) is
+  // normalized to RFC3339 UTC so the backend never silently drops it.
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
 }
 
 function parseTags(source: Record<string, unknown>): string[] | undefined {

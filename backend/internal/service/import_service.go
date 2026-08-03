@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -101,14 +102,16 @@ func importPriority(value string) string {
 }
 
 func importDueDate(value string) *time.Time {
+	value = strings.TrimSpace(value)
 	if value == "" {
 		return nil
 	}
-	if parsed, err := time.Parse(time.RFC3339, value); err == nil {
-		return &parsed
-	}
-	if parsed, err := time.Parse("2006-01-02", value); err == nil {
-		return &parsed
+	// RFC3339 is canonical; tolerate date-only and tz-less datetime shorthands
+	// the AI template advertises. Missing zones parse as UTC.
+	for _, layout := range []string{time.RFC3339, "2006-01-02", "2006-01-02T15:04:05", "2006-01-02 15:04:05"} {
+		if parsed, err := time.Parse(layout, value); err == nil {
+			return &parsed
+		}
 	}
 	return nil
 }
@@ -130,12 +133,20 @@ func importTags(tags []string) datatypes.JSON {
 	return datatypes.JSON(jsonBytes)
 }
 
+// ErrImportValidation marks payload validation failures so handlers can answer
+// 400 instead of 500.
+var ErrImportValidation = errors.New("invalid import payload")
+
+func importValidationError(format string, args ...interface{}) error {
+	return fmt.Errorf("%w: %s", ErrImportValidation, fmt.Sprintf(format, args...))
+}
+
 // buildBoardTree validates the input and maps it onto the repository tree.
-// Mirrors the client-side parser: duplicate column names are rejected, invalid
-// values fall back to defaults, and size limits protect the server.
+// Mirrors the client-side parser: duplicate column/task names are rejected,
+// invalid values fall back to defaults, and size limits protect the server.
 func (s *importService) buildBoardTree(input ImportBoardInput) (*repository.ImportBoardData, error) {
 	if len(input.Columns) > maxImportColumns {
-		return nil, fmt.Errorf("too many columns (max %d)", maxImportColumns)
+		return nil, importValidationError("too many columns (max %d)", maxImportColumns)
 	}
 
 	totalTasks := 0
@@ -144,35 +155,54 @@ func (s *importService) buildBoardTree(input ImportBoardInput) (*repository.Impo
 	columns := make([]repository.ImportColumnData, 0, len(input.Columns))
 
 	for ci, columnIn := range input.Columns {
-		key := normalizeImportKey(columnIn.Name)
+		columnName := strings.TrimSpace(columnIn.Name)
+		if columnName == "" {
+			return nil, importValidationError("column %d has no name", ci)
+		}
+		key := normalizeImportKey(columnName)
 		if seenColumns[key] {
-			return nil, fmt.Errorf("duplicate column name %q in import payload", columnIn.Name)
+			return nil, importValidationError("duplicate column name %q in import payload", columnName)
 		}
 		seenColumns[key] = true
 
 		totalTasks += len(columnIn.Tasks)
 		if totalTasks > maxImportTasks {
-			return nil, fmt.Errorf("too many tasks (max %d)", maxImportTasks)
+			return nil, importValidationError("too many tasks (max %d)", maxImportTasks)
 		}
 
 		tasks := make([]repository.ImportTaskData, 0, len(columnIn.Tasks))
+		seenTaskTitles := make(map[string]bool, len(columnIn.Tasks))
 		for ti, taskIn := range columnIn.Tasks {
+			taskTitle := strings.TrimSpace(taskIn.Title)
+			if taskTitle == "" {
+				return nil, importValidationError("column %q has a task with no title", columnName)
+			}
+			titleKey := normalizeImportKey(taskTitle)
+			if seenTaskTitles[titleKey] {
+				return nil, importValidationError("duplicate task title %q in column %q", taskTitle, columnName)
+			}
+			seenTaskTitles[titleKey] = true
+
 			totalChecklist += len(taskIn.Checklist)
 			if totalChecklist > maxImportChecklistItems {
-				return nil, fmt.Errorf("too many checklist items (max %d)", maxImportChecklistItems)
+				return nil, importValidationError("too many checklist items (max %d)", maxImportChecklistItems)
 			}
 
 			checklist := make([]models.ChecklistItem, 0, len(taskIn.Checklist))
 			for pos, itemIn := range taskIn.Checklist {
+				itemTitle := strings.TrimSpace(itemIn.Title)
+				if itemTitle == "" {
+					return nil, importValidationError("task %q has a checklist item with no title", taskTitle)
+				}
 				checklist = append(checklist, models.ChecklistItem{
-					Title:       strings.TrimSpace(itemIn.Title),
+					Title:       itemTitle,
 					IsCompleted: itemIn.IsCompleted,
 					Position:    pos,
 				})
 			}
 
 			task := models.Task{
-				Title:       strings.TrimSpace(taskIn.Title),
+				Title:       taskTitle,
 				Description: taskIn.Description,
 				Priority:    importPriority(taskIn.Priority),
 				Status:      "todo",
@@ -185,7 +215,7 @@ func (s *importService) buildBoardTree(input ImportBoardInput) (*repository.Impo
 
 		columns = append(columns, repository.ImportColumnData{
 			Column: models.Column{
-				Name:     strings.TrimSpace(columnIn.Name),
+				Name:     columnName,
 				Color:    strings.TrimSpace(columnIn.Color),
 				Behavior: models.ColumnBehaviorActive,
 				Position: ci,
@@ -232,12 +262,16 @@ func (s *importService) ImportProject(input ImportBoardInput) (*ImportResult, er
 	if color == "" {
 		color = "#7F9CF5"
 	}
+	icon := strings.TrimSpace(input.Icon)
+	if icon == "" {
+		icon = "📌"
+	}
 
 	tree.Project = models.Project{
 		Name:         name,
 		Description:  input.Description,
 		Color:        color,
-		Icon:         strings.TrimSpace(input.Icon),
+		Icon:         icon,
 		Status:       status,
 		WorkspaceID:  ws.ID,
 		OwnerID:      ws.OwnerID,
@@ -248,7 +282,9 @@ func (s *importService) ImportProject(input ImportBoardInput) (*ImportResult, er
 		return nil, err
 	}
 
-	project, err := s.projectRepo.FindProject(tree.Project.ID)
+	// Light payload suffices: the caller navigates by id/name and the heavy
+	// board is fetched separately.
+	project, err := s.projectRepo.FindProjectLight(tree.Project.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -265,6 +301,12 @@ func (s *importService) ReplaceBoard(projectIDOrPublicID string, input ImportBoa
 	tree, err := s.buildBoardTree(input)
 	if err != nil {
 		return nil, err
+	}
+
+	// A replace with no columns would wipe the whole board; require at least
+	// one column so an accidental empty/{} payload cannot be destructive.
+	if len(tree.Columns) == 0 {
+		return nil, importValidationError("board requires at least one column")
 	}
 
 	existingColumns := project.Columns

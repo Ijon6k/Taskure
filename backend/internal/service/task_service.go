@@ -158,20 +158,28 @@ func (s *taskService) UpdateTask(idOrPublicID string, updates map[string]interfa
 	}
 
 	// Enum whitelist: reject unknown priority/status values so garbage never
-	// reaches the column.
+	// reaches the column. null keeps its old no-op semantics (GORM skips nils).
 	if priorityRaw, ok := updates["priority"]; ok {
-		priority := strings.ToLower(strings.TrimSpace(fmt.Sprintf("%v", priorityRaw)))
-		if !validTaskPriorities[priority] {
-			priority = "none"
+		if priorityRaw == nil {
+			delete(updates, "priority")
+		} else {
+			priority := strings.ToLower(strings.TrimSpace(fmt.Sprintf("%v", priorityRaw)))
+			if !validTaskPriorities[priority] {
+				priority = "none"
+			}
+			updates["priority"] = priority
 		}
-		updates["priority"] = priority
 	}
 	if statusRaw, ok := updates["status"]; ok {
-		status := strings.ToLower(strings.TrimSpace(fmt.Sprintf("%v", statusRaw)))
-		if !validTaskStatuses[status] {
-			status = "todo"
+		if statusRaw == nil {
+			delete(updates, "status")
+		} else {
+			status := strings.ToLower(strings.TrimSpace(fmt.Sprintf("%v", statusRaw)))
+			if !validTaskStatuses[status] {
+				status = "todo"
+			}
+			updates["status"] = status
 		}
-		updates["status"] = status
 	}
 
 	// Safely parse due_date string into time.Time struct or nil for GORM map updates
