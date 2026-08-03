@@ -130,10 +130,15 @@ func (s *projectService) CreateProject(input CreateProjectInput) (*models.Projec
 	return s.projectRepo.FindProject(project.PublicID)
 }
 
+// GetProject returns the light payload (metadata + settings + columns with
+// task counts, no task rows). Consumers that render the full board must use
+// GetProjectBoard.
 func (s *projectService) GetProject(idOrPublicID string) (*models.Project, error) {
-	return s.projectRepo.FindProject(idOrPublicID)
+	return s.projectRepo.FindProjectLight(idOrPublicID)
 }
 
+// GetProjectBoard returns the full payload: columns, tasks and checklist
+// items, used only by the board page and its heavy consumers.
 func (s *projectService) GetProjectBoard(idOrPublicID string) (*models.Project, error) {
 	return s.projectRepo.FindProject(idOrPublicID)
 }

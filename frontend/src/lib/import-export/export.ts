@@ -56,7 +56,8 @@ export async function exportFullWorkspaceJSON(): Promise<void> {
 
   for (const p of projectsSummary) {
     try {
-      const fullProj = await projectsService.getProject(p.id);
+      // Board endpoint: the portable export needs full task rows.
+      const fullProj = await projectsService.getProjectBoard(p.id);
       fullProjects.push(fullProj);
     } catch {
       fullProjects.push(p);

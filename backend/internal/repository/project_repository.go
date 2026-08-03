@@ -182,9 +182,13 @@ func (r *projectRepository) GetColumnTaskCounts(columnIDs []string) (map[string]
 	return counts, nil
 }
 
+// FindProjectLight loads project metadata + settings + ordered columns with
+// per-column task counts, but no task rows — the payload for /projects/:id.
 func (r *projectRepository) FindProjectLight(idOrPublicID string) (*models.Project, error) {
 	var project models.Project
-	query := r.db
+	query := r.db.Preload("Columns", func(db *gorm.DB) *gorm.DB {
+		return db.Order("position asc")
+	})
 	if util.IsUUID(idOrPublicID) {
 		query = query.Where("id = ? OR public_id = ?", idOrPublicID, idOrPublicID)
 	} else {
@@ -193,6 +197,18 @@ func (r *projectRepository) FindProjectLight(idOrPublicID string) (*models.Proje
 	err := query.First(&project).Error
 	if err != nil {
 		return nil, err
+	}
+
+	if len(project.Columns) > 0 {
+		columnIDs := make([]string, 0, len(project.Columns))
+		for i := range project.Columns {
+			columnIDs = append(columnIDs, project.Columns[i].ID)
+		}
+		if counts, err := r.GetColumnTaskCounts(columnIDs); err == nil {
+			for i := range project.Columns {
+				project.Columns[i].TaskCount = counts[project.Columns[i].ID]
+			}
+		}
 	}
 	return &project, nil
 }

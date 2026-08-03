@@ -74,7 +74,8 @@ export default function ProjectsPage() {
   const handleExportProject = async (project: ProjectData) => {
     setExportingProjectId(project.id);
     try {
-      const fullProject = await projectsService.getProject(project.id);
+      // Board endpoint: the export needs full task rows.
+      const fullProject = await projectsService.getProjectBoard(project.id);
       openExportJson(fullProject);
     } catch (err: any) {
       toast.error(err.message || "Failed to load project data.");

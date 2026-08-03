@@ -125,7 +125,10 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
     });
   };
 
-  const taskCount = (project.columns || []).reduce((acc, col) => acc + (col.tasks?.length || 0), 0);
+  const taskCount = (project.columns || []).reduce(
+    (acc, col) => acc + (col.tasks ? col.tasks.length : (col.task_count ?? 0)),
+    0
+  );
 
   return (
     <>

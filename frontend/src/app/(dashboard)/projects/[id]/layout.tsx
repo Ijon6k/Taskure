@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useProjectBoard } from "@/lib/api";
+import { useProject } from "@/lib/api";
 import { useUIStore } from "@/store/use-ui-store";
 import { ProjectSubHeader } from "./components/project-sub-header";
 import dynamic from "next/dynamic";
@@ -19,7 +19,10 @@ export default function ProjectSubLayout({
   const params = useParams<{ id: string }>();
   const projectId = params?.id || "";
 
-  const { data: project, refetch } = useProjectBoard(projectId);
+  // Light payload: metadata + settings + columns with task counts. The heavy
+  // board payload (tasks + checklists) is fetched only by the pages that
+  // render tasks (board, overview, resources).
+  const { data: project, refetch } = useProject(projectId);
   const isEditProjectOpen = useUIStore((s) => s.isEditProjectOpen);
   const openEditProject = useUIStore((s) => s.openEditProject);
   const closeEditProject = useUIStore((s) => s.closeEditProject);
