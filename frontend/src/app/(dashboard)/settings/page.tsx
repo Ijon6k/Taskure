@@ -158,7 +158,7 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
               <div className="p-4 bg-surface-l2 rounded-md space-y-1">
                 <div className="text-[12px] font-mono text-theme-tertiary uppercase">Workspace Name</div>
-                <div className="text-[16px] font-semibold text-theme-primary">My Kanban</div>
+                <div className="text-[16px] font-semibold text-theme-primary">Taskure</div>
               </div>
 
               <div className="p-4 bg-surface-l2 rounded-md space-y-1">

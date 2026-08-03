@@ -16,8 +16,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "My Kanban — Personal Project Workspace",
+  title: {
+    default: "Taskure — Personal Project Workspace",
+    template: "%s · Taskure",
+  },
   description: "Personal project workspace for managing your projects",
+  icons: {
+    icon: "/taskurelogo.webp",
+  },
 };
 
 import { ThemeProvider } from "@/components/providers/theme-provider";

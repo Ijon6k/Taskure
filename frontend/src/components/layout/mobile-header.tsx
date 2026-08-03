@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { SidebarSimple, Plus, Kanban } from "@phosphor-icons/react";
+import Image from "next/image";
+import { SidebarSimple, Kanban } from "@phosphor-icons/react";
 import { useUIStore } from "@/store/use-ui-store";
 
 interface MobileHeaderProps {
@@ -9,7 +10,7 @@ interface MobileHeaderProps {
   onOpenCreateProject?: () => void;
 }
 
-export function MobileHeader({ title = "My Kanban", onOpenCreateProject }: MobileHeaderProps) {
+export function MobileHeader({ title = "Taskure", onOpenCreateProject }: MobileHeaderProps) {
   const toggleMobileMenu = useUIStore((s) => s.toggleMobileMenu);
 
   return (
@@ -26,9 +27,14 @@ export function MobileHeader({ title = "My Kanban", onOpenCreateProject }: Mobil
         </button>
 
         <Link href="/" className="flex items-center gap-1.5 shrink-0" aria-label="Go Home">
-          <span className="w-6 h-6 bg-brand-accent rounded-md flex items-center justify-center text-black font-bold text-xs shrink-0 shadow-xs">
-            K
-          </span>
+          <Image
+            src="/taskurelogo.webp"
+            alt="Taskure"
+            width={24}
+            height={24}
+            // ~120% zoom of the tile, rounded like the old "K" badge.
+            className="w-6 h-6 scale-[1.2] rounded-md object-contain shrink-0 shadow-xs"
+          />
         </Link>
       </div>
 

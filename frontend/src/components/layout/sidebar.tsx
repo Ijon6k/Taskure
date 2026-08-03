@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   Database,
@@ -91,19 +92,29 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
             {isLogoHovered ? (
               <SidebarSimple className="w-[18px] h-[18px] text-theme-primary" />
             ) : (
-              <span className="w-[28px] h-[28px] bg-brand-accent rounded-md flex items-center justify-center text-black font-bold text-sm">
-                K
-              </span>
+              <Image
+                src="/taskurelogo.webp"
+                alt="Taskure"
+                width={32}
+                height={32}
+                // ~120% zoom of a 28px tile, then rounded like the old "K" badge.
+                className="w-[32px] h-[32px] scale-[1.2] rounded-md object-contain"
+              />
             )}
           </button>
         ) : (
           <>
             <Link href="/" onClick={() => isMobileView && closeMobileMenu()} className="flex items-center gap-2.5 min-w-0">
-              <span className="w-[28px] h-[28px] bg-brand-accent rounded-md flex items-center justify-center text-black font-bold text-sm shrink-0">
-                K
-              </span>
+              <Image
+                src="/taskurelogo.webp"
+                alt="Taskure"
+                width={32}
+                height={32}
+                // ~120% zoom of a 28px tile, then rounded like the old "K" badge.
+                className="w-[32px] h-[32px] scale-[1.2] rounded-md object-contain shrink-0"
+              />
               <span className="text-[15px] font-medium tracking-tight text-theme-primary whitespace-nowrap">
-                My Kanban
+                Taskure
               </span>
             </Link>
 

@@ -13,7 +13,7 @@ export default function DashboardLayout({
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-surface-l0 text-theme-primary font-sans select-none overflow-hidden">
-      <MobileHeader title="Taskure Kanban" onOpenCreateProject={openCreateProject} />
+      <MobileHeader title="Taskure" onOpenCreateProject={openCreateProject} />
       <Sidebar onOpenCreateProject={openCreateProject} />
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {children}
