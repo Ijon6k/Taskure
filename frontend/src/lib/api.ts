@@ -8,6 +8,7 @@ import { projectsService } from "./api/services/projects.service";
 import { columnsService } from "./api/services/columns.service";
 import { tasksService } from "./api/services/tasks.service";
 import { workspaceService } from "./api/services/workspace.service";
+import { notebookService } from "./api/services/notebook.service";
 
 /** Backward-compatible facade exposing every API service under one object. */
 export const api = {
@@ -40,4 +41,10 @@ export const api = {
   updateWorkspaceSettings: workspaceService.updateWorkspaceSettings,
   getFocusTask: workspaceService.getFocusTask,
   seedDemoData: workspaceService.seedDemoData,
+
+  getNotebookPages: notebookService.getPages,
+  createNotebookPage: notebookService.createPage,
+  getNotebookPage: notebookService.getPage,
+  updateNotebookPage: notebookService.updatePage,
+  deleteNotebookPage: notebookService.deletePage,
 };

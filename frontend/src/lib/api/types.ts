@@ -141,6 +141,23 @@ export interface ProjectContextData {
   created_at: string;
 }
 
+// ─── Notebook ─────────────────────────────────────────────────────────────────
+// List payload excludes the markdown content; the detail payload adds it.
+
+export interface NotebookPageData {
+  id: string;
+  title: string;
+  position: number;
+  is_pinned: boolean;
+  project_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NotebookPageDetailData extends NotebookPageData {
+  content: string;
+}
+
 export interface TaskData {
   id: string;
   title: string;
@@ -278,4 +295,15 @@ export interface MoveTaskInput {
   column_id: string;
   position: number;
   status?: string;
+}
+
+export interface CreateNotebookPageInput {
+  title?: string;
+}
+
+export interface UpdateNotebookPageInput {
+  title?: string;
+  content?: string;
+  is_pinned?: boolean;
+  position?: number;
 }

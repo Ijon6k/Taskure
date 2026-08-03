@@ -103,10 +103,11 @@ type Project struct {
 	FocusEnabled bool           `gorm:"not null;default:true;index" json:"focus_enabled"`
 	Settings     datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"settings"`
 
-	Columns     []Column         `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"columns,omitempty"`
-	Tasks       []Task           `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"tasks,omitempty"`
-	Contexts    []ProjectContext `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"contexts,omitempty"`
-	Discussions []Discussion     `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"discussions,omitempty"`
+	Columns       []Column         `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"columns,omitempty"`
+	Tasks         []Task           `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"tasks,omitempty"`
+	Contexts      []ProjectContext `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"contexts,omitempty"`
+	Discussions   []Discussion     `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"discussions,omitempty"`
+	NotebookPages []NotebookPage   `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"notebook_pages,omitempty"`
 }
 
 // BeforeCreate generates the UUID primary key before insert.
@@ -289,6 +290,32 @@ func (pc *ProjectContext) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
+// --- NotebookPage ---
+
+type NotebookPage struct {
+	PublicBase
+	Title     string `gorm:"not null;size:200" json:"title"`
+	Content   string `gorm:"type:text" json:"content,omitempty"`
+	Position  int    `gorm:"not null;default:0;index:idx_notebook_project_position,priority:2" json:"position"`
+	IsPinned  bool   `gorm:"not null;default:false;index" json:"is_pinned"`
+	ProjectID string `gorm:"type:uuid;not null;index:idx_notebook_project_position,priority:1" json:"project_id"`
+}
+
+// BeforeCreate generates the UUID primary key and public NanoID before insert.
+func (np *NotebookPage) BeforeCreate(tx *gorm.DB) error {
+	if err := np.Base.BeforeCreate(tx); err != nil {
+		return err
+	}
+	if np.PublicID == "" {
+		id, err := nanoid.Generate("ntp")
+		if err != nil {
+			return err
+		}
+		np.PublicID = id
+	}
+	return nil
+}
+
 // --- Discussion ---
 
 type Discussion struct {
@@ -399,6 +426,7 @@ func AllModels() []any {
 		&Attachment{},
 		&Capture{},
 		&ProjectContext{},
+		&NotebookPage{},
 		&Discussion{},
 		&Activity{},
 		&ImageVariantJob{},

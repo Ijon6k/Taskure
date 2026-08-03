@@ -17,6 +17,7 @@ type Container struct {
 	ImportHandler    *ImportHandler
 	SeedHandler      *SeedHandler
 	StorageHandler   *StorageHandler
+	NotebookHandler  *NotebookHandler
 }
 
 // NewContainer bundles all services and storage into the handler container used by route registration.
@@ -28,6 +29,7 @@ func NewContainer(
 	importService service.ImportService,
 	seedService service.SeedService,
 	storageSvc storage.StorageService,
+	notebookService service.NotebookService,
 ) *Container {
 	return &Container{
 		WorkspaceHandler: NewWorkspaceHandler(workspaceService),
@@ -39,6 +41,7 @@ func NewContainer(
 		ImportHandler:    NewImportHandler(importService),
 		SeedHandler:      NewSeedHandler(seedService),
 		StorageHandler:   NewStorageHandler(storageSvc),
+		NotebookHandler:  NewNotebookHandler(notebookService),
 	}
 }
 
@@ -68,6 +71,10 @@ func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 		projects.POST("/:id/columns", c.ColumnHandler.CreateColumn)
 		projects.POST("/:id/tasks", c.TaskHandler.CreateTask)
 		projects.GET("/:id/suggested-tags", c.TaskHandler.GetSuggestedTags)
+
+		// Notebook pages scoped under project
+		projects.GET("/:id/notebook", c.NotebookHandler.ListPages)
+		projects.POST("/:id/notebook", c.NotebookHandler.CreatePage)
 
 		// Bulk import: one request creates/replaces an entire board atomically.
 		projects.POST("/import", c.ImportHandler.ImportProject)
@@ -108,6 +115,13 @@ func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 	{
 		checklist.PATCH("/:id", c.ChecklistHandler.UpdateChecklistItem)
 		checklist.DELETE("/:id", c.ChecklistHandler.DeleteChecklistItem)
+	}
+
+	notebook := r.Group("/notebook")
+	{
+		notebook.GET("/:id", c.NotebookHandler.GetPage)
+		notebook.PATCH("/:id", c.NotebookHandler.UpdatePage)
+		notebook.DELETE("/:id", c.NotebookHandler.DeletePage)
 	}
 
 	r.GET("/focus", c.FocusHandler.GetFocusTask)

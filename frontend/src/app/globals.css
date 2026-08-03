@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Syntax highlighting uses our own token theme defined in the NOTEBOOK
+   section below — token colors adapt to dark/light via CSS variables, so we
+   don't import highlight.js's static (dark-only) stylesheet. */
+
 @theme {
   --font-mono: var(--font-space-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
@@ -750,4 +754,347 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-thumb-hover);
+}
+
+/* ============================================================
+   NOTEBOOK EDITOR (TipTap)
+   Light, borderless, document-style. Inherits the app's color
+   tokens so it blends with every theme (graphite / neutral /
+   oled / light) without re-declaring them.
+   ============================================================ */
+.notebook-prose {
+  color: var(--text-primary);
+  line-height: 1.7;
+  font-size: 1em; /* em-based; wrapper sets the base size */
+}
+
+.notebook-prose > * + * {
+  margin-top: 0.75em;
+}
+
+.notebook-prose h1,
+.notebook-prose h2,
+.notebook-prose h3,
+.notebook-prose h4 {
+  color: var(--text-primary);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  margin-top: 1.4em;
+  margin-bottom: 0.4em;
+}
+
+.notebook-prose h1 { font-size: 1.9em; }
+.notebook-prose h2 { font-size: 1.5em; }
+.notebook-prose h3 { font-size: 1.2em; }
+.notebook-prose h4 { font-size: 1.05em; }
+
+.notebook-prose p {
+  color: var(--text-secondary);
+}
+
+.notebook-prose a {
+  color: var(--brand-accent);
+  text-decoration: none;
+}
+.notebook-prose a:hover {
+  text-decoration: underline;
+}
+
+.notebook-prose ul,
+.notebook-prose ol {
+  padding-left: 1.4em;
+  color: var(--text-secondary);
+}
+.notebook-prose ul { list-style: disc; }
+.notebook-prose ol { list-style: decimal; }
+.notebook-prose li::marker { color: var(--text-tertiary); }
+.notebook-prose li > p { margin: 0; }
+
+.notebook-prose blockquote {
+  border-left: 2px solid var(--border-default);
+  padding-left: 0.9em;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.notebook-prose hr {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 1.6em 0;
+}
+
+.notebook-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  padding: 0.12em 0.4em;
+  border-radius: 4px;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+}
+
+.notebook-prose pre {
+  margin: 1em 0;
+  padding: 0.9em 1em;
+  border-radius: var(--radius-md);
+  background: var(--surface-l1);
+  border: 1px solid var(--border-subtle);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  line-height: 1.55;
+}
+
+.notebook-prose pre code {
+  background: transparent;
+  padding: 0;
+  border: none;
+  font-size: inherit;
+}
+
+/* GFM tables */
+.notebook-prose .notebook-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92em;
+  color: var(--text-secondary);
+  margin: 1em 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  table-layout: fixed;
+}
+.notebook-prose .notebook-table th,
+.notebook-prose .notebook-table td {
+  border: 1px solid var(--border-strong);
+  padding: 0.5em 0.75em;
+  text-align: left;
+  vertical-align: top;
+  min-width: 1em;
+  position: relative;
+}
+.notebook-prose .notebook-table th {
+  background: var(--surface-l2);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.notebook-prose .notebook-table tr:nth-child(even) td {
+  background: var(--surface-l1);
+}
+
+/* Resize handle provided by @tiptap/extension-table */
+.notebook-prose .notebook-table .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--brand-accent);
+  opacity: 0;
+  pointer-events: auto;
+  cursor: col-resize;
+}
+.notebook-prose .notebook-table .column-resize-handle:hover,
+.notebook-prose .notebook-table.resize-cursor .column-resize-handle {
+  opacity: 0.5;
+}
+.notebook-prose.resize-cursor,
+.notebook-prose .notebook-table.resize-cursor {
+  cursor: col-resize;
+}
+
+/* Selected cell highlight while a table is being edited */
+.notebook-prose .notebook-table .selectedCell {
+  background: var(--brand-accent-subtle);
+}
+
+/* GFM task lists */
+.notebook-prose .notebook-task-list {
+  list-style: none;
+  padding-left: 0.2em;
+}
+.notebook-prose .notebook-task-list .notebook-task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+  margin: 0.25em 0;
+}
+.notebook-prose .notebook-task-list .notebook-task-item > label {
+  margin-top: 0.35em;
+  user-select: none;
+}
+.notebook-prose .notebook-task-list .notebook-task-item > div {
+  flex: 1;
+  min-width: 0;
+}
+.notebook-prose .notebook-task-list input[type="checkbox"] {
+  accent-color: var(--brand-accent);
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+}
+.notebook-prose .notebook-task-list input[type="checkbox"]:checked + div {
+  color: var(--text-tertiary);
+  text-decoration: line-through;
+}
+
+/* ── Go-to-top button (notebook editor) ─────────────────────── */
+.notebook-scroll-to-top {
+  /* Fixed to the viewport (not the scroll container) so it stays visible
+     no matter how far the document is scrolled. */
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 50;
+  width: 30px;
+  height: 30px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-l3);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+.notebook-scroll-to-top:hover {
+  background: var(--surface-l4);
+  color: var(--text-primary);
+}
+.notebook-scroll-to-top:active {
+  transform: scale(0.96);
+}
+
+/* ── Syntax highlighting (notebook code blocks) ───────────────
+   GitHub-style token colors, mapped through CSS vars so dark themes use
+   github-dark tones and the light theme uses github-light tones. The old
+   static github-dark.css import made code unreadable on light surfaces. */
+:root {
+  --syntax-plain: var(--text-primary);
+  --syntax-comment: #8b949e;
+  --syntax-keyword: #ff7b72;
+  --syntax-string: #a5d6ff;
+  --syntax-number: #79c0ff;
+  --syntax-title: #d2a8ff;
+  --syntax-builtin: #ffa657;
+  --syntax-name: #7ee787;
+  --syntax-section: #1f6feb;
+  --syntax-bullet: #f2cc60;
+  --syntax-subst: #c9d1d9;
+  --syntax-addition: #aff5b4;
+  --syntax-deletion: #ffdcd7;
+}
+
+[data-theme="light"] {
+  --syntax-plain: var(--text-primary);
+  --syntax-comment: #6a737d;
+  --syntax-keyword: #d73a49;
+  --syntax-string: #032f62;
+  --syntax-number: #005cc5;
+  --syntax-title: #6f42c1;
+  --syntax-builtin: #e36209;
+  --syntax-name: #22863a;
+  --syntax-section: #005cc5;
+  --syntax-bullet: #735c0f;
+  --syntax-subst: #24292e;
+  --syntax-addition: #22863a;
+  --syntax-deletion: #b31d28;
+}
+
+.notebook-prose .hljs {
+  color: var(--syntax-plain);
+  background: transparent;
+  padding: 0;
+}
+
+.notebook-prose .hljs-doctag,
+.notebook-prose .hljs-keyword,
+.notebook-prose .hljs-meta .hljs-keyword,
+.notebook-prose .hljs-template-tag,
+.notebook-prose .hljs-template-variable,
+.notebook-prose .hljs-type,
+.notebook-prose .hljs-variable.language_ {
+  color: var(--syntax-keyword);
+}
+
+.notebook-prose .hljs-title,
+.notebook-prose .hljs-title.class_,
+.notebook-prose .hljs-title.class_.inherited__,
+.notebook-prose .hljs-title.function_ {
+  color: var(--syntax-title);
+}
+
+.notebook-prose .hljs-attr,
+.notebook-prose .hljs-attribute,
+.notebook-prose .hljs-literal,
+.notebook-prose .hljs-meta,
+.notebook-prose .hljs-number,
+.notebook-prose .hljs-operator,
+.notebook-prose .hljs-variable,
+.notebook-prose .hljs-selector-attr,
+.notebook-prose .hljs-selector-class,
+.notebook-prose .hljs-selector-id {
+  color: var(--syntax-number);
+}
+
+.notebook-prose .hljs-regexp,
+.notebook-prose .hljs-string,
+.notebook-prose .hljs-meta .hljs-string {
+  color: var(--syntax-string);
+}
+
+.notebook-prose .hljs-built_in,
+.notebook-prose .hljs-symbol {
+  color: var(--syntax-builtin);
+}
+
+.notebook-prose .hljs-comment,
+.notebook-prose .hljs-code,
+.notebook-prose .hljs-formula {
+  color: var(--syntax-comment);
+  font-style: italic;
+}
+
+.notebook-prose .hljs-name,
+.notebook-prose .hljs-quote,
+.notebook-prose .hljs-selector-tag,
+.notebook-prose .hljs-selector-pseudo {
+  color: var(--syntax-name);
+}
+
+.notebook-prose .hljs-subst {
+  color: var(--syntax-subst);
+}
+
+.notebook-prose .hljs-section {
+  color: var(--syntax-section);
+  font-weight: 700;
+}
+
+.notebook-prose .hljs-bullet {
+  color: var(--syntax-bullet);
+}
+
+.notebook-prose .hljs-emphasis {
+  color: var(--syntax-plain);
+  font-style: italic;
+}
+
+.notebook-prose .hljs-strong {
+  color: var(--syntax-plain);
+  font-weight: 700;
+}
+
+.notebook-prose .hljs-addition {
+  color: var(--syntax-addition);
+}
+
+.notebook-prose .hljs-deletion {
+  color: var(--syntax-deletion);
 }
