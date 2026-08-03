@@ -1,17 +1,18 @@
-// Barrel for backward compatibility — the import/export domain now lives in
-// lib/import-export/ (types, constants, parse, diff, export, apply).
 export {
   applyImportCreate,
   applyImportReplace,
-  buildProjectJSON,
-  buildReplaceDiff,
   deleteAllWorkspaceData,
-  exportFullWorkspaceJSON,
   importFullWorkspaceJSON,
-  normalizeKey,
-  parseImportJSON,
-  parseImportObject,
-} from "./import-export";
+} from "./apply";
+export {
+  DEFAULT_PROJECT_COLOR,
+  DEFAULT_PROJECT_ICON,
+  VALID_PRIORITIES,
+  VALID_PROJECT_STATUSES,
+} from "./constants";
+export { buildReplaceDiff } from "./diff";
+export { buildProjectJSON, exportFullWorkspaceJSON } from "./export";
+export { normalizeKey, parseImportJSON, parseImportObject } from "./parse";
 export type {
   BoardMutationCounts,
   ColumnDiff,
@@ -26,4 +27,4 @@ export type {
   ParsedTask,
   TaskDiffItem,
   WorkspaceBackupPayload,
-} from "./import-export";
+} from "./types";
