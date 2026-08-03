@@ -17,10 +17,12 @@ type workspaceRepository struct {
 	db *gorm.DB
 }
 
+// NewWorkspaceRepository creates the workspace repository.
 func NewWorkspaceRepository(db *gorm.DB) WorkspaceRepository {
 	return &workspaceRepository{db: db}
 }
 
+// EnsureUserAndWorkspace seeds the default user + personal workspace when the database is fresh.
 func (r *workspaceRepository) EnsureUserAndWorkspace() (*models.Workspace, error) {
 	var user models.User
 	if err := r.db.First(&user).Error; err != nil {
@@ -49,14 +51,17 @@ func (r *workspaceRepository) EnsureUserAndWorkspace() (*models.Workspace, error
 	return &ws, nil
 }
 
+// GetDefaultWorkspace loads the default workspace with its projects.
 func (r *workspaceRepository) GetDefaultWorkspace() (*models.Workspace, error) {
 	return r.EnsureUserAndWorkspace()
 }
 
+// UpdateWorkspace applies partial updates to a workspace.
 func (r *workspaceRepository) UpdateWorkspace(ws *models.Workspace, updates map[string]interface{}) error {
 	return r.db.Model(ws).Updates(updates).Error
 }
 
+// BackfillNanoIDs assigns public NanoIDs to legacy rows that predate them.
 func (r *workspaceRepository) BackfillNanoIDs() error {
 	var workspaces []models.Workspace
 	if err := r.db.Where("public_id IS NULL OR public_id = ''").Find(&workspaces).Error; err == nil {

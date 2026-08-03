@@ -27,10 +27,12 @@ type variantJobRepository struct {
 	db *gorm.DB
 }
 
+// NewVariantJobRepository creates the variant-job repository.
 func NewVariantJobRepository(db *gorm.DB) VariantJobRepository {
 	return &variantJobRepository{db: db}
 }
 
+// Create enqueues a variant job.
 func (r *variantJobRepository) Create(job *models.ImageVariantJob) error {
 	return r.db.Create(job).Error
 }
@@ -58,6 +60,7 @@ func (r *variantJobRepository) ClaimNext() (*models.ImageVariantJob, error) {
 	return &job, nil
 }
 
+// MarkDone marks a job as completed.
 func (r *variantJobRepository) MarkDone(id string) error {
 	now := time.Now()
 	return r.db.Model(&models.ImageVariantJob{}).
@@ -69,6 +72,7 @@ func (r *variantJobRepository) MarkDone(id string) error {
 		}).Error
 }
 
+// Requeue returns a job to the pending queue.
 func (r *variantJobRepository) Requeue(id string, attempts int, lastError string) error {
 	return r.db.Model(&models.ImageVariantJob{}).
 		Where("id = ?", id).
@@ -79,6 +83,7 @@ func (r *variantJobRepository) Requeue(id string, attempts int, lastError string
 		}).Error
 }
 
+// MarkFailed records a permanent failure for a job.
 func (r *variantJobRepository) MarkFailed(id string, attempts int, lastError string) error {
 	now := time.Now()
 	return r.db.Model(&models.ImageVariantJob{}).

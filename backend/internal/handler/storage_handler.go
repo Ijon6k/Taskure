@@ -19,6 +19,7 @@ type StorageHandler struct {
 	storage storage.StorageService
 }
 
+// NewStorageHandler wires the object-storage HTTP handlers.
 func NewStorageHandler(storage storage.StorageService) *StorageHandler {
 	return &StorageHandler{storage: storage}
 }
@@ -63,6 +64,7 @@ func generatedThumbWidth(relPath string) int {
 	return w
 }
 
+// objectExists reports whether a key exists in the bucket without fetching its body.
 func (h *StorageHandler) objectExists(ctx context.Context, objectKey string) bool {
 	if h.storage != nil {
 		ok, err := h.storage.ObjectExists(ctx, objectKey)
@@ -123,6 +125,7 @@ func (h *StorageHandler) serveGeneratedOrOriginal(c *gin.Context, relPath string
 	h.serveOriginal(c, relPath, variantReq)
 }
 
+// ServeStorageFile handles GET /storage/*filepath — serves stored objects with variant width support.
 func (h *StorageHandler) ServeStorageFile(c *gin.Context) {
 	relPath := c.Param("filepath")
 	relPath = strings.TrimPrefix(relPath, "/")
@@ -180,6 +183,7 @@ func (h *StorageHandler) ServeStorageFile(c *gin.Context) {
 	c.String(http.StatusNotFound, "Variant not ready")
 }
 
+// serveOriginal streams the original object when no variant/width was requested.
 func (h *StorageHandler) serveOriginal(c *gin.Context, relPath string, variantReq bool) {
 	ctx := c.Request.Context()
 	reader, err := h.getObjectReader(ctx, relPath)
@@ -221,6 +225,7 @@ func (h *StorageHandler) serveOriginal(c *gin.Context, relPath string, variantRe
 	}
 }
 
+// getObjectReader opens a streaming reader for a stored object.
 func (h *StorageHandler) getObjectReader(ctx context.Context, objectKey string) (io.ReadCloser, error) {
 	// Defense in depth: never hand a relative path to the local fallback.
 	if strings.Contains(objectKey, "..") {

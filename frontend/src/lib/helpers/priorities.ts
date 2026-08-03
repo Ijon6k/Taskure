@@ -48,6 +48,7 @@ export const PRIORITIES: Record<string, PriorityConfig> = {
   },
 };
 
+/** Returns the visual config (label, order, colors) for a priority key. */
 export function getPriorityConfig(priority?: string): PriorityConfig {
   if (!priority) return DEFAULT_PRIORITY;
   const key = priority.toLowerCase().trim();

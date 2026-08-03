@@ -77,6 +77,7 @@ type importService struct {
 	importRepo    repository.ImportRepository
 }
 
+// NewImportService creates the import service.
 func NewImportService(
 	workspaceRepo repository.WorkspaceRepository,
 	projectRepo repository.ProjectRepository,
@@ -89,10 +90,12 @@ func NewImportService(
 	}
 }
 
+// normalizeImportKey lowercases and trims a string so imported column names match case-insensitively.
 func normalizeImportKey(value string) string {
 	return strings.ToLower(strings.TrimSpace(value))
 }
 
+// importPriority maps a raw priority string onto the canonical priority enum, defaulting to medium.
 func importPriority(value string) string {
 	priority := strings.ToLower(strings.TrimSpace(value))
 	if !validTaskPriorities[priority] {
@@ -101,6 +104,7 @@ func importPriority(value string) string {
 	return priority
 }
 
+// importDueDate parses a flexible due-date format, returning nil when absent.
 func importDueDate(value string) *time.Time {
 	value = strings.TrimSpace(value)
 	if value == "" {
@@ -116,6 +120,7 @@ func importDueDate(value string) *time.Time {
 	return nil
 }
 
+// importTags normalizes a raw tag list into the stored string-array shape.
 func importTags(tags []string) datatypes.JSON {
 	clean := make([]string, 0, len(tags))
 	for _, tag := range tags {
@@ -137,6 +142,7 @@ func importTags(tags []string) datatypes.JSON {
 // 400 instead of 500.
 var ErrImportValidation = errors.New("invalid import payload")
 
+// importValidationError wraps a validation failure so handlers can map it to 400.
 func importValidationError(format string, args ...interface{}) error {
 	return fmt.Errorf("%w: %s", ErrImportValidation, fmt.Sprintf(format, args...))
 }
@@ -227,6 +233,7 @@ func (s *importService) buildBoardTree(input ImportBoardInput) (*repository.Impo
 	return &repository.ImportBoardData{Columns: columns}, nil
 }
 
+// countBoardTree counts imported columns/tasks/checklists for the response summary.
 func countBoardTree(tree *repository.ImportBoardData) ImportCounts {
 	var counts ImportCounts
 	for _, column := range tree.Columns {
@@ -239,6 +246,7 @@ func countBoardTree(tree *repository.ImportBoardData) ImportCounts {
 	return counts
 }
 
+// ImportProject creates a new project whose board is built from the JSON input.
 func (s *importService) ImportProject(input ImportBoardInput) (*ImportResult, error) {
 	ws, err := s.workspaceRepo.EnsureUserAndWorkspace()
 	if err != nil {
@@ -292,6 +300,7 @@ func (s *importService) ImportProject(input ImportBoardInput) (*ImportResult, er
 	return &ImportResult{Counts: countBoardTree(tree), Project: project}, nil
 }
 
+// ReplaceBoard atomically replaces a project's board with the imported tree (import + remove diff).
 func (s *importService) ReplaceBoard(projectIDOrPublicID string, input ImportBoardInput) (*ImportCounts, error) {
 	project, err := s.projectRepo.FindProject(projectIDOrPublicID)
 	if err != nil {

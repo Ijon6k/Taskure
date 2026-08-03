@@ -3,6 +3,7 @@ import { projectsService } from "../services/projects.service";
 import { CreateProjectInput, ProjectData } from "../types";
 import { invalidateFocusQueries } from "./use-workspace";
 
+/** React Query key builders for project queries — invalidating 'all' covers every project query. */
 export const PROJECT_KEYS = {
   all: ["projects"] as const,
   list: (filters?: { status?: string; search?: string; pinned?: boolean }) =>
@@ -10,6 +11,7 @@ export const PROJECT_KEYS = {
   detail: (id: string) => [...PROJECT_KEYS.all, "detail", id] as const,
 };
 
+/** Fetches the lightweight project list (summary payload). */
 export function useProjects(filters?: { status?: string; search?: string; pinned?: boolean }) {
   return useQuery({
     queryKey: PROJECT_KEYS.list(filters),
@@ -20,6 +22,7 @@ export function useProjects(filters?: { status?: string; search?: string; pinned
   });
 }
 
+/** Fetches project metadata + settings + column counts (no task rows). */
 export function useProject(id: string) {
   return useQuery({
     queryKey: PROJECT_KEYS.detail(id),
@@ -31,6 +34,7 @@ export function useProject(id: string) {
   });
 }
 
+/** Fetches the full board payload (columns, tasks, checklists, labels). */
 export function useProjectBoard(id: string) {
   return useQuery({
     queryKey: [...PROJECT_KEYS.all, "board", id],
@@ -42,6 +46,7 @@ export function useProjectBoard(id: string) {
   });
 }
 
+/** Fetches the lightweight overview payload (columns + light task fields). */
 export function useProjectOverview(id: string) {
   return useQuery({
     queryKey: [...PROJECT_KEYS.all, "overview", id],
@@ -53,6 +58,7 @@ export function useProjectOverview(id: string) {
   });
 }
 
+/** Creates a project, then invalidates project and focus queries. */
 export function useCreateProject() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -64,6 +70,7 @@ export function useCreateProject() {
   });
 }
 
+/** Updates a project and invalidates every project-scoped query (list/detail/board/overview/assets/focus). */
 export function useUpdateProject() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -80,6 +87,7 @@ export function useUpdateProject() {
   });
 }
 
+/** Deletes a project and invalidates project-scoped queries. */
 export function useDeleteProject() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -94,6 +102,7 @@ export function useDeleteProject() {
   });
 }
 
+/** Fetches tag suggestions for a project. */
 export function useSuggestedTags(projectId: string) {
   return useQuery({
     queryKey: [...PROJECT_KEYS.all, "suggested-tags", projectId],

@@ -20,6 +20,7 @@ type seedService struct {
 	taskRepo      repository.TaskRepository
 }
 
+// NewSeedService creates the demo-seed service.
 func NewSeedService(
 	workspaceRepo repository.WorkspaceRepository,
 	projectRepo repository.ProjectRepository,
@@ -34,6 +35,7 @@ func NewSeedService(
 	}
 }
 
+// jsonRaw marshals a value into raw JSON for seeding (errors are deliberately ignored).
 func jsonRaw(v interface{}) datatypes.JSON {
 	b, err := json.Marshal(v)
 	if err != nil {
@@ -42,6 +44,7 @@ func jsonRaw(v interface{}) datatypes.JSON {
 	return datatypes.JSON(b)
 }
 
+// SeedDemoData creates a demo workspace with sample projects.
 func (s *seedService) SeedDemoData() ([]string, error) {
 	ws, err := s.workspaceRepo.EnsureUserAndWorkspace()
 	if err != nil {

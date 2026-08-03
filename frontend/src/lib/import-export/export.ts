@@ -6,6 +6,7 @@ import type { ExportScope, WorkspaceBackupPayload } from "./types";
 
 // ─── Export: strip everything the backend will regenerate ──────────────────
 
+/** Serializes one project (columns + tasks) into the portable export shape. */
 export function buildProjectJSON(project: ProjectData, scope: ExportScope): Record<string, unknown> {
   const columns = (project.columns ?? []).map(columnToExportJSON);
 
@@ -24,6 +25,7 @@ export function buildProjectJSON(project: ProjectData, scope: ExportScope): Reco
   };
 }
 
+/** Serializes one column into the export shape. */
 function columnToExportJSON(column: ColumnData): Record<string, unknown> {
   const out: Record<string, unknown> = { name: column.name };
   if (column.color) out.color = column.color;
@@ -50,6 +52,7 @@ function taskToExportJSON(task: TaskData): string | Record<string, unknown> | nu
 
 // ─── Legacy workspace backup (Settings page) ────────────────────────────────
 
+/** Builds the full workspace export document (projects + tags). */
 export async function exportFullWorkspaceJSON(): Promise<void> {
   const projectsSummary = await projectsService.getProjects();
   const fullProjects: ProjectData[] = [];

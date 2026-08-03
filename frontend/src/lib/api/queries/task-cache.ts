@@ -5,6 +5,7 @@ import { ChecklistItemData, ProjectData, TaskData } from "../types";
 // targets this key so small task mutations never refetch the whole board.
 export const projectBoardKey = (projectId: string) => ["projects", "board", projectId] as const;
 
+/** Maps raw API task rows into the board's normalized TaskData shape. */
 function mapTasks(
   old: ProjectData | undefined,
   mutate: (task: TaskData) => TaskData
@@ -56,6 +57,7 @@ export function invalidateProjectOverview(queryClient: QueryClient, projectId: s
   queryClient.invalidateQueries({ queryKey: ["projects", "overview", projectId] });
 }
 
+/** Removes a task from every column in the cached board. */
 export function removeTaskFromBoard(
   queryClient: QueryClient,
   projectId: string,
@@ -92,6 +94,7 @@ export function appendTaskToBoard(
   });
 }
 
+/** Appends a new checklist item to a task in the cached board. */
 export function appendChecklistToBoard(
   queryClient: QueryClient,
   projectId: string,
@@ -125,6 +128,7 @@ export function patchChecklistInBoard(
   );
 }
 
+/** Removes a checklist item from whichever task holds it. */
 export function removeChecklistFromBoard(
   queryClient: QueryClient,
   projectId: string,

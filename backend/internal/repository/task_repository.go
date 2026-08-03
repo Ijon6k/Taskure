@@ -47,20 +47,24 @@ type taskRepository struct {
 	db *gorm.DB
 }
 
+// NewTaskRepository creates the task repository.
 func NewTaskRepository(db *gorm.DB) TaskRepository {
 	return &taskRepository{db: db}
 }
 
+// CreateTask persists a new task.
 func (r *taskRepository) CreateTask(task *models.Task) error {
 	return r.db.Create(task).Error
 }
 
+// GetCountByColumnID counts tasks in a column.
 func (r *taskRepository) GetCountByColumnID(columnID string) (int64, error) {
 	var count int64
 	err := r.db.Model(&models.Task{}).Where("column_id = ?", columnID).Count(&count).Error
 	return count, err
 }
 
+// FindTask loads a task with its checklist and labels, by id or public id.
 func (r *taskRepository) FindTask(idOrPublicID string) (*models.Task, error) {
 	var task models.Task
 	query := r.db.Preload("ChecklistItems", func(db *gorm.DB) *gorm.DB {
@@ -80,14 +84,17 @@ func (r *taskRepository) FindTask(idOrPublicID string) (*models.Task, error) {
 	return &task, nil
 }
 
+// UpdateTask applies partial updates to a task.
 func (r *taskRepository) UpdateTask(task *models.Task, updates map[string]interface{}) error {
 	return r.db.Model(task).Updates(updates).Error
 }
 
+// DeleteTask removes a task.
 func (r *taskRepository) DeleteTask(task *models.Task) error {
 	return r.db.Delete(task).Error
 }
 
+// GetPendingTasks returns the oldest non-done tasks for a project (focus/upcoming feeds).
 func (r *taskRepository) GetPendingTasks(projectID string, limit int) ([]models.Task, error) {
 	var tasks []models.Task
 	query := r.db.Where("status != ?", "done")
@@ -116,16 +123,19 @@ func (r *taskRepository) GetPendingTasks(projectID string, limit int) ([]models.
 	return tasks, err
 }
 
+// AddChecklistItem persists a new checklist item.
 func (r *taskRepository) AddChecklistItem(item *models.ChecklistItem) error {
 	return r.db.Create(item).Error
 }
 
+// GetChecklistCount counts checklist items for a task.
 func (r *taskRepository) GetChecklistCount(taskID string) (int64, error) {
 	var count int64
 	err := r.db.Model(&models.ChecklistItem{}).Where("task_id = ?", taskID).Count(&count).Error
 	return count, err
 }
 
+// FindChecklistItem loads one checklist item by id.
 func (r *taskRepository) FindChecklistItem(id string) (*models.ChecklistItem, error) {
 	var item models.ChecklistItem
 	if err := r.db.First(&item, "id = ?", id).Error; err != nil {
@@ -134,14 +144,17 @@ func (r *taskRepository) FindChecklistItem(id string) (*models.ChecklistItem, er
 	return &item, nil
 }
 
+// UpdateChecklistItem applies partial updates to a checklist item.
 func (r *taskRepository) UpdateChecklistItem(item *models.ChecklistItem, updates map[string]interface{}) error {
 	return r.db.Model(item).Updates(updates).Error
 }
 
+// DeleteChecklistItem removes a checklist item.
 func (r *taskRepository) DeleteChecklistItem(id string) error {
 	return r.db.Delete(&models.ChecklistItem{}, "id = ?", id).Error
 }
 
+// GetTaskAttachmentRows loads the minimal task rows (id/title/attachments) the Asset Explorer needs.
 func (r *taskRepository) GetTaskAttachmentRows(projectID string) ([]TaskAttachmentRow, error) {
 	var rows []TaskAttachmentRow
 	err := r.db.Model(&models.Task{}).
@@ -151,6 +164,7 @@ func (r *taskRepository) GetTaskAttachmentRows(projectID string) ([]TaskAttachme
 	return rows, err
 }
 
+// RecordTagUsage bumps tag usage counters for a project.
 func (r *taskRepository) RecordTagUsage(projectID string, tags []string) error {
 	if projectID == "" || len(tags) == 0 {
 		return nil
@@ -182,6 +196,7 @@ func (r *taskRepository) RecordTagUsage(projectID string, tags []string) error {
 	return nil
 }
 
+// GetSuggestedTags returns the most-used tags for a project.
 func (r *taskRepository) GetSuggestedTags(projectID string, limit int) ([]models.ProjectTagStat, error) {
 	if limit <= 0 {
 		limit = 10

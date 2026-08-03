@@ -1,6 +1,7 @@
 import { fetcher } from "../client";
 import { ColumnData, CreateColumnInput } from "../types";
 
+/** Column endpoints. */
 export const columnsService = {
   createColumn: (projectId: string, data: CreateColumnInput) => {
     return fetcher<ColumnData>(`/projects/${projectId}/columns`, {

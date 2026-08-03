@@ -12,10 +12,12 @@ type ImportHandler struct {
 	service service.ImportService
 }
 
+// NewImportHandler wires the import HTTP handlers to the import service.
 func NewImportHandler(service service.ImportService) *ImportHandler {
 	return &ImportHandler{service: service}
 }
 
+// ImportProject handles POST /projects/import — creates a brand-new project from a JSON board.
 func (h *ImportHandler) ImportProject(c *gin.Context) {
 	var input service.ImportBoardInput
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -39,6 +41,7 @@ func (h *ImportHandler) ImportProject(c *gin.Context) {
 	})
 }
 
+// ReplaceBoard handles POST /projects/:id/import — atomically replaces a project's board from JSON.
 func (h *ImportHandler) ReplaceBoard(c *gin.Context) {
 	idParam := c.Param("id")
 	var input service.ImportBoardInput

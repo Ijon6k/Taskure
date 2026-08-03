@@ -14,6 +14,7 @@ interface SuggestedTagsBarProps {
   onToggleTag: (tag: string) => void;
 }
 
+/** Inline tag suggestions bar shown when a task has no tags yet. */
 export function SuggestedTagsBar({
   projectId,
   selectedTags,

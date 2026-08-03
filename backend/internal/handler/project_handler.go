@@ -14,10 +14,12 @@ type ProjectHandler struct {
 	service service.ProjectService
 }
 
+// NewProjectHandler wires the project HTTP handlers to the project service.
 func NewProjectHandler(service service.ProjectService) *ProjectHandler {
 	return &ProjectHandler{service: service}
 }
 
+// ListProjects handles GET /projects — lists the user's projects (full payload).
 func (h *ProjectHandler) ListProjects(c *gin.Context) {
 	status := c.Query("status")
 	search := c.Query("search")
@@ -32,6 +34,7 @@ func (h *ProjectHandler) ListProjects(c *gin.Context) {
 	response.OK(c, projects)
 }
 
+// ListProjectsSummary handles GET /projects/summary — lightweight list payload for sidebars/switchers.
 func (h *ProjectHandler) ListProjectsSummary(c *gin.Context) {
 	status := c.Query("status")
 	search := c.Query("search")
@@ -46,6 +49,7 @@ func (h *ProjectHandler) ListProjectsSummary(c *gin.Context) {
 	response.OK(c, projects)
 }
 
+// CreateProject handles POST /projects — creates a project with default columns.
 func (h *ProjectHandler) CreateProject(c *gin.Context) {
 	var input service.CreateProjectInput
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -62,6 +66,7 @@ func (h *ProjectHandler) CreateProject(c *gin.Context) {
 	response.Created(c, project)
 }
 
+// GetProject handles GET /projects/:id — metadata + settings + column counts (no task rows).
 func (h *ProjectHandler) GetProject(c *gin.Context) {
 	idParam := c.Param("id")
 	project, err := h.service.GetProject(idParam)
@@ -73,6 +78,7 @@ func (h *ProjectHandler) GetProject(c *gin.Context) {
 	response.OK(c, project)
 }
 
+// GetProjectBoard handles GET /projects/:id/board — full board payload including tasks, checklists and labels.
 func (h *ProjectHandler) GetProjectBoard(c *gin.Context) {
 	idParam := c.Param("id")
 	project, err := h.service.GetProjectBoard(idParam)
@@ -84,6 +90,7 @@ func (h *ProjectHandler) GetProjectBoard(c *gin.Context) {
 	response.OK(c, project)
 }
 
+// ListProjectAssets handles GET /projects/:id/assets — flat overview resources + task attachments for the Asset Explorer.
 func (h *ProjectHandler) ListProjectAssets(c *gin.Context) {
 	idParam := c.Param("id")
 	assets, err := h.service.ListProjectAssets(idParam)
@@ -99,6 +106,7 @@ func (h *ProjectHandler) ListProjectAssets(c *gin.Context) {
 	response.OK(c, assets)
 }
 
+// GetProjectOverview handles GET /projects/:id/overview — columns with tasks reduced to light list fields.
 func (h *ProjectHandler) GetProjectOverview(c *gin.Context) {
 	idParam := c.Param("id")
 	project, err := h.service.GetProjectOverview(idParam)
@@ -110,6 +118,7 @@ func (h *ProjectHandler) GetProjectOverview(c *gin.Context) {
 	response.OK(c, project)
 }
 
+// UpdateProject handles PATCH /projects/:id — updates metadata and merges settings JSONB.
 func (h *ProjectHandler) UpdateProject(c *gin.Context) {
 	idParam := c.Param("id")
 	var input service.UpdateProjectInput
@@ -127,6 +136,7 @@ func (h *ProjectHandler) UpdateProject(c *gin.Context) {
 	response.OK(c, project)
 }
 
+// DeleteProject handles DELETE /projects/:id — deletes the project and its stored files.
 func (h *ProjectHandler) DeleteProject(c *gin.Context) {
 	idParam := c.Param("id")
 	if err := h.service.DeleteProject(idParam); err != nil {
@@ -137,6 +147,7 @@ func (h *ProjectHandler) DeleteProject(c *gin.Context) {
 	response.Message(c, "Project deleted successfully")
 }
 
+// DeleteProjectResource handles DELETE /projects/:id/resources/:resourceId — removes a resource and its object.
 func (h *ProjectHandler) DeleteProjectResource(c *gin.Context) {
 	idParam := c.Param("id")
 	resourceIDParam := c.Param("resourceId")
@@ -154,6 +165,7 @@ func (h *ProjectHandler) DeleteProjectResource(c *gin.Context) {
 	response.OK(c, project)
 }
 
+// UploadProjectResource handles POST /projects/:id/resources/upload — stores a file in MinIO and links it as a resource.
 func (h *ProjectHandler) UploadProjectResource(c *gin.Context) {
 	idParam := c.Param("id")
 	fileHeader, err := c.FormFile("file")

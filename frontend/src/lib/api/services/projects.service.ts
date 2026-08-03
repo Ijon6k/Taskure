@@ -7,6 +7,7 @@ import {
   UpdateProjectInput,
 } from "../types";
 
+/** Project endpoints: list/detail/board/overview/assets, resources and bulk import. */
 export const projectsService = {
   getProjects: (params?: { status?: string; search?: string; pinned?: boolean }) => {
     const query = new URLSearchParams();

@@ -183,6 +183,7 @@ export function AssetListRow({
   );
 }
 
+/** Picks the icon for an asset row based on kind/mime. */
 function getAssetIcon(asset: ProjectAsset) {
   const lower = asset.url.toLowerCase();
   if (lower.includes("github.com") || lower.includes("gitlab.com") || lower.includes("bitbucket.org")) {

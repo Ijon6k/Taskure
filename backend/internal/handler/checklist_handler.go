@@ -11,10 +11,12 @@ type ChecklistHandler struct {
 	service service.TaskService
 }
 
+// NewChecklistHandler wires the checklist HTTP handlers to the task service.
 func NewChecklistHandler(service service.TaskService) *ChecklistHandler {
 	return &ChecklistHandler{service: service}
 }
 
+// AddChecklistItem handles POST /checklist — appends a subtask to a task.
 func (h *ChecklistHandler) AddChecklistItem(c *gin.Context) {
 	taskIDParam := c.Param("id")
 	var input service.AddChecklistInput
@@ -32,6 +34,7 @@ func (h *ChecklistHandler) AddChecklistItem(c *gin.Context) {
 	response.Created(c, item)
 }
 
+// UpdateChecklistItem handles PATCH /checklist/:id — updates a subtask (title/completion/position).
 func (h *ChecklistHandler) UpdateChecklistItem(c *gin.Context) {
 	id := c.Param("id")
 	var input models.UpdateChecklistItemInput
@@ -64,6 +67,7 @@ func (h *ChecklistHandler) UpdateChecklistItem(c *gin.Context) {
 	response.OK(c, item)
 }
 
+// DeleteChecklistItem handles DELETE /checklist/:id — removes a subtask.
 func (h *ChecklistHandler) DeleteChecklistItem(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.DeleteChecklistItem(id); err != nil {

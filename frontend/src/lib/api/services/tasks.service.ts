@@ -1,6 +1,7 @@
 import { fetcher } from "../client";
 import { TaskData, ChecklistItemData, CreateTaskInput, MoveTaskInput, UpdateTaskInput } from "../types";
 
+/** Task, checklist and attachment endpoints. */
 export const tasksService = {
   createTask: (projectId: string, data: CreateTaskInput) => {
     return fetcher<TaskData>(`/projects/${projectId}/tasks`, {

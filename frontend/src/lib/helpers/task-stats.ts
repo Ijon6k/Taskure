@@ -1,5 +1,6 @@
 import { ColumnData, TaskData, ChecklistItemData } from "../api";
 
+/** Computes a 0-100 completion percentage, clamped and rounded. */
 export function calculateProgress(completed: number, total: number): number {
   if (!total || total <= 0) return 0;
   return Math.min(100, Math.max(0, Math.round((completed / total) * 100)));
@@ -26,6 +27,7 @@ export interface TaskStats {
   completedSubtasks: number;
 }
 
+/** Aggregates per-column and per-task statistics (counts, completion, subtask progress) for the overview page. */
 export function computeTaskStats(columns: ColumnData[] = []): TaskStats {
   const safeColumns = Array.isArray(columns) ? columns : [];
 

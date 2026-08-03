@@ -22,6 +22,7 @@ export interface WorkspaceStateEvaluation {
   activeProjectsCount: number;
 }
 
+/** Derives the aggregated workspace state (counts by status) from the project list. */
 export function deriveWorkspaceState(
   projects: ProjectSummaryData[] = [],
   focusResp?: FocusResponse | null

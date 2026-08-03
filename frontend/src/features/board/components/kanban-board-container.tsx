@@ -18,6 +18,7 @@ interface KanbanBoardContainerProps {
   onImportJson?: (() => void) | undefined;
 }
 
+/** Bridges board data + DnD hook into the presentational KanbanBoard. */
 export function KanbanBoardContainer({
   projectId,
   project,

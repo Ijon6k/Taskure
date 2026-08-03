@@ -35,6 +35,7 @@ interface ImportPreviewState {
   diff: ImportDiff;
 }
 
+/** Board page: loads the board query, wires drag-and-drop onTaskMoved and hosts the drawer + modals. */
 export default function ProjectBoardPage() {
   const params = useParams<{ id: string }>();
   const projectId = params?.id || "";

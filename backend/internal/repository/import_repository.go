@@ -52,6 +52,7 @@ type importRepository struct {
 	db *gorm.DB
 }
 
+// NewImportRepository creates the import repository.
 func NewImportRepository(db *gorm.DB) ImportRepository {
 	return &importRepository{db: db}
 }
@@ -92,6 +93,7 @@ func recordTagUsageTx(tx *gorm.DB, projectID string, tagsJSON datatypes.JSON) er
 	return nil
 }
 
+// createTaskTree inserts a column and all its tasks/checklists inside one transaction.
 func createTaskTree(tx *gorm.DB, projectID string, tasks []ImportTaskData) error {
 	for i := range tasks {
 		task := &tasks[i].Task
@@ -113,6 +115,7 @@ func createTaskTree(tx *gorm.DB, projectID string, tasks []ImportTaskData) error
 	return nil
 }
 
+// createColumnTree inserts a project's full board (columns + tasks + checklists) inside one transaction.
 func createColumnTree(tx *gorm.DB, projectID string, columns []ImportColumnData) error {
 	for i := range columns {
 		col := &columns[i].Column
@@ -130,6 +133,7 @@ func createColumnTree(tx *gorm.DB, projectID string, columns []ImportColumnData)
 	return nil
 }
 
+// CreateProjectBoard creates a project with its whole board in one transaction.
 func (r *importRepository) CreateProjectBoard(data *ImportBoardData) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(&data.Project).Error; err != nil {
@@ -139,6 +143,7 @@ func (r *importRepository) CreateProjectBoard(data *ImportBoardData) error {
 	})
 }
 
+// ReplaceBoard atomically replaces a project's columns/tasks/checklists with a new tree.
 func (r *importRepository) ReplaceBoard(projectID string, data *ReplaceBoardData) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		if err := createColumnTree(tx, projectID, data.NewColumns); err != nil {

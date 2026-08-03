@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useProjectOverview } from "@/lib/api";
 import { ProjectOverviewTab } from "@/components/features/project/project-overview-tab";
 
+/** Overview page: columns + light tasks, meta, resources and tags sections. */
 export default function ProjectOverviewPage() {
   const params = useParams<{ id: string }>();
   const projectId = params?.id || "";

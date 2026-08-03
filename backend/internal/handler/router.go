@@ -19,6 +19,7 @@ type Container struct {
 	StorageHandler   *StorageHandler
 }
 
+// NewContainer bundles all services and storage into the handler container used by route registration.
 func NewContainer(
 	workspaceService service.WorkspaceService,
 	projectService service.ProjectService,

@@ -25,6 +25,7 @@ interface ProjectCardProps {
   isExporting?: boolean;
 }
 
+/** Formats a timestamp as a short relative label ('2h ago'). */
 function relativeTime(dateStr: string): string {
   try {
     return formatDistanceToNow(new Date(dateStr), { addSuffix: true });

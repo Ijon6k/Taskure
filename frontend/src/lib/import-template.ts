@@ -71,6 +71,7 @@ export const IMPORT_AI_EXAMPLE = `{
   ]
 }`;
 
+/** Builds the AI import prompt with an embedded example payload. */
 export function buildAiPromptWithExample(): string {
   return `${IMPORT_AI_PROMPT}\n\nExample:\n${IMPORT_AI_EXAMPLE}\n\nReturn ONLY the JSON object.`;
 }

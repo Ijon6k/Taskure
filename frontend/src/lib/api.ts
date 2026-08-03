@@ -9,6 +9,7 @@ import { columnsService } from "./api/services/columns.service";
 import { tasksService } from "./api/services/tasks.service";
 import { workspaceService } from "./api/services/workspace.service";
 
+/** Backward-compatible facade exposing every API service under one object. */
 export const api = {
   getProjects: projectsService.getProjects,
   getProject: projectsService.getProject,

@@ -6,6 +6,7 @@ import type { BoardMutationCounts, ImportApplyResult, ParsedImport, WorkspaceBac
 
 // ─── Apply: single bulk request per import ──────────────────────────────────
 
+/** Normalizes the API import-count response into a stable shape. */
 function mapImportCounts(raw: Record<string, number>): BoardMutationCounts {
   const counts: BoardMutationCounts = {
     columnsAdded: 0,
@@ -20,16 +21,19 @@ function mapImportCounts(raw: Record<string, number>): BoardMutationCounts {
   return counts;
 }
 
+/** Creates a new project from parsed import data via the API. */
 export async function applyImportCreate(parsed: ParsedImport): Promise<ImportApplyResult> {
   const result = await projectsService.importProject(parsed);
   return { project: result.project, ...mapImportCounts(result.counts) };
 }
 
+/** Replaces an existing project's board with parsed import data. */
 export async function applyImportReplace(projectId: string, parsed: ParsedImport): Promise<BoardMutationCounts> {
   const result = await projectsService.importBoard(projectId, parsed);
   return mapImportCounts(result.counts);
 }
 
+/** Applies a full workspace import (projects + tags) via the API. */
 export async function importFullWorkspaceJSON(
   jsonString: string
 ): Promise<{ success: boolean; projectCount: number; taskCount: number }> {
@@ -68,6 +72,7 @@ export async function importFullWorkspaceJSON(
   }
 }
 
+/** Deletes every project in the workspace (full reset). */
 export async function deleteAllWorkspaceData(): Promise<void> {
   const projects = await projectsService.getProjects();
   for (const proj of projects) {

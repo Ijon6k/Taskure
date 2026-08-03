@@ -50,7 +50,7 @@ func (f *fakeVariantRepo) MarkFailed(id string, attempts int, lastError string) 
 	f.lastError = lastError
 	return nil
 }
-func (f *fakeVariantRepo) ReclaimProcessing() error               { return nil }
+func (f *fakeVariantRepo) ReclaimProcessing() error { return nil }
 func (f *fakeVariantRepo) FailedJobs() ([]models.ImageVariantJob, error) {
 	return f.failedJobs, nil
 }
@@ -222,7 +222,7 @@ func TestReconcileRevivesFailedJobWhenVariantsMissing(t *testing.T) {
 func TestReconcileMarksReadyJobDone(t *testing.T) {
 	const objectKey = "tasks/task-id/img.png"
 	store := &fakeStorage{objects: map[string][]byte{
-		objectKey:                  testPNG(t, 100, 100),
+		objectKey: testPNG(t, 100, 100),
 		storage.ThumbKey(objectKey, storage.PreviewWidth): []byte("webp"),
 	}}
 	repo := &fakeVariantRepo{failedJobs: []models.ImageVariantJob{{Base: models.Base{ID: "1"}, ObjectKey: objectKey}}}

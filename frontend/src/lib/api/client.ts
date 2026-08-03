@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosRequestConfig } from "axios";
 
+/** Base URL for all API requests, resolved from env with a localhost fallback. */
 export const API_BASE_URL = "/api";
 
 export class ApiError extends Error {
@@ -14,6 +15,7 @@ export class ApiError extends Error {
   }
 }
 
+/** Shared axios instance: JSON handling, credentials and the API base URL. */
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30_000,
@@ -37,6 +39,7 @@ apiClient.interceptors.response.use(
   }
 );
 
+/** Extracts a human-readable message from an API error (axios or generic). */
 function getApiErrorMessage(data: unknown): string | undefined {
   if (!data || typeof data !== "object") return undefined;
   const payload = data as { message?: unknown; error?: unknown };
@@ -45,6 +48,7 @@ function getApiErrorMessage(data: unknown): string | undefined {
   return undefined;
 }
 
+/** Typed GET helper used by every query — wraps apiClient.get and unwraps the payload. */
 export async function fetcher<T>(
   endpoint: string,
   config?: AxiosRequestConfig

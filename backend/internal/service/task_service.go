@@ -83,6 +83,7 @@ type taskService struct {
 	storage     storage.StorageService
 }
 
+// NewTaskService creates the task service.
 func NewTaskService(taskRepo repository.TaskRepository, projectRepo repository.ProjectRepository, columnRepo repository.ColumnRepository, variantJobs repository.VariantJobRepository, storage storage.StorageService) TaskService {
 	return &taskService{
 		taskRepo:    taskRepo,
@@ -93,6 +94,7 @@ func NewTaskService(taskRepo repository.TaskRepository, projectRepo repository.P
 	}
 }
 
+// CreateTask creates a task in a column and records its tag usage.
 func (s *taskService) CreateTask(projectIDOrPublicID string, input CreateTaskInput) (*models.Task, error) {
 	project, err := s.projectRepo.FindProject(projectIDOrPublicID)
 	if err != nil {
@@ -147,10 +149,12 @@ func (s *taskService) CreateTask(projectIDOrPublicID string, input CreateTaskInp
 	return s.taskRepo.FindTask(task.PublicID)
 }
 
+// GetTask returns one task with checklist and labels.
 func (s *taskService) GetTask(idOrPublicID string) (*models.Task, error) {
 	return s.taskRepo.FindTask(idOrPublicID)
 }
 
+// UpdateTask applies a partial update map, re-deriving checklist counts and positions where needed.
 func (s *taskService) UpdateTask(idOrPublicID string, updates map[string]interface{}) (*models.Task, error) {
 	task, err := s.taskRepo.FindTask(idOrPublicID)
 	if err != nil {
@@ -241,6 +245,7 @@ func (s *taskService) UpdateTask(idOrPublicID string, updates map[string]interfa
 	return s.taskRepo.FindTask(task.ID)
 }
 
+// GetSuggestedTags returns the most-used tags in a project.
 func (s *taskService) GetSuggestedTags(projectIDOrPublicID string, limit int) ([]string, error) {
 	project, err := s.projectRepo.FindProject(projectIDOrPublicID)
 	if err != nil {
@@ -283,6 +288,7 @@ func extractAttachmentKeys(attsJSON datatypes.JSON) []string {
 	return keys
 }
 
+// MoveTask moves a task between columns and/or repositions it, applying column behavior status rules.
 func (s *taskService) MoveTask(idOrPublicID string, input MoveTaskInput) (*models.Task, error) {
 	task, err := s.taskRepo.FindTask(idOrPublicID)
 	if err != nil {
@@ -319,6 +325,7 @@ func (s *taskService) MoveTask(idOrPublicID string, input MoveTaskInput) (*model
 	return s.taskRepo.FindTask(task.ID)
 }
 
+// DeleteTask removes a task and deletes its attachment objects.
 func (s *taskService) DeleteTask(idOrPublicID string) error {
 	task, err := s.taskRepo.FindTask(idOrPublicID)
 	if err != nil {
@@ -336,6 +343,7 @@ func (s *taskService) DeleteTask(idOrPublicID string) error {
 	return nil
 }
 
+// AddChecklistItem appends a subtask to a task.
 func (s *taskService) AddChecklistItem(taskIDOrPublicID string, input AddChecklistInput) (*models.ChecklistItem, error) {
 	task, err := s.taskRepo.FindTask(taskIDOrPublicID)
 	if err != nil {
@@ -361,6 +369,7 @@ func (s *taskService) AddChecklistItem(taskIDOrPublicID string, input AddCheckli
 	return &item, nil
 }
 
+// UpdateChecklistItem applies partial updates to a subtask.
 func (s *taskService) UpdateChecklistItem(id string, updates map[string]interface{}) (*models.ChecklistItem, error) {
 	item, err := s.taskRepo.FindChecklistItem(id)
 	if err != nil {
@@ -373,10 +382,12 @@ func (s *taskService) UpdateChecklistItem(id string, updates map[string]interfac
 	return item, nil
 }
 
+// DeleteChecklistItem removes a subtask.
 func (s *taskService) DeleteChecklistItem(id string) error {
 	return s.taskRepo.DeleteChecklistItem(id)
 }
 
+// GetFocusTask selects today's single focus task for a workspace, timezone-aware.
 func (s *taskService) GetFocusTask(projectID string, limit int, loc *time.Location) (*focusengine.FocusResult, error) {
 	if limit <= 0 {
 		limit = 100
@@ -442,10 +453,12 @@ func (s *taskService) GetFocusTask(projectID string, limit int, loc *time.Locati
 	return &result, nil
 }
 
+// GetFocusOverview aggregates focus eligibility counts for the workspace.
 func (s *taskService) GetFocusOverview() (*repository.FocusOverviewResult, error) {
 	return s.projectRepo.GetFocusOverview()
 }
 
+// formatFileSize renders a byte count as a human-readable string.
 func formatFileSize(b int64) string {
 	const unit = 1024
 	if b < unit {
@@ -459,6 +472,7 @@ func formatFileSize(b int64) string {
 	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), "KMGTPE"[exp])
 }
 
+// UploadAttachment stores a file in object storage, attaches it to the task and enqueues variant generation for images.
 func (s *taskService) UploadAttachment(ctx context.Context, taskIDOrPublicID string, fileName string, reader io.Reader, fileSize int64, contentType string) (*models.Task, error) {
 	task, err := s.taskRepo.FindTask(taskIDOrPublicID)
 	if err != nil {
@@ -531,6 +545,7 @@ func (s *taskService) UploadAttachment(ctx context.Context, taskIDOrPublicID str
 	return s.taskRepo.FindTask(task.ID)
 }
 
+// DeleteAttachment removes an attachment from the task and deletes its object from storage.
 func (s *taskService) DeleteAttachment(ctx context.Context, taskIDOrPublicID string, attachmentID string) (*models.Task, error) {
 	task, err := s.taskRepo.FindTask(taskIDOrPublicID)
 	if err != nil {

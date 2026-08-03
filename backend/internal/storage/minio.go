@@ -19,6 +19,7 @@ type minioStorageService struct {
 	logger    zerolog.Logger
 }
 
+// NewMinIOStorage builds a MinIO-backed storage service.
 func NewMinIOStorage(cfg config.Config, logger zerolog.Logger) (StorageService, error) {
 	client, err := minio.New(cfg.MinIOEndpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(cfg.MinIOUser, cfg.MinIOPassword, ""),
@@ -36,6 +37,7 @@ func NewMinIOStorage(cfg config.Config, logger zerolog.Logger) (StorageService, 
 	}, nil
 }
 
+// EnsureBucket creates the bucket if it does not exist yet.
 func (s *minioStorageService) EnsureBucket(ctx context.Context) error {
 	exists, err := s.client.BucketExists(ctx, s.bucket)
 	if err != nil {
@@ -69,6 +71,7 @@ func (s *minioStorageService) EnsureBucket(ctx context.Context) error {
 	return nil
 }
 
+// UploadFile streams a file into the bucket and returns its public URL.
 func (s *minioStorageService) UploadFile(ctx context.Context, objectName string, reader io.Reader, objectSize int64, contentType string) (*UploadResult, error) {
 	info, err := s.client.PutObject(ctx, s.bucket, objectName, reader, objectSize, minio.PutObjectOptions{
 		ContentType: contentType,
@@ -86,6 +89,7 @@ func (s *minioStorageService) UploadFile(ctx context.Context, objectName string,
 	}, nil
 }
 
+// GetObject opens a read stream for an object key.
 func (s *minioStorageService) GetObject(ctx context.Context, objectName string) (io.ReadCloser, error) {
 	obj, err := s.client.GetObject(ctx, s.bucket, objectName, minio.GetObjectOptions{})
 	if err != nil {
@@ -94,6 +98,7 @@ func (s *minioStorageService) GetObject(ctx context.Context, objectName string) 
 	return obj, nil
 }
 
+// ObjectExists reports whether an object key exists in the bucket.
 func (s *minioStorageService) ObjectExists(ctx context.Context, objectName string) (bool, error) {
 	_, err := s.client.StatObject(ctx, s.bucket, objectName, minio.StatObjectOptions{})
 	if err == nil {
@@ -105,6 +110,7 @@ func (s *minioStorageService) ObjectExists(ctx context.Context, objectName strin
 	return false, fmt.Errorf("failed to stat object '%s' in minio: %w", objectName, err)
 }
 
+// DeleteFile removes an object key from the bucket.
 func (s *minioStorageService) DeleteFile(ctx context.Context, objectName string) error {
 	err := s.client.RemoveObject(ctx, s.bucket, objectName, minio.RemoveObjectOptions{})
 	if err != nil {
@@ -114,6 +120,7 @@ func (s *minioStorageService) DeleteFile(ctx context.Context, objectName string)
 	return nil
 }
 
+// GetPublicURL renders the externally reachable URL for an object key.
 func (s *minioStorageService) GetPublicURL(objectName string) string {
 	return fmt.Sprintf("%s/%s", s.publicURL, objectName)
 }

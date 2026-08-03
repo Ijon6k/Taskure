@@ -14,6 +14,7 @@ type FocusHandler struct {
 	service service.TaskService
 }
 
+// NewFocusHandler wires the focus HTTP handlers to the task service.
 func NewFocusHandler(service service.TaskService) *FocusHandler {
 	return &FocusHandler{service: service}
 }
@@ -29,6 +30,7 @@ func clientLocation(c *gin.Context) *time.Location {
 	return time.FixedZone("client", offsetMinutes*60)
 }
 
+// GetFocusTask handles GET /focus — returns the single most important task for today, timezone-aware.
 func (h *FocusHandler) GetFocusTask(c *gin.Context) {
 	projectID := c.Query("project_id")
 	limitStr := c.Query("limit")
@@ -54,6 +56,7 @@ func (h *FocusHandler) GetFocusTask(c *gin.Context) {
 	response.OK(c, vm)
 }
 
+// GetFocusOverview handles GET /focus/overview — returns focus eligibility counts.
 func (h *FocusHandler) GetFocusOverview(c *gin.Context) {
 	overview, err := h.service.GetFocusOverview()
 	if err != nil {

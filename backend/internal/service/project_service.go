@@ -42,20 +42,20 @@ var validProjectStatuses = map[string]bool{
 // UpdateProjectInput is the typed PATCH payload. Pointer fields distinguish
 // "absent" (no change) from explicit values; nil never reaches the DB.
 type UpdateProjectInput struct {
-	Name         *string      `json:"name"`
-	Description  *string      `json:"description"`
-	Color        *string      `json:"color"`
-	Icon         *string      `json:"icon"`
-	Status       *string      `json:"status"`
-	IsPinned     *bool        `json:"is_pinned"`
-	IsArchived   *bool        `json:"is_archived"`
-	FocusEnabled *bool        `json:"focus_enabled"`
+	Name         *string `json:"name"`
+	Description  *string `json:"description"`
+	Color        *string `json:"color"`
+	Icon         *string `json:"icon"`
+	Status       *string `json:"status"`
+	IsPinned     *bool   `json:"is_pinned"`
+	IsArchived   *bool   `json:"is_archived"`
+	FocusEnabled *bool   `json:"focus_enabled"`
 	// Overview metadata — merged into the settings JSONB column.
-	TargetGoal    *string      `json:"target_goal"`
-	TargetDate    *string      `json:"target_date"`
-	Tags          *[]string    `json:"tags"`
-	Resources     *interface{} `json:"resources"`
-	StrategyNotes *string      `json:"strategy_notes"`
+	TargetGoal    *string                `json:"target_goal"`
+	TargetDate    *string                `json:"target_date"`
+	Tags          *[]string              `json:"tags"`
+	Resources     *interface{}           `json:"resources"`
+	StrategyNotes *string                `json:"strategy_notes"`
 	Settings      map[string]interface{} `json:"settings"`
 }
 
@@ -91,6 +91,7 @@ type projectService struct {
 	resourcesMu sync.Mutex
 }
 
+// NewProjectService creates the project service.
 func NewProjectService(
 	projectRepo repository.ProjectRepository,
 	workspaceRepo repository.WorkspaceRepository,
@@ -109,6 +110,7 @@ func NewProjectService(
 	}
 }
 
+// ListProjects returns the user's projects with columns and per-column task counts.
 func (s *projectService) ListProjects(status string, search string, pinned bool) ([]models.Project, error) {
 	ws, err := s.workspaceRepo.EnsureUserAndWorkspace()
 	if err != nil {
@@ -138,6 +140,7 @@ func (s *projectService) ListProjectsSummary(status string, search string, pinne
 	return summaries, nil
 }
 
+// CreateProject creates a project with its default columns from the typed input.
 func (s *projectService) CreateProject(input CreateProjectInput) (*models.Project, error) {
 	ws, err := s.workspaceRepo.EnsureUserAndWorkspace()
 	if err != nil {
@@ -203,10 +206,12 @@ func (s *projectService) GetProjectBoard(idOrPublicID string) (*models.Project, 
 	return s.projectRepo.FindProject(idOrPublicID)
 }
 
+// GetProjectOverview returns the lightweight overview payload (columns + light task fields).
 func (s *projectService) GetProjectOverview(idOrPublicID string) (*models.Project, error) {
 	return s.projectRepo.FindProjectOverview(idOrPublicID)
 }
 
+// UpdateProject applies typed updates, merging overview metadata into the settings JSONB column.
 func (s *projectService) UpdateProject(idOrPublicID string, input *UpdateProjectInput) (*models.Project, error) {
 	if input == nil {
 		project, err := s.projectRepo.FindProject(idOrPublicID)
@@ -309,6 +314,7 @@ func (s *projectService) UpdateProject(idOrPublicID string, input *UpdateProject
 	return s.projectRepo.FindProject(project.ID)
 }
 
+// DeleteProject removes a project and deletes its stored objects from object storage.
 func (s *projectService) DeleteProject(idOrPublicID string) error {
 	project, err := s.projectRepo.FindProject(idOrPublicID)
 	if err != nil {
@@ -370,6 +376,7 @@ func extractResourceKeys(settings datatypes.JSON) []string {
 	return keys
 }
 
+// UploadResource stores a file in object storage and links it into the project's settings.resources.
 func (s *projectService) UploadResource(ctx context.Context, projectIDOrPublicID string, fileName string, reader io.Reader, fileSize int64, contentType string) (*models.Project, error) {
 	s.resourcesMu.Lock()
 	defer s.resourcesMu.Unlock()
@@ -538,6 +545,7 @@ func (s *projectService) DeleteResource(ctx context.Context, projectIDOrPublicID
 	return s.projectRepo.FindProject(project.ID)
 }
 
+// isImageExt reports whether the file extension is in the supported image set.
 func isImageExt(ext string) bool {
 	lower := strings.ToLower(ext)
 	exts := []string{".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".avif"}

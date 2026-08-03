@@ -35,6 +35,7 @@ type VariantWorker struct {
 	wg          sync.WaitGroup
 }
 
+// NewVariantWorker creates the background image-variant worker.
 func NewVariantWorker(repo repository.VariantJobRepository, storageSvc storage.StorageService, logger zerolog.Logger, workers int) *VariantWorker {
 	if workers < 1 {
 		workers = 1
@@ -122,6 +123,7 @@ func (w *VariantWorker) Wait() {
 	w.logger.Info().Msg("variant worker stopped")
 }
 
+// run is the worker's main loop: polls the job queue and processes jobs until ctx is cancelled.
 func (w *VariantWorker) run(ctx context.Context, id int) {
 	defer w.wg.Done()
 	ticker := time.NewTicker(pollInterval)
@@ -139,6 +141,7 @@ func (w *VariantWorker) run(ctx context.Context, id int) {
 	}
 }
 
+// processNext dequeues and processes a single variant job.
 func (w *VariantWorker) processNext(ctx context.Context) error {
 	job, err := w.repo.ClaimNext()
 	if err != nil {
@@ -165,6 +168,7 @@ func (w *VariantWorker) processNext(ctx context.Context) error {
 	return w.repo.MarkDone(job.ID)
 }
 
+// processJob generates the variant(s) for one object key and marks the job done.
 func (w *VariantWorker) processJob(ctx context.Context, job *models.ImageVariantJob) error {
 	obj, err := w.storage.GetObject(ctx, job.ObjectKey)
 	if err != nil {

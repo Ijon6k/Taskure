@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useProject } from "@/lib/api";
 import { ProjectResourcesTab } from "@/components/features/project/project-resources-tab";
 
+/** Asset explorer page: resource/attachment grid with search, edit and upload. */
 export default function ProjectResourcesPage() {
   const params = useParams<{ id: string }>();
   const projectId = params?.id || "";

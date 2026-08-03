@@ -22,6 +22,7 @@ type columnService struct {
 	projectRepo repository.ProjectRepository
 }
 
+// NewColumnService creates the column service.
 func NewColumnService(
 	columnRepo repository.ColumnRepository,
 	projectRepo repository.ProjectRepository,
@@ -32,6 +33,7 @@ func NewColumnService(
 	}
 }
 
+// CreateColumn creates a column, deriving a unique name when only a project is given.
 func (s *columnService) CreateColumn(projectIDOrPublicID string, input CreateColumnInput) (*models.Column, error) {
 	project, err := s.projectRepo.FindProject(projectIDOrPublicID)
 	if err != nil {
@@ -62,6 +64,7 @@ func (s *columnService) CreateColumn(projectIDOrPublicID string, input CreateCol
 	return &col, nil
 }
 
+// UpdateColumn renames or repositions a column.
 func (s *columnService) UpdateColumn(id string, updates map[string]interface{}) (*models.Column, error) {
 	col, err := s.columnRepo.FindColumnByID(id)
 	if err != nil {
@@ -74,6 +77,7 @@ func (s *columnService) UpdateColumn(id string, updates map[string]interface{}) 
 	return col, nil
 }
 
+// DeleteColumn removes a column (tasks cascade).
 func (s *columnService) DeleteColumn(id string) error {
 	return s.columnRepo.DeleteColumn(id)
 }

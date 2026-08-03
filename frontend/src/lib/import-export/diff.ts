@@ -4,6 +4,7 @@ import type { ColumnDiff, ImportDiff, ParsedImport, TaskDiffItem } from "./types
 
 // ─── Replace diff: what an import would change on an existing board ────────
 
+/** Computes what an import would add/remove for a preview before applying. */
 export function buildReplaceDiff(project: ProjectData, parsed: ParsedImport): ImportDiff {
   const existingColumns = project.columns ?? [];
   const existingByName = new Map(existingColumns.map((col) => [normalizeKey(col.name), col]));

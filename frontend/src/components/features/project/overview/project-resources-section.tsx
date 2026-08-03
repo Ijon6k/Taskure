@@ -507,6 +507,7 @@ export function ProjectResourcesSection({
   );
 }
 
+/** Heuristic: does the filename look like an image? */
 function isImageFileName(title: string): boolean {
   if (!title) return false;
   const lower = title.toLowerCase();

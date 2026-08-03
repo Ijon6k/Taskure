@@ -11,10 +11,12 @@ type WorkspaceHandler struct {
 	service service.WorkspaceService
 }
 
+// NewWorkspaceHandler wires the workspace HTTP handlers to the workspace service.
 func NewWorkspaceHandler(service service.WorkspaceService) *WorkspaceHandler {
 	return &WorkspaceHandler{service: service}
 }
 
+// GetDefaultWorkspace handles GET /workspaces/default — returns the default workspace with projects.
 func (h *WorkspaceHandler) GetDefaultWorkspace(c *gin.Context) {
 	ws, err := h.service.GetDefaultWorkspace()
 	if err != nil {
@@ -24,6 +26,7 @@ func (h *WorkspaceHandler) GetDefaultWorkspace(c *gin.Context) {
 	response.OK(c, ws)
 }
 
+// UpdateDefaultWorkspace handles PATCH /workspaces/default — updates workspace settings.
 func (h *WorkspaceHandler) UpdateDefaultWorkspace(c *gin.Context) {
 	var input models.UpdateWorkspaceInput
 	if err := c.ShouldBindJSON(&input); err != nil {

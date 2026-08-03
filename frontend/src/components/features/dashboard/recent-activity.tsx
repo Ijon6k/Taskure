@@ -11,6 +11,7 @@ interface RecentActivityProps {
   loading?: boolean;
 }
 
+/** Formats a timestamp as a short relative label ('2h ago'). */
 function relativeTime(dateStr?: string): string {
   if (!dateStr) return "";
   try {

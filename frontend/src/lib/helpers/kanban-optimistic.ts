@@ -14,6 +14,7 @@ export interface MoveTaskOptimisticParams {
 /**
  * Pure function to compute the new columns array state when a task is dragged optimistically.
  */
+/** Computes the new column layout after a drag-and-drop move (pure, dnd-kit agnostic). */
 export function computeOptimisticTaskMove(
   columns: ColumnData[],
   params: MoveTaskOptimisticParams

@@ -18,6 +18,7 @@ interface UseOptimisticMutationOptions<TState, TArgs> {
  * 2. Runs asyncMutation in background.
  * 3. Automatically rolls back to previous state if asyncMutation fails.
  */
+/** React Query mutation wrapper: applies an optimistic update with rollback on error. */
 export function useOptimisticMutation<TState, TArgs>({
   currentState,
   onApplyState,

@@ -11,10 +11,12 @@ type ColumnHandler struct {
 	service service.ColumnService
 }
 
+// NewColumnHandler wires the column HTTP handlers to the column service.
 func NewColumnHandler(service service.ColumnService) *ColumnHandler {
 	return &ColumnHandler{service: service}
 }
 
+// CreateColumn handles POST /projects/:id/columns — creates a column in a project.
 func (h *ColumnHandler) CreateColumn(c *gin.Context) {
 	projectIDParam := c.Param("id")
 	var input service.CreateColumnInput
@@ -32,6 +34,7 @@ func (h *ColumnHandler) CreateColumn(c *gin.Context) {
 	response.Created(c, col)
 }
 
+// UpdateColumn handles PATCH /columns/:id — renames/reorders a column.
 func (h *ColumnHandler) UpdateColumn(c *gin.Context) {
 	id := c.Param("id")
 	var input models.UpdateColumnInput
@@ -67,6 +70,7 @@ func (h *ColumnHandler) UpdateColumn(c *gin.Context) {
 	response.OK(c, col)
 }
 
+// DeleteColumn handles DELETE /columns/:id — removes a column with its tasks.
 func (h *ColumnHandler) DeleteColumn(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.DeleteColumn(id); err != nil {

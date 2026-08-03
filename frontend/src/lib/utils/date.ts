@@ -1,5 +1,6 @@
 import { differenceInCalendarDays, isSameYear, format } from "date-fns";
 
+/** Returns today's date label for the dashboard header. */
 export function getFormattedDate(): string {
   const options: Intl.DateTimeFormatOptions = {
     weekday: "long",
@@ -9,6 +10,7 @@ export function getFormattedDate(): string {
   return new Date().toLocaleDateString("en-US", options);
 }
 
+/** Returns a time-of-day greeting (morning/afternoon/evening). */
 export function getTimeGreeting(): string {
   const hour = new Date().getHours();
   if (hour >= 4 && hour < 12) return "Good morning";
@@ -16,6 +18,7 @@ export function getTimeGreeting(): string {
   return "Good evening";
 }
 
+/** Formats a date compactly (e.g. 'Aug 3'). */
 export function formatDateShort(dateStr?: string | null): string {
   if (!dateStr) return "";
   try {
@@ -30,6 +33,7 @@ export function formatDateShort(dateStr?: string | null): string {
   }
 }
 
+/** Formats a date as a full, human-readable string (e.g. 'Mon, Aug 3, 2026'). */
 export function formatDateFull(dateStr?: string | null): string {
   if (!dateStr) return "";
   try {
@@ -59,6 +63,7 @@ export interface FormattedDueDate {
  * - 7+ days (same year): "Jul 31" -> text-theme-tertiary
  * - 7+ days (different year): "Jul 31, 2027" -> text-theme-tertiary
  */
+/** Formats a due date relative to today: 'Today', 'Tomorrow', 'Overdue' or a short date. */
 export function getFormattedDueDate(
   dateStr?: string | null | undefined
 ): FormattedDueDate | null {
@@ -122,6 +127,7 @@ export interface ProjectUrgencyMetadata {
  * Computes single highest-priority urgency signal for Project Card metadata footer:
  * Priority: 1. Overdue -> 2. Due Today -> 3. Tomorrow -> 4. Upcoming (In 2-6d) -> 5. Future (7+d) -> 6. Last Updated
  */
+/** Ranks a project's freshness for the dashboard (based on updated_at age). */
 export function computeProjectUrgency(
   tasks: Array<{ due_date?: string | null; updated_at?: string }>,
   projectUpdatedAt?: string

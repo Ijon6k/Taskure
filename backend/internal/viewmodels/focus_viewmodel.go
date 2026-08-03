@@ -110,6 +110,7 @@ func DeriveReasonTag(item focusengine.FocusItem, now time.Time, loc *time.Locati
 	return "Up next"
 }
 
+// deriveStateCode collapses checklist progress into a two-letter state code for the focus view.
 func deriveStateCode(res focusengine.FocusResult) string {
 	if res.TotalProjectsCount == 0 {
 		return "FRESH"
@@ -129,6 +130,7 @@ func deriveStateCode(res focusengine.FocusResult) string {
 	return "ACTIVE"
 }
 
+// NewFocusViewModel builds the focus response view from project/task data.
 func NewFocusViewModel(res focusengine.FocusResult, loc *time.Location) FocusViewModel {
 	if loc == nil {
 		loc = time.UTC
@@ -159,6 +161,7 @@ func NewFocusViewModel(res focusengine.FocusResult, loc *time.Location) FocusVie
 	return vm
 }
 
+// MapFocusItemView flattens a task into the focus list item shape.
 func MapFocusItemView(item focusengine.FocusItem, now time.Time, loc *time.Location) FocusItemView {
 	taskID := item.Task.PublicID
 	if taskID == "" {

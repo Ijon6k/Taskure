@@ -22,6 +22,7 @@ interface UseTaskDrawerOptions {
 }
 
 
+/** Task drawer state: open/close, form values, checklist + attachment mutations, focus resolution and cache sync. */
 export function useTaskDrawer({ taskId, onClose }: UseTaskDrawerOptions) {
   const queryClient = useQueryClient();
   const [task, setTask] = useState<TaskData | null>(null);

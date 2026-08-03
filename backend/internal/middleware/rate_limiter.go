@@ -20,6 +20,7 @@ type clientLimiter struct {
 	resetAt time.Time
 }
 
+// NewRateLimiter creates a token-bucket rate limiter with the given rate and burst.
 func NewRateLimiter(rate int, window time.Duration) *RateLimiter {
 	rl := &RateLimiter{
 		limiters: make(map[string]*clientLimiter),
@@ -43,6 +44,7 @@ func NewRateLimiter(rate int, window time.Duration) *RateLimiter {
 	return rl
 }
 
+// Middleware returns the Gin middleware enforcing the rate limit per IP.
 func (rl *RateLimiter) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		key := c.ClientIP()
@@ -68,10 +70,12 @@ func (rl *RateLimiter) Middleware() gin.HandlerFunc {
 	}
 }
 
+// UploadRateLimiter is a stricter limiter for file upload endpoints.
 func UploadRateLimiter() gin.HandlerFunc {
 	return NewRateLimiter(60, time.Minute).Middleware()
 }
 
+// SeedRateLimiter is a stricter limiter for the demo-seed endpoint.
 func SeedRateLimiter() gin.HandlerFunc {
 	return NewRateLimiter(10, time.Minute).Middleware()
 }

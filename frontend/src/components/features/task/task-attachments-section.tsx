@@ -19,6 +19,7 @@ export interface AttachmentItem {
 
 const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024; // 500MB (matches backend limit)
 
+/** True when the attachment mime/filename indicates an image. */
 function isImageAttachment(item: AttachmentItem & { mime_type?: string }): boolean {
   if (!item.url) return false;
   const mime = item.mimeType || item.mime_type;

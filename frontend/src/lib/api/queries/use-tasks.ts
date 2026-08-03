@@ -14,6 +14,7 @@ import {
 } from "./task-cache";
 import { CreateTaskInput, MoveTaskInput, CreateColumnInput, TaskData, ChecklistItemData, ProjectData } from "../types";
 
+/** Creates a task: patches the board cache, invalidates detail/overview/focus (no board refetch). */
 export function useCreateTask(projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -27,6 +28,7 @@ export function useCreateTask(projectId: string) {
   });
 }
 
+/** Moves a task optimistically with rollback; on success patches the board cache. */
 export function useMoveTask(projectId: string) {
   const queryClient = useQueryClient();
   const boardKey = projectBoardKey(projectId);
@@ -94,6 +96,7 @@ export function useMoveTask(projectId: string) {
   });
 }
 
+/** Updates a task optimistically with rollback; on success patches the board cache. */
 export function useUpdateTask(projectId: string) {
   const queryClient = useQueryClient();
   const boardKey = projectBoardKey(projectId);
@@ -142,6 +145,7 @@ export function useUpdateTask(projectId: string) {
   });
 }
 
+/** Deletes a task and removes it from the board cache. */
 export function useDeleteTask(projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -155,6 +159,7 @@ export function useDeleteTask(projectId: string) {
   });
 }
 
+/** Creates a column and invalidates detail/board/focus (columns change board structure). */
 export function useCreateColumn(projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -167,6 +172,7 @@ export function useCreateColumn(projectId: string) {
   });
 }
 
+/** Adds a subtask and patches the board cache. */
 export function useAddChecklistItem(projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -180,6 +186,7 @@ export function useAddChecklistItem(projectId: string) {
   });
 }
 
+/** Updates a subtask and patches the board cache. */
 export function useUpdateChecklistItem(projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({

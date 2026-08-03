@@ -1,6 +1,7 @@
 import { fetcher } from "../client";
 import { FocusResponse } from "../types";
 
+/** Workspace, focus and demo-seed endpoints. */
 export const workspaceService = {
   updateWorkspaceSettings: (settings: Record<string, unknown>) => {
     return fetcher<{ message: string }>("/workspaces/default", {

@@ -16,6 +16,7 @@ import { toast } from "sonner";
 
 import { createPortal } from "react-dom";
 
+/** No-op handler placeholder for the board. */
 const noop = () => {};
 
 interface KanbanBoardProps {
@@ -26,6 +27,7 @@ interface KanbanBoardProps {
   onTaskMoved?: ((updated: TaskData) => void) | undefined;
 }
 
+/** Renders columns + cards, wires dnd sensors and optimistically syncs moves via the parent. */
 export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, onRefreshProject, onTaskMoved }: KanbanBoardProps) {
   const [columns, setColumns] = useState<ColumnData[]>(initialColumns);
   const [isAddingColumn, setIsAddingColumn] = useState(false);

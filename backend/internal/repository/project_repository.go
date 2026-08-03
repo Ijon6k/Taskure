@@ -26,10 +26,12 @@ type projectRepository struct {
 	db *gorm.DB
 }
 
+// NewProjectRepository creates the project repository.
 func NewProjectRepository(db *gorm.DB) ProjectRepository {
 	return &projectRepository{db: db}
 }
 
+// ListProjectsLight lists projects for a workspace with optional status/search/pinned filters and pagination.
 func (r *projectRepository) ListProjectsLight(workspaceID string, status string, search string, pinned bool, limit int, offset int) ([]models.Project, int64, error) {
 	query := r.db.Where("workspace_id = ?", workspaceID)
 
@@ -91,10 +93,12 @@ func (r *projectRepository) ListProjectsLight(workspaceID string, status string,
 	return projects, total, nil
 }
 
+// CreateProject persists a project row.
 func (r *projectRepository) CreateProject(project *models.Project) error {
 	return r.db.Create(project).Error
 }
 
+// CreateProjectWithDefaultColumns creates a project together with its default column set.
 func (r *projectRepository) CreateProjectWithDefaultColumns(project *models.Project, defaultCols []models.Column) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(project).Error; err != nil {
@@ -110,6 +114,7 @@ func (r *projectRepository) CreateProjectWithDefaultColumns(project *models.Proj
 	})
 }
 
+// FindProject loads a project with ordered columns, tasks, checklists and labels — the full board payload.
 func (r *projectRepository) FindProject(idOrPublicID string) (*models.Project, error) {
 	var project models.Project
 	query := r.db.Preload("Columns", func(db *gorm.DB) *gorm.DB {
@@ -137,10 +142,12 @@ type FocusOverviewResult struct {
 	SetupRecommended int `json:"setup_recommended"`
 }
 
+// UpdateProject applies partial updates to a project.
 func (r *projectRepository) UpdateProject(project *models.Project, updates map[string]interface{}) error {
 	return r.db.Model(project).Updates(updates).Error
 }
 
+// DeleteProject removes a project (children cascade).
 func (r *projectRepository) DeleteProject(project *models.Project) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		return tx.Delete(project).Error
@@ -239,6 +246,7 @@ func (r *projectRepository) FindProjectOverview(idOrPublicID string) (*models.Pr
 	return &project, nil
 }
 
+// GetFocusOverview aggregates focus-eligible/excluded project counts.
 func (r *projectRepository) GetFocusOverview() (*FocusOverviewResult, error) {
 	var projects []models.Project
 	err := r.db.Where("is_archived = ? AND (status IS NULL OR status != ?)", false, "archived").

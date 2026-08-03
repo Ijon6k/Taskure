@@ -3,6 +3,7 @@ import type { ImportKind, ParsedChecklistItem, ParsedColumn, ParsedImport, Parse
 
 // ─── Import: tolerant parser — only a task title is required ───────────────
 
+/** Parses and validates a full imported board/workspace JSON document. */
 export function parseImportJSON(jsonString: string): ParsedImport {
   let raw: unknown;
   try {
@@ -13,8 +14,11 @@ export function parseImportJSON(jsonString: string): ParsedImport {
   return parseImportObject(raw);
 }
 
-/** Parses an already-deserialized object (e.g. a workspace-backup project
- *  row) without the JSON round-trip that `parseImportJSON` would require. */
+/** Parses an already-deserialized object (a board, project, or workspace-backup
+ *  row) so callers can import without the extra JSON round-trip of
+ *  `parseImportJSON`. Tolerant parser: only a project name or one column with a
+ *  non-empty task title is required. Throws on invalid structure, duplicate
+ *  column names, or duplicate task titles within a column. */
 export function parseImportObject(raw: unknown): ParsedImport {
   const source = unwrapRoot(raw);
   if (!source || typeof source !== "object" || Array.isArray(source)) {
@@ -70,6 +74,7 @@ export function parseImportObject(raw: unknown): ParsedImport {
   return parsed;
 }
 
+/** Unwraps common wrapper keys ('data', 'board', 'project') from an imported document. */
 function unwrapRoot(raw: unknown): Record<string, unknown> | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const maybe = raw as Record<string, unknown>;
@@ -81,6 +86,7 @@ function unwrapRoot(raw: unknown): Record<string, unknown> | null {
   return maybe;
 }
 
+/** Maps an external payload shape to the internal kind used by import. */
 function resolveKind(source: Record<string, unknown>): ImportKind {
   if (source.type === "board") return "board";
   if (source.type === "project") return "project";
@@ -88,6 +94,8 @@ function resolveKind(source: Record<string, unknown>): ImportKind {
   return "board";
 }
 
+/** Parses an imported column. Requires a non-empty name; yields its tasks and
+ *  optional color. Returns null for invalid shapes so callers can filter them. */
 function parseColumn(raw: unknown): ParsedColumn | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const source = raw as Record<string, unknown>;
@@ -105,6 +113,7 @@ function parseColumn(raw: unknown): ParsedColumn | null {
   return parsedColumn;
 }
 
+/** Parses an imported task (title, priority, tags, due date, checklist). */
 function parseTask(raw: unknown): ParsedTask | null {
   if (typeof raw === "string") {
     const title = raw.trim();
@@ -130,8 +139,9 @@ function parseTask(raw: unknown): ParsedTask | null {
   return task;
 }
 
-/** Backend expects RFC3339; tolerate the "YYYY-MM-DD" shorthand the AI template
- *  advertises, and drop anything unparseable instead of failing the import. */
+/** The backend expects RFC3339. Tolerate the "YYYY-MM-DD" shorthand the AI
+ *  import template advertises and drop anything unparseable rather than failing
+ *  the whole import; returns undefined when the value is empty/invalid. */
 function normalizeDueDate(value: string | undefined): string | undefined {
   if (!value) return undefined;
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
@@ -146,6 +156,7 @@ function normalizeDueDate(value: string | undefined): string | undefined {
   return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
 }
 
+/** Parses an imported tags field into a validated string array. */
 function parseTags(source: Record<string, unknown>): string[] | undefined {
   if (Array.isArray(source.tags)) {
     return source.tags.map(String).map((tag) => tag.trim()).filter(Boolean);
@@ -158,6 +169,7 @@ function parseTags(source: Record<string, unknown>): string[] | undefined {
   return undefined;
 }
 
+/** Parses an imported checklist block into checklist items. */
 function parseChecklist(source: Record<string, unknown>): ParsedChecklistItem[] | undefined {
   const rawItems = Array.isArray(source.checklist_items)
     ? source.checklist_items
@@ -170,6 +182,7 @@ function parseChecklist(source: Record<string, unknown>): ParsedChecklistItem[] 
   return items.length > 0 ? items : undefined;
 }
 
+/** Parses a single imported checklist item. */
 function parseChecklistItem(raw: unknown): ParsedChecklistItem | null {
   if (typeof raw === "string") {
     const title = raw.trim();
@@ -184,12 +197,14 @@ function parseChecklistItem(raw: unknown): ParsedChecklistItem | null {
   return done ? { title, is_completed: true } : { title };
 }
 
+/** Trims and normalizes an imported string, returning null for empty values. */
 function cleanString(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
   const trimmed = value.trim();
   return trimmed || undefined;
 }
 
+/** Normalizes an external field key (camelCase/snake_case) to the internal one. */
 export function normalizeKey(value: string): string {
   return value.toLowerCase().trim();
 }

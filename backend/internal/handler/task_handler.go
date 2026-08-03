@@ -14,10 +14,12 @@ type TaskHandler struct {
 	service service.TaskService
 }
 
+// NewTaskHandler wires the task HTTP handlers to the task service.
 func NewTaskHandler(service service.TaskService) *TaskHandler {
 	return &TaskHandler{service: service}
 }
 
+// CreateTask handles POST /projects/:id/tasks — creates a task in a column.
 func (h *TaskHandler) CreateTask(c *gin.Context) {
 	projectIDParam := c.Param("id")
 	var input service.CreateTaskInput
@@ -35,6 +37,7 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 	response.Created(c, task)
 }
 
+// GetTask handles GET /tasks/:id — full task detail with checklist and labels.
 func (h *TaskHandler) GetTask(c *gin.Context) {
 	idParam := c.Param("id")
 	task, err := h.service.GetTask(idParam)
@@ -50,6 +53,7 @@ func (h *TaskHandler) GetTask(c *gin.Context) {
 	response.OK(c, task)
 }
 
+// UpdateTask handles PATCH /tasks/:id — partial update (title, description, tags, due date, ...).
 func (h *TaskHandler) UpdateTask(c *gin.Context) {
 	idParam := c.Param("id")
 	var input models.UpdateTaskInput
@@ -93,6 +97,7 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
 	response.OK(c, task)
 }
 
+// MoveTask handles PATCH /tasks/:id/move — moves a task between columns or repositions it.
 func (h *TaskHandler) MoveTask(c *gin.Context) {
 	idParam := c.Param("id")
 	var input service.MoveTaskInput
@@ -114,6 +119,7 @@ func (h *TaskHandler) MoveTask(c *gin.Context) {
 	response.OK(c, task)
 }
 
+// DeleteTask handles DELETE /tasks/:id — deletes a task and its attachments.
 func (h *TaskHandler) DeleteTask(c *gin.Context) {
 	idParam := c.Param("id")
 	if err := h.service.DeleteTask(idParam); err != nil {
@@ -128,6 +134,7 @@ func (h *TaskHandler) DeleteTask(c *gin.Context) {
 	response.Message(c, "Task deleted")
 }
 
+// UploadTaskAttachment handles POST /tasks/:id/attachments — stores a file in MinIO and attaches it to the task.
 func (h *TaskHandler) UploadTaskAttachment(c *gin.Context) {
 	idParam := c.Param("id")
 	fileHeader, err := c.FormFile("file")
@@ -164,6 +171,7 @@ func (h *TaskHandler) UploadTaskAttachment(c *gin.Context) {
 	response.OK(c, task)
 }
 
+// DeleteTaskAttachment handles DELETE /tasks/:id/attachments/:attachmentId — removes an attachment and its object.
 func (h *TaskHandler) DeleteTaskAttachment(c *gin.Context) {
 	idParam := c.Param("id")
 	attachmentIDParam := c.Param("attachmentId")
@@ -177,6 +185,7 @@ func (h *TaskHandler) DeleteTaskAttachment(c *gin.Context) {
 	response.OK(c, task)
 }
 
+// GetSuggestedTags handles GET /projects/:id/suggested-tags — tag suggestions from usage history.
 func (h *TaskHandler) GetSuggestedTags(c *gin.Context) {
 	projectIDParam := c.Param("id")
 	tags, err := h.service.GetSuggestedTags(projectIDParam, 10)

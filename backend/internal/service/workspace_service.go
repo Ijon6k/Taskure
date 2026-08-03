@@ -16,18 +16,22 @@ type workspaceService struct {
 	repo repository.WorkspaceRepository
 }
 
+// NewWorkspaceService creates the workspace service.
 func NewWorkspaceService(repo repository.WorkspaceRepository) WorkspaceService {
 	return &workspaceService{repo: repo}
 }
 
+// EnsureDefaultWorkspace seeds the default workspace on a fresh database.
 func (s *workspaceService) EnsureDefaultWorkspace() (*models.Workspace, error) {
 	return s.repo.EnsureUserAndWorkspace()
 }
 
+// GetDefaultWorkspace returns the default workspace with its projects.
 func (s *workspaceService) GetDefaultWorkspace() (*models.Workspace, error) {
 	return s.repo.GetDefaultWorkspace()
 }
 
+// UpdateDefaultWorkspace merges partial updates into workspace settings.
 func (s *workspaceService) UpdateDefaultWorkspace(updates map[string]interface{}) (*models.Workspace, error) {
 	ws, err := s.repo.GetDefaultWorkspace()
 	if err != nil {
@@ -39,6 +43,7 @@ func (s *workspaceService) UpdateDefaultWorkspace(updates map[string]interface{}
 	return ws, nil
 }
 
+// BackfillNanoIDs assigns public NanoIDs to legacy rows on startup.
 func (s *workspaceService) BackfillNanoIDs() error {
 	return s.repo.BackfillNanoIDs()
 }

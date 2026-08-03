@@ -55,6 +55,7 @@ interface UIStoreState {
   toggleMobileMenu: () => void;
 }
 
+/** Global UI state: sidebar, mobile tabs, theme-related toggles. */
 export const useUIStore = create<UIStoreState>((set) => ({
   // Create Project
   isCreateProjectOpen: false,

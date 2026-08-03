@@ -21,6 +21,7 @@ export const DEFAULT_BOARD_FILTERS: BoardFilterState = {
   sortBy: "position",
 };
 
+/** Counts how many filters are currently active (for the toolbar badge). */
 export function countActiveFilters(filters: BoardFilterState): number {
   let count = 0;
   if (filters.searchQuery.trim()) count++;
@@ -33,6 +34,7 @@ export function countActiveFilters(filters: BoardFilterState): number {
   return count;
 }
 
+/** Applies board filters (search, tags, priority, due date, assignee) and sorting to a task list. */
 export function filterAndSortTasks(tasks: TaskData[], filters: BoardFilterState): TaskData[] {
   let result = [...tasks];
 

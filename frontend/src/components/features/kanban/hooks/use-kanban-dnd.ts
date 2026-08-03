@@ -24,6 +24,7 @@ interface UseKanbanDndOptions {
 }
 
 
+/** Owns all drag-and-drop state for a board: sensors, handlers, optimistic reorder, API sync and rollback. */
 export function useKanbanDnd({
   columns,
   setColumns,

@@ -209,6 +209,7 @@ export function AiContextManager({
   );
 }
 
+/** Picks the icon for an AI context type. */
 function getContextTypeIcon(type: string) {
   switch (type) {
     case "api_spec":

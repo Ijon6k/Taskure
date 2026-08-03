@@ -8,8 +8,10 @@ import { ProjectAsset, GroupByOption, AssetGroup, AssetKind } from "../types";
 import { UploadQueueItem } from "../components/upload-queue-card";
 import { toast } from "sonner";
 
+/** React Query key for the assets query of a project. */
 export const projectAssetsKey = (projectId: string) => ["project", "assets", projectId];
 
+/** Maps a raw asset row into the display shape, deriving kind from mime/filename when missing. */
 function mapAssetItem(item: ProjectAssetItem): ProjectAsset {
   // Task attachments are stored with type "file" even for images (backend
   // serializes AttachmentItem.Type as "file" on upload), so image detection
@@ -39,6 +41,7 @@ function mapAssetItem(item: ProjectAssetItem): ProjectAsset {
   };
 }
 
+/** Resource management for a project: paginated asset list, search, upload/link/delete/bulk and optimistic cache updates. */
 export function useProjectAssets(projectId: string, onRefreshProject?: () => void) {
   const [searchQuery, setSearchQuery] = useState("");
   const [groupBy, setGroupBy] = useState<GroupByOption>("source");
@@ -420,6 +423,7 @@ export function useProjectAssets(projectId: string, onRefreshProject?: () => voi
   };
 }
 
+/** Heuristic: does the filename look like an image (png/jpg/gif/webp/svg)? */
 function isImageFileName(title: string): boolean {
   if (!title) return false;
   const lower = title.toLowerCase();

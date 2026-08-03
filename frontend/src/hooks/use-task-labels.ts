@@ -11,6 +11,7 @@ import {
   getGlobalTags,
 } from "@/lib/tags";
 
+/** Loads the label picker options (workspace-global + project-scoped) for a task. */
 export function useTaskLabels(projectId: string = "", labels: string[] = [], onChange?: (labels: string[]) => void) {
   const [projectTags, setProjectTags] = useState<CustomTag[]>([]);
   const [globalCategories, setGlobalCategories] = useState<TagCategory[]>([]);

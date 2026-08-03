@@ -40,6 +40,7 @@ export const COLOR_NAME_MAP: Record<string, string> = {
   indigo: "#7F9CF5",
 };
 
+/** Color palette available for tag/category chips. */
 export const AVAILABLE_COLOR_NAMES = Object.keys(COLOR_NAME_MAP);
 
 // Resolves a color name (e.g. "purple", "blue") or hex code to valid CSS Hex
@@ -104,6 +105,7 @@ const PROJECT_TAGS_PREFIX = "kanban_project_tags_";
 // Helper to Safely Access LocalStorage with In-Memory Cache
 const storageCache = new Map<string, any>();
 
+/** Safe localStorage wrapper used by the tag/category persistence layer. */
 function getStorage<T>(key: string, defaultValue: T): T {
   if (typeof window === "undefined") return defaultValue;
   if (storageCache.has(key)) {
@@ -119,6 +121,7 @@ function getStorage<T>(key: string, defaultValue: T): T {
   }
 }
 
+/** Safe localStorage setter used by the tag/category persistence layer. */
 function setStorage<T>(key: string, value: T): void {
   if (typeof window === "undefined") return;
   storageCache.set(key, value);
@@ -131,11 +134,13 @@ function setStorage<T>(key: string, value: T): void {
 
 // ── 1. PROJECT TAGS (Strictly Manual Drawer Tags per Project) ───────────────
 
+/** Loads tags scoped to a project. */
 export function getProjectTags(projectId: string): CustomTag[] {
   if (!projectId) return [];
   return getStorage<CustomTag[]>(`${PROJECT_TAGS_PREFIX}${projectId}`, []);
 }
 
+/** Persists a project-scoped tag. */
 export function saveProjectTag(projectId: string, tag: CustomTag): CustomTag[] {
   if (!projectId) return [];
   const existing = getProjectTags(projectId);
@@ -153,6 +158,7 @@ export function saveProjectTag(projectId: string, tag: CustomTag): CustomTag[] {
   return updated;
 }
 
+/** Removes a project-scoped tag. */
 export function deleteProjectTag(projectId: string, tagId: string): CustomTag[] {
   if (!projectId) return [];
   const existing = getProjectTags(projectId);
@@ -163,10 +169,12 @@ export function deleteProjectTag(projectId: string, tagId: string): CustomTag[] 
 
 // ── 2. GLOBAL CATEGORIES & TAGS (SETTINGS) ──────────────────────────────────
 
+/** Loads the workspace-global category list. */
 export function getGlobalCategories(): TagCategory[] {
   return getStorage<TagCategory[]>(GLOBAL_CATEGORIES_KEY, []);
 }
 
+/** Persists a new category. */
 export function saveGlobalCategory(category: TagCategory): TagCategory[] {
   const existing = getGlobalCategories();
   const index = existing.findIndex((c) => c.id === category.id);
@@ -181,6 +189,7 @@ export function saveGlobalCategory(category: TagCategory): TagCategory[] {
   return updated;
 }
 
+/** Removes a category. */
 export function deleteGlobalCategory(catId: string): TagCategory[] {
   const existingCategories = getGlobalCategories();
   const updatedCategories = existingCategories.filter((c) => c.id !== catId);
@@ -194,10 +203,12 @@ export function deleteGlobalCategory(catId: string): TagCategory[] {
   return updatedCategories;
 }
 
+/** Loads the workspace-global tag list. */
 export function getGlobalTags(): CustomTag[] {
   return getStorage<CustomTag[]>(GLOBAL_TAGS_KEY, []);
 }
 
+/** Persists a new global tag. */
 export function saveGlobalTag(tag: CustomTag): CustomTag[] {
   const existing = getGlobalTags();
   const index = existing.findIndex((t) => t.id === tag.id);
@@ -212,6 +223,7 @@ export function saveGlobalTag(tag: CustomTag): CustomTag[] {
   return updated;
 }
 
+/** Removes a global tag. */
 export function deleteGlobalTag(tagId: string): CustomTag[] {
   const existing = getGlobalTags();
   const updated = existing.filter((t) => t.id !== tagId);
@@ -221,6 +233,7 @@ export function deleteGlobalTag(tagId: string): CustomTag[] {
 
 // ── 3. JSON IMPORT & EXPORT FOR TAG TEMPLATES (WITH AI PROMPT COLOR CODES) ──
 
+/** Serializes all tags/categories into a portable JSON file. */
 export function exportTagsJson(): string {
   const categories = getGlobalCategories();
   const tags = getGlobalTags();
@@ -235,6 +248,7 @@ export function exportTagsJson(): string {
   return JSON.stringify(exportObject, null, 2);
 }
 
+/** Merges tags/categories from an imported JSON file. */
 export function importTagsJson(jsonString: string): { success: boolean; message: string } {
   try {
     const parsed = JSON.parse(jsonString);
@@ -265,6 +279,7 @@ export function importTagsJson(jsonString: string): { success: boolean; message:
 
 // ── 4. RESOLVER HELPERS FOR COMPONENT UI ───────────────────────────────────
 
+/** Resolves the display config (label, color) for a tag name. */
 export function getTagConfig(tagName: string, projectId?: string, customColor?: string): TagConfig {
   const cleanName = tagName.trim();
   const lowerName = cleanName.toLowerCase();

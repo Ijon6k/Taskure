@@ -15,11 +15,13 @@ var (
 	ErrExecutableNotAllowed = errors.New("executable files are not allowed for security reasons")
 )
 
+// IsUUID reports whether s is a valid v4 UUID string (vs a NanoID public id).
 func IsUUID(s string) bool {
 	_, err := uuid.Parse(s)
 	return err == nil
 }
 
+// FormatFileSize renders a byte count as a human-readable string (e.g. "1.2 MB").
 func FormatFileSize(b int64) string {
 	const unit = 1024
 	if b < unit {
@@ -33,6 +35,7 @@ func FormatFileSize(b int64) string {
 	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), "KMGTPE"[exp])
 }
 
+// ValidateUploadHeader enforces content-type and size limits for uploads.
 func ValidateUploadHeader(header *multipart.FileHeader) error {
 	const MaxSize = 500 * 1024 * 1024 // 500MB
 	if header.Size > MaxSize {

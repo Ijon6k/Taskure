@@ -40,6 +40,7 @@ type InternalBase struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
+// BeforeCreate generates the UUID primary key before insert.
 func (ib *InternalBase) BeforeCreate(tx *gorm.DB) error {
 	if ib.ID == "" {
 		ib.ID = uuid.New().String()
@@ -71,6 +72,7 @@ type Workspace struct {
 	Labels   []Label   `gorm:"foreignKey:WorkspaceID;constraint:OnDelete:CASCADE" json:"labels,omitempty"`
 }
 
+// BeforeCreate generates the UUID primary key before insert.
 func (w *Workspace) BeforeCreate(tx *gorm.DB) error {
 	if err := w.Base.BeforeCreate(tx); err != nil {
 		return err
@@ -107,6 +109,7 @@ type Project struct {
 	Discussions []Discussion     `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE" json:"discussions,omitempty"`
 }
 
+// BeforeCreate generates the UUID primary key before insert.
 func (p *Project) BeforeCreate(tx *gorm.DB) error {
 	if err := p.Base.BeforeCreate(tx); err != nil {
 		return err
@@ -172,6 +175,7 @@ type Task struct {
 	Attachments    []Attachment    `gorm:"foreignKey:TaskID;constraint:OnDelete:CASCADE" json:"-"`
 }
 
+// BeforeCreate generates the UUID primary key before insert.
 func (t *Task) BeforeCreate(tx *gorm.DB) error {
 	if err := t.Base.BeforeCreate(tx); err != nil {
 		return err
@@ -242,6 +246,7 @@ type Capture struct {
 	ProcessedAt *time.Time `json:"processed_at,omitempty"`
 }
 
+// BeforeCreate generates the UUID primary key before insert.
 func (c *Capture) BeforeCreate(tx *gorm.DB) error {
 	if err := c.Base.BeforeCreate(tx); err != nil {
 		return err
@@ -269,6 +274,7 @@ type ProjectContext struct {
 	Embedding   datatypes.JSON `gorm:"type:jsonb" json:"-"`
 }
 
+// BeforeCreate generates the UUID primary key before insert.
 func (pc *ProjectContext) BeforeCreate(tx *gorm.DB) error {
 	if err := pc.Base.BeforeCreate(tx); err != nil {
 		return err

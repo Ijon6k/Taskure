@@ -20,6 +20,7 @@ interface TaskDrawerProps {
   onClose: () => void;
 }
 
+/** Slide-over drawer for one task: edit fields, subtasks, attachments, labels and focus pickup. */
 export function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
   const {
     task,

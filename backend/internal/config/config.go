@@ -83,6 +83,7 @@ func (c Config) PostgresDSN() string {
 		" sslmode=disable TimeZone=UTC"
 }
 
+// getenv reads an env var, falling back to the given default when unset or empty.
 func getenv(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
@@ -90,6 +91,7 @@ func getenv(key, fallback string) string {
 	return fallback
 }
 
+// getenvFirst reads the first non-empty value from a list of env vars.
 func getenvFirst(keys []string, fallback string) string {
 	for _, key := range keys {
 		if v := os.Getenv(key); v != "" {
