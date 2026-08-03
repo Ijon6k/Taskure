@@ -21,6 +21,30 @@ export interface ProjectSettings {
   strategy_notes?: string;
 }
 
+// ─── Asset Explorer payload (GET /projects/:id/assets) ───────────────────────
+// One flat item for both overview resources and task attachments; source_kind
+// lets the client route deletes (task attachments via the task, resources via
+// the project settings).
+
+export interface ProjectAssetItem {
+  id: string;
+  title: string;
+  kind: string; // "link" | "image" | "file"
+  url?: string;
+  preview_url?: string;
+  size?: string;
+  mime_type?: string;
+  created_at?: string;
+  source_kind: "overview" | "task";
+  source_label: string;
+  task_id?: string;
+}
+
+export interface ProjectAssetsData {
+  resources: ProjectAssetItem[];
+  attachments: ProjectAssetItem[];
+}
+
 // ─── Core Domain Types ────────────────────────────────────────────────────────
 
 export interface ProjectData {
@@ -168,10 +192,6 @@ export interface FocusItem {
   project: ProjectData | FocusProjectView;
   score?: number;
   reason_tag?: string;
-}
-
-export interface FocusOverview {
-  active_projects: number;
 }
 
 export interface WorkspaceSummary {

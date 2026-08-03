@@ -131,7 +131,7 @@ const (
 
 type Column struct {
 	InternalBase
-	Name      string `gorm:"not null;size:50" json:"name"`
+	Name      string `gorm:"not null;size:200" json:"name"`
 	Behavior  string `gorm:"size:20;not null;default:'active';index" json:"behavior"`
 	Position  int    `gorm:"not null;default:0;index:idx_column_project_position,priority:2" json:"position"`
 	ProjectID string `gorm:"type:uuid;not null;index:idx_column_project_position,priority:1" json:"project_id"`

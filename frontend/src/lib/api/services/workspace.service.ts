@@ -1,5 +1,5 @@
 import { fetcher } from "../client";
-import { FocusResponse, FocusOverview } from "../types";
+import { FocusResponse } from "../types";
 
 export const workspaceService = {
   updateWorkspaceSettings: (settings: Record<string, unknown>) => {
@@ -12,10 +12,6 @@ export const workspaceService = {
   getFocusTask: () => {
     const tzOffsetMinutes = -new Date().getTimezoneOffset();
     return fetcher<FocusResponse>(`/focus?tz_offset_minutes=${tzOffsetMinutes}`);
-  },
-
-  getFocusOverview: () => {
-    return fetcher<FocusOverview>("/focus/overview");
   },
 
   seedDemoData: () => {

@@ -1,5 +1,11 @@
 import { fetcher } from "../client";
-import { ProjectData, ProjectSummaryData, CreateProjectInput, UpdateProjectInput } from "../types";
+import {
+  ProjectData,
+  ProjectSummaryData,
+  ProjectAssetsData,
+  CreateProjectInput,
+  UpdateProjectInput,
+} from "../types";
 
 export const projectsService = {
   getProjects: (params?: { status?: string; search?: string; pinned?: boolean }) => {
@@ -17,6 +23,14 @@ export const projectsService = {
 
   getProjectBoard: (id: string) => {
     return fetcher<ProjectData>(`/projects/${id}/board`);
+  },
+
+  getProjectOverview: (id: string) => {
+    return fetcher<ProjectData>(`/projects/${id}/overview`);
+  },
+
+  getProjectAssets: (id: string) => {
+    return fetcher<ProjectAssetsData>(`/projects/${id}/assets`);
   },
 
   createProject: (data: CreateProjectInput) => {

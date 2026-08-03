@@ -216,7 +216,7 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
             {(isMobileView || !isSidebarCollapsed) && <span>Shortcuts</span>}
           </span>
           {(isMobileView || !isSidebarCollapsed) && (
-            <kbd className="px-1.5 py-0.5 bg-theme-elevated border border-white/10 rounded-[4px] text-[10px] font-mono text-brand-accent font-semibold">
+            <kbd className="px-1.5 py-0.5 bg-theme-elevated border border-theme-subtle rounded-[4px] text-[10px] font-mono text-brand-accent font-semibold">
               ?
             </kbd>
           )}

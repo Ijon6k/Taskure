@@ -191,12 +191,9 @@ function KanbanColumnInner({
     <div
       ref={setNodeRef}
       data-kanban-column="true"
-      style={{
-        ...style,
-        borderColor: showOver ? "var(--brand-accent)" : "transparent",
-      }}
-      className={`relative w-full md:w-[384px] md:min-w-[384px] shrink-0 flex flex-col max-h-full overflow-y-auto rounded-md bg-surface-l2 group/col ${
-        showOver ? "ring-2 ring-brand-accent/20 bg-surface-hover" : ""
+      style={{ ...style }}
+      className={`relative w-full md:w-[384px] md:min-w-[384px] shrink-0 flex flex-col max-h-full overflow-y-auto rounded-md bg-surface-l2 group/col border ${
+        showOver ? "border-brand-accent/40 ring-2 ring-brand-accent/10 bg-surface-hover" : "border-transparent"
       }`}
     >
       {/* Sticky Column Header Container - Flush top-0 with solid background */}

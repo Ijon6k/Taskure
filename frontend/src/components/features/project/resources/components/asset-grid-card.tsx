@@ -26,7 +26,7 @@ export function AssetGridCard({
   onToggleSelect,
 }: AssetGridCardProps) {
   const handleClick = () => {
-    if (isSelecting && onToggleSelect && asset.source.kind === "overview") {
+    if (isSelecting && onToggleSelect) {
       onToggleSelect(asset.id);
     } else if (onPreview) {
       onPreview(asset);
@@ -72,7 +72,7 @@ export function AssetGridCard({
         )}
 
         {/* Checkbox (Selection Mode) */}
-        {isSelecting && asset.source.kind === "overview" && (
+        {isSelecting && (
           <div
             onClick={(e) => {
               e.stopPropagation();

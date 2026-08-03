@@ -13,6 +13,7 @@ interface KanbanBoardContainerProps {
   loading: boolean;
   onTaskClick: (task: TaskData) => void;
   onRefreshProject: () => void;
+  onTaskMoved?: ((updated: TaskData) => void) | undefined;
   onExportJson?: (() => void) | undefined;
   onImportJson?: (() => void) | undefined;
 }
@@ -23,6 +24,7 @@ export function KanbanBoardContainer({
   loading,
   onTaskClick,
   onRefreshProject,
+  onTaskMoved,
   onExportJson,
   onImportJson,
 }: KanbanBoardContainerProps) {
@@ -76,6 +78,7 @@ export function KanbanBoardContainer({
             columns={filteredColumns}
             onTaskClick={onTaskClick}
             onRefreshProject={onRefreshProject}
+            onTaskMoved={onTaskMoved}
           />
         )}
       </div>

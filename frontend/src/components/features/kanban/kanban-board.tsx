@@ -23,9 +23,10 @@ interface KanbanBoardProps {
   columns: ColumnData[];
   onTaskClick: (task: TaskData) => void;
   onRefreshProject?: () => void;
+  onTaskMoved?: ((updated: TaskData) => void) | undefined;
 }
 
-export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, onRefreshProject }: KanbanBoardProps) {
+export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, onRefreshProject, onTaskMoved }: KanbanBoardProps) {
   const [columns, setColumns] = useState<ColumnData[]>(initialColumns);
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
@@ -97,6 +98,23 @@ export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, o
     columns,
     setColumns,
     onRefreshProject,
+    onTaskMoved: (updated) => {
+      // Reconcile local state with the server response (authoritative
+      // position/status), then let the parent sync the query cache.
+      setColumns((prev) =>
+        prev.map((col) =>
+          col.id === updated.column_id
+            ? {
+                ...col,
+                tasks: [...(col.tasks || []).filter((t) => t.id !== updated.id), updated].sort(
+                  (a, b) => a.position - b.position
+                ),
+              }
+            : { ...col, tasks: (col.tasks || []).filter((t) => t.id !== updated.id) }
+        )
+      );
+      onTaskMoved?.(updated);
+    },
   });
 
   // Measure the source element width so the DragOverlay matches the real column/card width

@@ -1,7 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { api, TaskData, ChecklistItemData, ColumnData, AttachmentData, useProject } from "@/lib/api";
+import {
+  appendChecklistToBoard,
+  invalidateProjectOverview,
+  patchChecklistInBoard,
+  patchTaskInBoard,
+  removeChecklistFromBoard,
+  removeTaskFromBoard,
+} from "@/lib/api/queries/task-cache";
 import { AttachmentItem } from "../task-attachments-section";
 import { extractTaskTags } from "@/lib/tags";
 import { toast } from "sonner";
@@ -10,15 +19,28 @@ import { useHotkeys } from "react-hotkeys-hook";
 interface UseTaskDrawerOptions {
   taskId: string | null;
   onClose: () => void;
-  onTaskUpdated?: (() => void) | undefined;
 }
 
 
-export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerOptions) {
+export function useTaskDrawer({ taskId, onClose }: UseTaskDrawerOptions) {
+  const queryClient = useQueryClient();
   const [task, setTask] = useState<TaskData | null>(null);
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  // Sync the board cache with a fresh server response so the board stays in
+  // sync without refetching the whole project payload after every edit. The
+  // overview payload is derived from the same rows, so it is invalidated too.
+  const patchBoardCache = useCallback(
+    (updatedTask: TaskData) => {
+      const projectId = updatedTask.project_id || task?.project_id;
+      if (!projectId) return;
+      patchTaskInBoard(queryClient, projectId, updatedTask);
+      invalidateProjectOverview(queryClient, projectId);
+    },
+    [queryClient, task?.project_id]
+  );
 
   // Editable states
   const [editTitle, setEditTitle] = useState("");
@@ -120,8 +142,8 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
             const updated = await api.uploadTaskAttachment(task.id, imgFile);
             setTask(updated);
             setTaskAttachments((updated.attachments as AttachmentItem[]) ?? []);
+            patchBoardCache(updated);
             toast.success(`Pasted image attached to task!`);
-            onTaskUpdated?.();
           } catch (err) {
             toast.error("Failed to upload pasted image: " + (err as Error).message);
           }
@@ -131,7 +153,7 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
 
     window.addEventListener("paste", handlePaste);
     return () => window.removeEventListener("paste", handlePaste);
-  }, [taskId, task, onTaskUpdated]);
+  }, [taskId, task, patchBoardCache]);
 
   const handleSaveEdit = async () => {
     if (!task) return;
@@ -145,8 +167,8 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
       setTask(updated);
       setTaskAttachments((updated.attachments as AttachmentItem[]) ?? taskAttachments);
       setIsEditing(false);
+      patchBoardCache(updated);
       toast.success("Task details saved!");
-      onTaskUpdated?.();
     } catch (e) {
       toast.error("Failed to update task: " + (e as Error).message);
     }
@@ -158,14 +180,14 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
     const newStatus = targetCol?.behavior === "completed" ? "done" : "todo";
 
     try {
-      await api.moveTask(task.id, {
+      const updated = await api.moveTask(task.id, {
         column_id: newColumnId,
         position: 0,
         status: newStatus,
       });
       await fetchTaskDetails(task.id);
+      patchBoardCache(updated);
       toast.success(`Task moved to ${targetCol?.name || "new column"}`);
-      onTaskUpdated?.();
     } catch (e) {
       toast.error("Failed to move column: " + (e as Error).message);
     }
@@ -181,8 +203,8 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
         });
         setTask(updated);
         setTaskAttachments((updated.attachments as AttachmentItem[]) ?? taskAttachments);
+        patchBoardCache(updated);
         toast.success("Due date updated");
-        onTaskUpdated?.();
       } catch (e) {
         toast.error("Failed to update due date: " + (e as Error).message);
       }
@@ -198,7 +220,7 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
       setTaskAttachments((updated.attachments as AttachmentItem[]) ?? taskAttachments);
       const refreshed = extractTaskTags(updated);
       setTaskTags(refreshed.length > 0 ? refreshed : newTags);
-      onTaskUpdated?.();
+      patchBoardCache(updated);
     } catch (e) {
       toast.error("Failed to update tags: " + (e as Error).message);
     }
@@ -207,10 +229,11 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
   const handleAddChecklist = async (title: string) => {
     if (!task) return;
     try {
-      await api.addChecklistItem(task.id, title);
+      const item = await api.addChecklistItem(task.id, title);
+      appendChecklistToBoard(queryClient, task.project_id, task.id, item);
+      invalidateProjectOverview(queryClient, task.project_id);
       toast.success("Subtask added");
       fetchTaskDetails(task.id);
-      onTaskUpdated?.();
     } catch (e) {
       toast.error("Failed to add subtask: " + (e as Error).message);
     }
@@ -233,9 +256,10 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
     });
 
     try {
-      await api.updateChecklistItem(item.id, { is_completed: nextStatus });
+      const updated = await api.updateChecklistItem(item.id, { is_completed: nextStatus });
+      patchChecklistInBoard(queryClient, task.project_id, updated);
+      invalidateProjectOverview(queryClient, task.project_id);
       toast.success(nextStatus ? "Subtask completed!" : "Marked incomplete");
-      onTaskUpdated?.();
     } catch (e) {
       // Revert optimistically — only the specific item, using functional updater
       setTask((prev) => {
@@ -251,11 +275,13 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
   };
 
   const handleDeleteChecklist = async (itemId: string) => {
+    if (!task) return;
     try {
       await api.deleteChecklistItem(itemId);
+      removeChecklistFromBoard(queryClient, task.project_id, itemId);
+      invalidateProjectOverview(queryClient, task.project_id);
       toast.success("Subtask removed");
       if (task) fetchTaskDetails(task.id);
-      onTaskUpdated?.();
     } catch (e) {
       toast.error("Failed to delete subtask: " + (e as Error).message);
     }
@@ -279,7 +305,7 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
       };
       const updated = await api.updateTask(task.id, { attachments: newAtts.map(toApiAttachment) });
       setTask(updated);
-      onTaskUpdated?.();
+      patchBoardCache(updated);
     } catch (e) {
       toast.error("Failed to save attachments: " + (e as Error).message);
     }
@@ -291,8 +317,8 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
       const updated = await api.uploadTaskAttachment(task.id, file);
       setTask(updated);
       setTaskAttachments((updated.attachments as AttachmentItem[]) ?? []);
+      patchBoardCache(updated);
       toast.success(`File "${file.name}" uploaded to MinIO!`);
-      onTaskUpdated?.();
     } catch (e) {
       toast.error("Failed to upload attachment: " + (e as Error).message);
     }
@@ -304,8 +330,8 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
       const updated = await api.deleteTaskAttachment(task.id, attachmentId);
       setTask(updated);
       setTaskAttachments((updated.attachments as AttachmentItem[]) ?? []);
+      patchBoardCache(updated);
       toast.success("Attachment removed");
-      onTaskUpdated?.();
     } catch (e) {
       toast.error("Failed to delete attachment: " + (e as Error).message);
     }
@@ -315,10 +341,11 @@ export function useTaskDrawer({ taskId, onClose, onTaskUpdated }: UseTaskDrawerO
     if (!task) return;
     try {
       await api.deleteTask(task.id);
+      removeTaskFromBoard(queryClient, task.project_id, task.id);
+      invalidateProjectOverview(queryClient, task.project_id);
       toast.success("Task deleted");
       setIsDeleteModalOpen(false);
       onClose();
-      onTaskUpdated?.();
     } catch (e) {
       toast.error("Failed to delete task: " + (e as Error).message);
     }

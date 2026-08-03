@@ -18,16 +18,23 @@ interface ProjectOverviewTabProps {
   project: ProjectData | null;
   onRefreshProject?: () => void;
   onSwitchTab?: (tab: "board" | "resources") => void;
+  onOpenTask?: (taskId: string) => void;
 }
 
 export function ProjectOverviewTab({
   project,
   onRefreshProject,
   onSwitchTab,
+  onOpenTask,
 }: ProjectOverviewTabProps) {
   const { setSelectedTaskId } = useUIStore();
   const [isEditingInline, setIsEditingInline] = useState(false);
   const settings = project?.settings ?? {};
+
+  const handleOpenTask = (taskId: string) => {
+    setSelectedTaskId(taskId);
+    onOpenTask?.(taskId);
+  };
 
   const defaultResources: ResourceLinkItem[] = settings.resources ?? [];
 
@@ -114,20 +121,48 @@ export function ProjectOverviewTab({
     setIsEditingInline(true);
   };
 
-  const handleAddResource = () => {
+  const persistResources = async (next: ResourceLinkItem[]) => {
+    if (!project) return false;
+    try {
+      await api.updateProject(project.id, { resources: next });
+      setResources(next);
+      if (onRefreshProject) onRefreshProject();
+      return true;
+    } catch (err) {
+      toast.error("Failed to save resources: " + (err as Error).message);
+      return false;
+    }
+  };
+
+  const handleAddResource = async () => {
     if (!newResTitle.trim() || !newResUrl.trim()) return;
     const item: ResourceLinkItem = {
       id: `res-${Date.now()}`,
       title: newResTitle.trim(),
       url: newResUrl.trim(),
+      created_at: new Date().toISOString(),
     };
-    setResources([...resources, item]);
-    setNewResTitle("");
-    setNewResUrl("");
+    if (await persistResources([...(settings.resources ?? []), item])) {
+      setNewResTitle("");
+      setNewResUrl("");
+      toast.success("Link added to Overview");
+    }
   };
 
-  const handleRemoveResource = (id: string) => {
-    setResources(resources.filter((r) => r.id !== id));
+  const handleRemoveResource = async (id: string) => {
+    const next = (settings.resources ?? []).filter((r) => r.id !== id);
+    if (await persistResources(next)) {
+      toast.success("Resource removed");
+    }
+  };
+
+  const handleUpdateResource = async (id: string, title: string, url?: string) => {
+    const next = (settings.resources ?? []).map((r) =>
+      r.id === id ? { ...r, title: title.trim() || r.title, url: url?.trim() || r.url } : r
+    );
+    if (await persistResources(next)) {
+      toast.success("Resource updated");
+    }
   };
 
   const handleSaveInline = async () => {
@@ -230,7 +265,7 @@ export function ProjectOverviewTab({
         <div className="space-y-1.5">
           <h2 className="section-title">Today&apos;s Focus</h2>
           <div
-            onClick={() => focusTask && setSelectedTaskId(focusTask.id)}
+            onClick={() => focusTask && handleOpenTask(focusTask.id)}
             className="interactive-row px-3.5 py-2.5 flex items-center justify-between cursor-pointer"
           >
             {focusTask ? (
@@ -271,7 +306,7 @@ export function ProjectOverviewTab({
                 {upcomingTasks.map((item: TaskData) => (
                   <div
                     key={item.id}
-                    onClick={() => setSelectedTaskId(item.id)}
+                    onClick={() => handleOpenTask(item.id)}
                     className="subtle-row"
                   >
                     <span className="text-[14px] font-medium text-theme-primary truncate flex-1">
@@ -295,7 +330,7 @@ export function ProjectOverviewTab({
                 {completedTasks.map((item: TaskData) => (
                   <div
                     key={item.id}
-                    onClick={() => setSelectedTaskId(item.id)}
+                    onClick={() => handleOpenTask(item.id)}
                     className="subtle-row"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5 text-semantic-success shrink-0" />
@@ -327,6 +362,7 @@ export function ProjectOverviewTab({
             setStrategyNotes={setStrategyNotes}
             onOpenResourcesTab={() => onSwitchTab && onSwitchTab("resources")}
             onAddPhotoResource={(newItems) => setResources([...newItems, ...resources])}
+            onUpdateResource={handleUpdateResource}
           />
         </div>
 

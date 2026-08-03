@@ -31,7 +31,7 @@ export function AssetListRow({
   return (
     <div
       onClick={() => {
-        if (isSelecting && onToggleSelect && asset.source.kind === "overview") {
+        if (isSelecting && onToggleSelect) {
           onToggleSelect(asset.id);
         }
       }}
@@ -39,28 +39,24 @@ export function AssetListRow({
         isSelected
           ? "bg-brand-accent-subtle"
           : "hover:bg-surface-hover"
-      } ${isSelecting && asset.source.kind === "overview" ? "cursor-pointer" : ""}`}
+      } ${isSelecting ? "cursor-pointer" : ""}`}
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
         {/* Checkbox in Selection Mode */}
         {isSelecting ? (
-          asset.source.kind === "overview" ? (
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleSelect && onToggleSelect(asset.id);
-              }}
-              className={`w-4 h-4 rounded border flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
-                isSelected
-                  ? "bg-brand-accent border-brand-accent text-on-accent"
-                  : "border-theme-subtle bg-surface-l1 text-theme-tertiary hover:border-brand-accent"
-              }`}
-            >
-              <Check className="w-3 h-3 stroke-[3]" />
-            </div>
-          ) : (
-            <div className="w-4 h-4 shrink-0" />
-          )
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleSelect && onToggleSelect(asset.id);
+            }}
+            className={`w-4 h-4 rounded border flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
+              isSelected
+                ? "bg-brand-accent border-brand-accent text-on-accent"
+                : "border-theme-subtle bg-surface-l1 text-theme-tertiary hover:border-brand-accent"
+            }`}
+          >
+            <Check className="w-3 h-3 stroke-[3]" />
+          </div>
         ) : null}
 
         {/* Kind Icon / Small Thumbnail */}

@@ -68,7 +68,7 @@ export function AssetToolbar({
             <button
               type="button"
               onClick={onSelectAll}
-              className="px-2.5 py-1 bg-surface-l3 hover:bg-surface-hover text-theme-primary font-medium rounded-md transition-colors cursor-pointer"
+              className="px-2.5 py-1 bg-surface-l3 hover:bg-surface-hover border border-brand-accent text-theme-primary font-medium rounded-md transition-colors cursor-pointer"
             >
               Select All
             </button>

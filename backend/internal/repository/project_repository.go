@@ -19,6 +19,7 @@ type ProjectRepository interface {
 	GetColumnTaskCounts(columnIDs []string) (map[string]int, error)
 	GetFocusOverview() (*FocusOverviewResult, error)
 	FindProjectLight(idOrPublicID string) (*models.Project, error)
+	FindProjectOverview(idOrPublicID string) (*models.Project, error)
 }
 
 type projectRepository struct {
@@ -209,6 +210,31 @@ func (r *projectRepository) FindProjectLight(idOrPublicID string) (*models.Proje
 				project.Columns[i].TaskCount = counts[project.Columns[i].ID]
 			}
 		}
+	}
+	return &project, nil
+}
+
+// FindProjectOverview loads the project exactly as the Overview page reads it:
+// metadata + settings + ordered columns, each with its tasks reduced to the
+// light fields the overview lists need (no checklists, labels or descriptions).
+func (r *projectRepository) FindProjectOverview(idOrPublicID string) (*models.Project, error) {
+	var project models.Project
+	query := r.db.Preload("Columns", func(db *gorm.DB) *gorm.DB {
+		return db.Order("position asc")
+	}).Preload("Columns.Tasks", func(db *gorm.DB) *gorm.DB {
+		return db.Order("position asc").
+			Select("id", "public_id", "title", "priority", "due_date", "status", "column_id", "project_id", "position", "created_at", "updated_at")
+	})
+
+	if util.IsUUID(idOrPublicID) {
+		query = query.Where("id = ? OR public_id = ?", idOrPublicID, idOrPublicID)
+	} else {
+		query = query.Where("public_id = ?", idOrPublicID)
+	}
+
+	err := query.First(&project).Error
+	if err != nil {
+		return nil, err
 	}
 	return &project, nil
 }

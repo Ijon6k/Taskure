@@ -18,6 +18,9 @@ interface UseKanbanDndOptions {
   columns: ColumnData[];
   setColumns: React.Dispatch<React.SetStateAction<ColumnData[]>>;
   onRefreshProject?: (() => void) | undefined;
+  /** Called with the server response after a successful task move — lets the
+   *  caller sync caches without a full board refetch. */
+  onTaskMoved?: ((updated: TaskData) => void) | undefined;
 }
 
 
@@ -25,6 +28,7 @@ export function useKanbanDnd({
   columns,
   setColumns,
   onRefreshProject,
+  onTaskMoved,
 }: UseKanbanDndOptions) {
   const [activeTask, setActiveTask] = useState<TaskData | null>(null);
   const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
@@ -159,13 +163,15 @@ export function useKanbanDnd({
     );
 
     try {
-      await api.moveTask(activeTaskData.id, {
+      const updated = await api.moveTask(activeTaskData.id, {
         column_id: targetColId,
         position: targetTaskPosition,
         status: newStatus,
       });
 
-      onRefreshProject?.();
+      // No refetch — the optimistic UI already shows the move; the caller
+      // syncs the query cache from the server response instead.
+      onTaskMoved?.(updated);
     } catch (e) {
       toast.error("Failed to move task: " + (e as Error).message);
       onRefreshProject?.();

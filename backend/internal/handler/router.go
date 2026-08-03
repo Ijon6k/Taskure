@@ -58,6 +58,8 @@ func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 		projects.POST("", c.ProjectHandler.CreateProject)
 		projects.GET("/:id", c.ProjectHandler.GetProject)
 		projects.GET("/:id/board", c.ProjectHandler.GetProjectBoard)
+		projects.GET("/:id/assets", c.ProjectHandler.ListProjectAssets)
+		projects.GET("/:id/overview", c.ProjectHandler.GetProjectOverview)
 		projects.PATCH("/:id", c.ProjectHandler.UpdateProject)
 		projects.DELETE("/:id", c.ProjectHandler.DeleteProject)
 

@@ -3,7 +3,9 @@
 import { useCallback, useState } from "react";
 import { useParams } from "next/navigation";
 import dynamic from "next/dynamic";
+import { useQueryClient } from "@tanstack/react-query";
 import { useProjectBoard, TaskData } from "@/lib/api";
+import { patchTaskInBoard, invalidateProjectOverview } from "@/lib/api/queries/task-cache";
 import { KanbanBoardContainer } from "@/features/board/components/kanban-board-container";
 import { BoardImportPreview } from "@/components/features/kanban/board-import-preview";
 import { useUIStore } from "@/store/use-ui-store";
@@ -38,6 +40,7 @@ export default function ProjectBoardPage() {
   const projectId = params?.id || "";
 
   const { data: project, isLoading: loading, refetch } = useProjectBoard(projectId);
+  const queryClient = useQueryClient();
   const [importPreview, setImportPreview] = useState<ImportPreviewState | null>(null);
   const [isApplying, setIsApplying] = useState(false);
 
@@ -55,6 +58,16 @@ export default function ProjectBoardPage() {
   const handleTaskClick = useCallback((task: TaskData) => {
     setSelectedTaskId(task.id);
   }, [setSelectedTaskId]);
+
+  // Drag-drop moves are patched into the query cache from the server response
+  // instead of refetching the full board payload.
+  const handleTaskMoved = useCallback(
+    (updated: TaskData) => {
+      patchTaskInBoard(queryClient, projectId, updated);
+      invalidateProjectOverview(queryClient, projectId);
+    },
+    [queryClient, projectId]
+  );
 
   // Replace-mode import: parse the JSON, close the modal, and let the user
   // review an in-place board diff before anything is mutated.
@@ -101,6 +114,7 @@ export default function ProjectBoardPage() {
           loading={loading}
           onTaskClick={handleTaskClick}
           onRefreshProject={refetch}
+          onTaskMoved={handleTaskMoved}
           onExportJson={() => project && openExportJson(project)}
           onImportJson={openImportJson}
         />
@@ -111,7 +125,6 @@ export default function ProjectBoardPage() {
         <TaskDrawer
           taskId={selectedTaskId}
           onClose={() => setSelectedTaskId(null)}
-          onTaskUpdated={refetch}
         />
       )}
 

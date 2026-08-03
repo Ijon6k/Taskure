@@ -8,6 +8,7 @@ import (
 	"io"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Ijon6k/Taskure/apps/api/internal/imageutil"
@@ -64,26 +65,37 @@ type ProjectService interface {
 	CreateProject(input CreateProjectInput) (*models.Project, error)
 	GetProject(idOrPublicID string) (*models.Project, error)
 	GetProjectBoard(idOrPublicID string) (*models.Project, error)
+	GetProjectOverview(idOrPublicID string) (*models.Project, error)
 	UpdateProject(idOrPublicID string, input *UpdateProjectInput) (*models.Project, error)
 	DeleteProject(idOrPublicID string) error
 
 	// MinIO Resource Upload
 	UploadResource(ctx context.Context, projectIDOrPublicID string, fileName string, reader io.Reader, fileSize int64, contentType string) (*models.Project, error)
 	DeleteResource(ctx context.Context, projectIDOrPublicID string, resourceID string) (*models.Project, error)
+
+	// Asset Explorer
+	ListProjectAssets(idOrPublicID string) (*viewmodels.ProjectAssets, error)
 }
 
 type projectService struct {
 	projectRepo   repository.ProjectRepository
 	workspaceRepo repository.WorkspaceRepository
 	columnRepo    repository.ColumnRepository
+	taskRepo      repository.TaskRepository
 	variantJobs   repository.VariantJobRepository
 	storage       storage.StorageService
+
+	// Serializes read-modify-write cycles over project settings.resources
+	// (UploadResource / DeleteResource) — concurrent calls would otherwise
+	// overwrite each other's changes.
+	resourcesMu sync.Mutex
 }
 
 func NewProjectService(
 	projectRepo repository.ProjectRepository,
 	workspaceRepo repository.WorkspaceRepository,
 	columnRepo repository.ColumnRepository,
+	taskRepo repository.TaskRepository,
 	variantJobs repository.VariantJobRepository,
 	storage storage.StorageService,
 ) ProjectService {
@@ -91,6 +103,7 @@ func NewProjectService(
 		projectRepo:   projectRepo,
 		workspaceRepo: workspaceRepo,
 		columnRepo:    columnRepo,
+		taskRepo:      taskRepo,
 		variantJobs:   variantJobs,
 		storage:       storage,
 	}
@@ -190,16 +203,31 @@ func (s *projectService) GetProjectBoard(idOrPublicID string) (*models.Project, 
 	return s.projectRepo.FindProject(idOrPublicID)
 }
 
+func (s *projectService) GetProjectOverview(idOrPublicID string) (*models.Project, error) {
+	return s.projectRepo.FindProjectOverview(idOrPublicID)
+}
+
 func (s *projectService) UpdateProject(idOrPublicID string, input *UpdateProjectInput) (*models.Project, error) {
+	if input == nil {
+		project, err := s.projectRepo.FindProject(idOrPublicID)
+		if err != nil {
+			return nil, err
+		}
+		return s.projectRepo.FindProject(project.ID)
+	}
+
+	// settings.resources is read-modify-write across UpdateProject (link
+	// edits), UploadResource and DeleteResource — serialize them all so a
+	// concurrent upload/delete cannot clobber a settings merge.
+	s.resourcesMu.Lock()
+	defer s.resourcesMu.Unlock()
+
 	project, err := s.projectRepo.FindProject(idOrPublicID)
 	if err != nil {
 		return nil, err
 	}
 
 	updates := make(map[string]interface{})
-	if input == nil {
-		return s.projectRepo.FindProject(project.ID)
-	}
 
 	if input.Name != nil {
 		updates["name"] = *input.Name
@@ -343,6 +371,9 @@ func extractResourceKeys(settings datatypes.JSON) []string {
 }
 
 func (s *projectService) UploadResource(ctx context.Context, projectIDOrPublicID string, fileName string, reader io.Reader, fileSize int64, contentType string) (*models.Project, error) {
+	s.resourcesMu.Lock()
+	defer s.resourcesMu.Unlock()
+
 	project, err := s.projectRepo.FindProject(projectIDOrPublicID)
 	if err != nil {
 		return nil, err
@@ -429,6 +460,9 @@ func (s *projectService) UploadResource(ctx context.Context, projectIDOrPublicID
 // DeleteResource removes a project resource (its object plus derived
 // preview/thumbnail keys) and rewrites settings.resources accordingly.
 func (s *projectService) DeleteResource(ctx context.Context, projectIDOrPublicID string, resourceID string) (*models.Project, error) {
+	s.resourcesMu.Lock()
+	defer s.resourcesMu.Unlock()
+
 	project, err := s.projectRepo.FindProject(projectIDOrPublicID)
 	if err != nil {
 		return nil, err
@@ -513,4 +547,98 @@ func isImageExt(ext string) bool {
 		}
 	}
 	return false
+}
+
+// resourceEntry mirrors the shape of one settings.resources entry, which the
+// Asset Explorer flattens into a ProjectAssetItem.
+type resourceEntry struct {
+	ID         string `json:"id"`
+	Title      string `json:"title"`
+	Type       string `json:"type"`
+	URL        string `json:"url"`
+	PreviewURL string `json:"preview_url,omitempty"`
+	Size       string `json:"size,omitempty"`
+	MimeType   string `json:"mime_type,omitempty"`
+	CreatedAt  string `json:"created_at,omitempty"`
+}
+
+// buildProjectAssets flattens project settings.resources and the project's
+// task attachment blobs into one Asset Explorer payload. Malformed JSON is
+// skipped per entry — a bad attachment must not hide the rest of the list.
+func buildProjectAssets(settings datatypes.JSON, rows []repository.TaskAttachmentRow) *viewmodels.ProjectAssets {
+	out := &viewmodels.ProjectAssets{}
+
+	if len(settings) > 0 {
+		var settingsMap map[string]interface{}
+		if err := json.Unmarshal(settings, &settingsMap); err == nil {
+			if raw, ok := settingsMap["resources"].([]interface{}); ok {
+				for _, r := range raw {
+					rm, ok := r.(map[string]interface{})
+					if !ok {
+						continue
+					}
+					b, err := json.Marshal(rm)
+					if err != nil {
+						continue
+					}
+					var entry resourceEntry
+					if err := json.Unmarshal(b, &entry); err != nil {
+						continue
+					}
+					out.Resources = append(out.Resources, viewmodels.ProjectAssetItem{
+						ID:          entry.ID,
+						Title:       entry.Title,
+						Kind:        entry.Type,
+						URL:         entry.URL,
+						PreviewURL:  entry.PreviewURL,
+						Size:        entry.Size,
+						MimeType:    entry.MimeType,
+						CreatedAt:   entry.CreatedAt,
+						SourceKind:  "overview",
+						SourceLabel: "Overview",
+					})
+				}
+			}
+		}
+	}
+
+	for _, row := range rows {
+		var atts []AttachmentItem
+		if err := json.Unmarshal(row.AttachmentsJSON, &atts); err != nil {
+			continue
+		}
+		for _, att := range atts {
+			out.Attachments = append(out.Attachments, viewmodels.ProjectAssetItem{
+				ID:          att.ID,
+				Title:       att.Title,
+				Kind:        att.Type,
+				URL:         att.URL,
+				PreviewURL:  att.PreviewURL,
+				Size:        att.Size,
+				MimeType:    att.MimeType,
+				SourceKind:  "task",
+				SourceLabel: row.Title,
+				TaskID:      row.ID,
+			})
+		}
+	}
+
+	return out
+}
+
+// ListProjectAssets returns the lightweight Asset Explorer payload: overview
+// resources plus all task attachments, without the full board (columns,
+// checklists, labels) the /board endpoint loads.
+func (s *projectService) ListProjectAssets(idOrPublicID string) (*viewmodels.ProjectAssets, error) {
+	project, err := s.projectRepo.FindProjectLight(idOrPublicID)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := s.taskRepo.GetTaskAttachmentRows(project.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return buildProjectAssets(project.Settings, rows), nil
 }

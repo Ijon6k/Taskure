@@ -6,6 +6,7 @@ import (
 
 	"github.com/Ijon6k/Taskure/apps/api/internal/models"
 	"github.com/Ijon6k/Taskure/apps/api/internal/util"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -28,6 +29,18 @@ type TaskRepository interface {
 	FindChecklistItem(id string) (*models.ChecklistItem, error)
 	UpdateChecklistItem(item *models.ChecklistItem, updates map[string]interface{}) error
 	DeleteChecklistItem(id string) error
+
+	// Asset Explorer
+	GetTaskAttachmentRows(projectID string) ([]TaskAttachmentRow, error)
+}
+
+// TaskAttachmentRow is the minimal slice of a task the Asset Explorer needs:
+// identity + attachment blob only — no joined columns, labels or checklists.
+type TaskAttachmentRow struct {
+	ID              string
+	Title           string
+	CreatedAt       time.Time
+	AttachmentsJSON datatypes.JSON
 }
 
 type taskRepository struct {
@@ -127,6 +140,15 @@ func (r *taskRepository) UpdateChecklistItem(item *models.ChecklistItem, updates
 
 func (r *taskRepository) DeleteChecklistItem(id string) error {
 	return r.db.Delete(&models.ChecklistItem{}, "id = ?", id).Error
+}
+
+func (r *taskRepository) GetTaskAttachmentRows(projectID string) ([]TaskAttachmentRow, error) {
+	var rows []TaskAttachmentRow
+	err := r.db.Model(&models.Task{}).
+		Select("id, title, created_at, attachments_json").
+		Where("project_id = ?", projectID).
+		Scan(&rows).Error
+	return rows, err
 }
 
 func (r *taskRepository) RecordTagUsage(projectID string, tags []string) error {

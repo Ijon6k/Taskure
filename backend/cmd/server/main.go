@@ -69,7 +69,7 @@ func main() {
 
 	workspaceService := service.NewWorkspaceService(workspaceRepo)
 	taskService := service.NewTaskService(taskRepo, projectRepo, columnRepo, variantJobRepo, storageSvc)
-	projectService := service.NewProjectService(projectRepo, workspaceRepo, columnRepo, variantJobRepo, storageSvc)
+	projectService := service.NewProjectService(projectRepo, workspaceRepo, columnRepo, taskRepo, variantJobRepo, storageSvc)
 	columnService := service.NewColumnService(columnRepo, projectRepo)
 	importService := service.NewImportService(workspaceRepo, projectRepo, importRepo)
 	seedService := service.NewSeedService(workspaceRepo, projectRepo, columnRepo, taskRepo)

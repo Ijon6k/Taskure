@@ -13,6 +13,8 @@ export const api = {
   getProjects: projectsService.getProjects,
   getProject: projectsService.getProject,
   getProjectBoard: projectsService.getProjectBoard,
+  getProjectOverview: projectsService.getProjectOverview,
+  getProjectAssets: projectsService.getProjectAssets,
   createProject: projectsService.createProject,
   updateProject: projectsService.updateProject,
   uploadProjectResource: projectsService.uploadResource,

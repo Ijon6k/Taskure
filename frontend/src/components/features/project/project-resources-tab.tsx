@@ -18,11 +18,13 @@ import { ProjectAsset } from "./resources/types";
 interface ProjectResourcesTabProps {
   project: ProjectData | null;
   onRefreshProject?: (() => void) | undefined;
+  onOpenTask?: ((taskId: string) => void) | undefined;
 }
 
 export function ProjectResourcesTab({
   project,
   onRefreshProject,
+  onOpenTask,
 }: ProjectResourcesTabProps) {
   const { setSelectedTaskId } = useUIStore();
 
@@ -49,7 +51,7 @@ export function ProjectResourcesTab({
     editAsset,
     deleteAsset,
     bulkDeleteAssets,
-  } = useProjectAssets(project, onRefreshProject);
+  } = useProjectAssets(project?.id || "", onRefreshProject);
 
   // Modals & Panels State
   const [showAddLink, setShowAddLink] = useState(false);
@@ -62,7 +64,7 @@ export function ProjectResourcesTab({
 
   // Delete Target Confirmation State
   const [deleteTarget, setDeleteTarget] = useState<
-    { mode: "single"; item: ProjectAsset } | { mode: "bulk"; ids: string[] } | null
+    { mode: "single"; item: ProjectAsset } | { mode: "bulk"; items: ProjectAsset[] } | null
   >(null);
 
   const handleAddLinkSubmit = async (e: React.FormEvent) => {
@@ -83,15 +85,19 @@ export function ProjectResourcesTab({
 
   const handleRequestDeleteBulk = () => {
     if (selectedIds.size === 0) return;
-    setDeleteTarget({ mode: "bulk", ids: Array.from(selectedIds) });
+    const items = Array.from(selectedIds)
+      .map((id) => allAssets.find((a) => a.id === id))
+      .filter((a): a is ProjectAsset => Boolean(a));
+    if (items.length === 0) return;
+    setDeleteTarget({ mode: "bulk", items });
   };
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
     if (deleteTarget.mode === "single") {
-      await deleteAsset(deleteTarget.item.id);
+      await deleteAsset(deleteTarget.item);
     } else {
-      await bulkDeleteAssets(deleteTarget.ids);
+      await bulkDeleteAssets(deleteTarget.items);
     }
     setDeleteTarget(null);
   };
@@ -102,6 +108,7 @@ export function ProjectResourcesTab({
 
   const handleOpenTask = (taskId: string) => {
     setSelectedTaskId(taskId);
+    onOpenTask?.(taskId);
   };
 
   return (
@@ -291,7 +298,7 @@ export function ProjectResourcesTab({
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
         isOpen={Boolean(deleteTarget)}
-        count={deleteTarget?.mode === "bulk" ? deleteTarget.ids.length : 1}
+        count={deleteTarget?.mode === "bulk" ? deleteTarget.items.length : 1}
         itemTitle={deleteTarget?.mode === "single" ? deleteTarget.item.title : undefined}
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteTarget(null)}

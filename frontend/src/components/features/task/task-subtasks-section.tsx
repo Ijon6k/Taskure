@@ -63,7 +63,7 @@ export function TaskSubtasksSection({
                 type="checkbox"
                 checked={item.is_completed}
                 onChange={() => onToggleItem(item)}
-                className="w-4 h-4 rounded border-white/20 text-[#68D391] focus:ring-0 accent-[#68D391] cursor-pointer"
+                className="w-4 h-4 rounded border-theme-subtle text-[#68D391] focus:ring-0 accent-[#68D391] cursor-pointer"
               />
               <span
                 className={`truncate ${
@@ -93,12 +93,12 @@ export function TaskSubtasksSection({
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
           placeholder="Add a subtask…"
-          className="flex-1 bg-theme-elevated border border-white/6 rounded-md px-3 py-1.5 text-[14px] text-theme-primary placeholder-theme-tertiary focus:outline-none focus:border-brand-accent transition-colors"
+          className="flex-1 bg-theme-elevated border border-theme-subtle rounded-md px-3 py-1.5 text-[14px] text-theme-primary placeholder-theme-tertiary focus:outline-none focus:border-brand-accent transition-colors"
         />
         <button
           type="submit"
           disabled={!newTitle.trim()}
-          className="p-1.5 bg-theme-elevated hover:bg-theme-hover text-theme-primary rounded-md border border-white/8 transition-colors shrink-0 disabled:opacity-40"
+          className="p-1.5 bg-theme-elevated hover:bg-theme-hover text-theme-primary rounded-md border border-theme-subtle transition-colors shrink-0 disabled:opacity-40"
         >
           <Plus className="w-4 h-4" />
         </button>

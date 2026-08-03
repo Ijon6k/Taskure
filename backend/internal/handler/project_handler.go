@@ -7,6 +7,7 @@ import (
 	"github.com/Ijon6k/Taskure/apps/api/internal/service"
 	"github.com/Ijon6k/Taskure/apps/api/internal/util"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type ProjectHandler struct {
@@ -75,6 +76,32 @@ func (h *ProjectHandler) GetProject(c *gin.Context) {
 func (h *ProjectHandler) GetProjectBoard(c *gin.Context) {
 	idParam := c.Param("id")
 	project, err := h.service.GetProjectBoard(idParam)
+	if err != nil {
+		response.NotFound(c, "Project not found")
+		return
+	}
+
+	response.OK(c, project)
+}
+
+func (h *ProjectHandler) ListProjectAssets(c *gin.Context) {
+	idParam := c.Param("id")
+	assets, err := h.service.ListProjectAssets(idParam)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			response.NotFound(c, "Project not found")
+			return
+		}
+		response.InternalServerError(c, err)
+		return
+	}
+
+	response.OK(c, assets)
+}
+
+func (h *ProjectHandler) GetProjectOverview(c *gin.Context) {
+	idParam := c.Param("id")
+	project, err := h.service.GetProjectOverview(idParam)
 	if err != nil {
 		response.NotFound(c, "Project not found")
 		return

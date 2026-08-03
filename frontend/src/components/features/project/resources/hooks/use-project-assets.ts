@@ -1,16 +1,45 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { ProjectData, ResourceLinkItem, api } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { ProjectAssetItem, ProjectAssetsData, ResourceLinkItem, api } from "@/lib/api";
 import { normalizeStorageUrl } from "@/lib/image-url";
 import { ProjectAsset, GroupByOption, AssetGroup, AssetKind } from "../types";
 import { UploadQueueItem } from "../components/upload-queue-card";
 import { toast } from "sonner";
 
-export function useProjectAssets(
-  project: ProjectData | null,
-  onRefreshProject?: () => void
-) {
+export const projectAssetsKey = (projectId: string) => ["project", "assets", projectId];
+
+function mapAssetItem(item: ProjectAssetItem): ProjectAsset {
+  // Task attachments are stored with type "file" even for images (backend
+  // serializes AttachmentItem.Type as "file" on upload), so image detection
+  // falls back to mime/filename heuristics — same rule the pre-endpoint
+  // Asset Explorer used on the board payload.
+  const looksLikeImage =
+    item.mime_type?.startsWith("image/") || isImageFileName(item.title);
+  const kind: AssetKind = looksLikeImage
+    ? "image"
+    : item.kind === "link" || item.url?.startsWith("http")
+      ? "link"
+      : "file";
+
+  return {
+    id: item.id,
+    title: item.title || "Resource",
+    url: normalizeStorageUrl(item.url || ""),
+    previewUrl: item.preview_url ? normalizeStorageUrl(item.preview_url) : undefined,
+    kind,
+    size: item.size,
+    mimeType: item.mime_type,
+    createdAt: item.created_at,
+    source:
+      item.source_kind === "task"
+        ? { kind: "task" as const, label: `Task: ${item.source_label}`, taskId: item.task_id }
+        : { kind: "overview" as const, label: "Project Overview" },
+  };
+}
+
+export function useProjectAssets(projectId: string, onRefreshProject?: () => void) {
   const [searchQuery, setSearchQuery] = useState("");
   const [groupBy, setGroupBy] = useState<GroupByOption>("source");
   const [viewKindFilter, setViewKindFilter] = useState<"all" | AssetKind>("all");
@@ -25,6 +54,12 @@ export function useProjectAssets(
 
   // Lightbox Inspection State
   const [previewAsset, setPreviewAsset] = useState<ProjectAsset | null>(null);
+
+  const { data, refetch } = useQuery({
+    queryKey: projectAssetsKey(projectId),
+    queryFn: () => api.getProjectAssets(projectId),
+    enabled: Boolean(projectId),
+  });
 
   // Clipboard Image Paste Listener (Ctrl+V / Cmd+V)
   useEffect(() => {
@@ -49,62 +84,20 @@ export function useProjectAssets(
 
     window.addEventListener("paste", handlePaste);
     return () => window.removeEventListener("paste", handlePaste);
-  }, [project?.id, project?.settings?.resources]);
+  }, [projectId]);
 
   // 1. Overview Direct Assets
   const overviewAssets = useMemo<ProjectAsset[]>(() => {
-    const raw: ResourceLinkItem[] = project?.settings?.resources ?? [];
-    return raw.map((res, index) => {
-      const urlStr = res?.url ?? "";
-      const isImg = isImageFileName(res?.title || "") || Boolean(urlStr.match(/\.(png|jpg|jpeg|gif|webp|svg)$/i));
-      const kind: AssetKind = res?.type === "image" || isImg ? "image" : urlStr.startsWith("http") ? "link" : "file";
-
-      return {
-        id: res?.id || `res-${index}`,
-        title: res?.title || "Resource",
-        url: normalizeStorageUrl(urlStr),
-        previewUrl: res?.preview_url ? normalizeStorageUrl(res.preview_url) : undefined,
-        kind,
-        size: res?.size,
-        mimeType: res?.mime_type,
-        createdAt: res?.created_at,
-        source: {
-          kind: "overview",
-          label: "Project Overview",
-        },
-      };
-    });
-  }, [project?.settings?.resources]);
+    return (data?.resources ?? []).map(mapAssetItem);
+  }, [data?.resources]);
 
   // 2. Task Attachments
   const taskAssets = useMemo<ProjectAsset[]>(() => {
-    if (!project?.columns) return [];
-    return project.columns
-      .flatMap((col) => col.tasks || [])
-      .flatMap((task) =>
-        (task.attachments || []).map((att) => {
-          const isImg = att.mime_type?.startsWith("image/") || isImageFileName(att.title || "");
-          const kind: AssetKind = isImg ? "image" : att.type === "link" ? "link" : "file";
+    return (data?.attachments ?? []).map(mapAssetItem);
+  }, [data?.attachments]);
 
-          return {
-            id: att.id,
-            title: att.title || "Task Attachment",
-            url: normalizeStorageUrl(att.url || ""),
-            previewUrl: att.preview_url ? normalizeStorageUrl(att.preview_url) : undefined,
-            kind,
-            size: att.size,
-            mimeType: att.mime_type,
-            source: {
-              kind: "task" as const,
-              label: `Task: ${task.title}`,
-              taskId: task.id,
-            },
-          };
-        })
-      );
-  }, [project?.columns]);
-
-  // 3. Combined Assets Array
+  // 3. Combined Assets Array (overview resources win over attachments
+  // sharing an id or URL, matching the pre-endpoint dedup rule)
   const allAssets = useMemo<ProjectAsset[]>(() => {
     const map = new Map<string, ProjectAsset>();
 
@@ -169,11 +162,9 @@ export function useProjectAssets(
 
   // API Persistence for Links
   const saveOverviewResources = async (newList: ResourceLinkItem[]) => {
-    if (!project) return;
     try {
-      await api.updateProject(project.id, {
-        resources: newList,
-      });
+      await api.updateProject(projectId, { resources: newList });
+      await refetch();
       if (onRefreshProject) onRefreshProject();
     } catch (err) {
       toast.error("Failed to update resources: " + (err as Error).message);
@@ -199,14 +190,23 @@ export function useProjectAssets(
       created_at: new Date().toISOString(),
     };
 
-    const currentRaw: ResourceLinkItem[] = project?.settings?.resources ?? [];
+    const currentRaw = (data?.resources ?? []).map((r) => ({
+      id: r.id,
+      title: r.title,
+      url: r.url || "",
+      type: r.kind as ResourceLinkItem["type"],
+      preview_url: r.preview_url,
+      size: r.size,
+      mime_type: r.mime_type,
+      created_at: r.created_at,
+    }));
     await saveOverviewResources([newItem, ...currentRaw]);
     toast.success("Asset link added!");
   };
 
   // Binary Direct MinIO Upload — Preserves Original File Untouched
   const uploadFiles = async (fileList: FileList | File[]) => {
-    if (!fileList || fileList.length === 0 || !project?.id) return;
+    if (!fileList || fileList.length === 0 || !projectId) return;
     setIsUploading(true);
 
     const filesArray = Array.from(fileList);
@@ -257,7 +257,7 @@ export function useProjectAssets(
         }
 
         // Upload exact original file directly to MinIO Go API endpoint
-        await api.uploadProjectResource(project.id, file);
+        await api.uploadProjectResource(projectId, file);
         successCount++;
 
         if (queueId) {
@@ -283,6 +283,7 @@ export function useProjectAssets(
       }
     }
 
+    await refetch();
     if (onRefreshProject) onRefreshProject();
     setIsUploading(false);
 
@@ -295,14 +296,18 @@ export function useProjectAssets(
     setUploadQueue((prev) => prev.filter((q) => q.id !== id));
   };
 
-  const deleteAsset = async (id: string) => {
-    if (!project) return;
+  const deleteAsset = async (asset: ProjectAsset) => {
     try {
-      await api.deleteProjectResource(project.id, id);
+      if (asset.source.kind === "task" && asset.source.taskId) {
+        await api.deleteTaskAttachment(asset.source.taskId, asset.id);
+      } else {
+        await api.deleteProjectResource(projectId, asset.id);
+      }
+      await refetch();
       if (onRefreshProject) onRefreshProject();
       setSelectedIds((prev) => {
         const next = new Set(prev);
-        next.delete(id);
+        next.delete(asset.id);
         return next;
       });
       toast.success("Asset removed");
@@ -312,7 +317,16 @@ export function useProjectAssets(
   };
 
   const editAsset = async (id: string, newTitle: string, newUrl?: string) => {
-    const currentRaw: ResourceLinkItem[] = project?.settings?.resources ?? [];
+    const currentRaw = (data?.resources ?? []).map((r) => ({
+      id: r.id,
+      title: r.title,
+      url: r.url || "",
+      type: r.kind as ResourceLinkItem["type"],
+      preview_url: r.preview_url,
+      size: r.size,
+      mime_type: r.mime_type,
+      created_at: r.created_at,
+    }));
     const updated = currentRaw.map((r) => {
       if (r.id === id) {
         return {
@@ -327,14 +341,23 @@ export function useProjectAssets(
     toast.success("Asset updated");
   };
 
-  const bulkDeleteAssets = async (ids: string[]) => {
-    if (!project || ids.length === 0) return;
+  const bulkDeleteAssets = async (assets: ProjectAsset[]) => {
+    if (assets.length === 0) return;
     try {
-      await Promise.all(ids.map((id) => api.deleteProjectResource(project.id, id)));
+      // Sequential — backend DeleteResource does a read-modify-write on
+      // settings.resources; concurrent calls would overwrite each other.
+      for (const asset of assets) {
+        if (asset.source.kind === "task" && asset.source.taskId) {
+          await api.deleteTaskAttachment(asset.source.taskId, asset.id);
+        } else {
+          await api.deleteProjectResource(projectId, asset.id);
+        }
+      }
+      await refetch();
       if (onRefreshProject) onRefreshProject();
       setSelectedIds(new Set());
       setIsSelecting(false);
-      toast.success(`${ids.length} asset(s) removed`);
+      toast.success(`${assets.length} asset(s) removed`);
     } catch (err) {
       toast.error("Failed to remove assets: " + (err as Error).message);
     }
@@ -361,10 +384,7 @@ export function useProjectAssets(
   };
 
   const selectAll = () => {
-    const overviewIds = filteredAssets
-      .filter((a) => a.source.kind === "overview")
-      .map((a) => a.id);
-    setSelectedIds(new Set(overviewIds));
+    setSelectedIds(new Set(filteredAssets.map((a) => a.id)));
   };
 
   const clearSelection = () => {
@@ -406,3 +426,5 @@ function isImageFileName(title: string): boolean {
   const exts = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".avif"];
   return exts.some((ext) => lower.endsWith(ext)) || lower.startsWith("data:image/");
 }
+
+export type { ProjectAssetsData };

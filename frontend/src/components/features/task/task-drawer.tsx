@@ -18,10 +18,9 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 interface TaskDrawerProps {
   taskId: string | null;
   onClose: () => void;
-  onTaskUpdated?: () => void;
 }
 
-export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) {
+export function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
   const {
     task,
     loading,
@@ -51,7 +50,7 @@ export function TaskDrawer({ taskId, onClose, onTaskUpdated }: TaskDrawerProps) 
     handleToggleChecklist,
     handleDeleteChecklist,
     handleDeleteTask,
-  } = useTaskDrawer({ taskId, onClose, onTaskUpdated });
+  } = useTaskDrawer({ taskId, onClose });
 
   if (!taskId) return null;
 
