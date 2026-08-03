@@ -1,15 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pin, FolderKanban } from "lucide-react";
-import { useProjects } from "@/lib/api";
+import { useRouter } from "next/navigation";
+import { Plus, Pin, FolderKanban, Upload } from "lucide-react";
+import { useProjects, projectsService, ProjectData } from "@/lib/api";
 import { ProjectCard } from "@/components/features/project/project-card";
 import { SearchInput } from "@/components/ui/search-input";
 import { FilterPills } from "@/components/ui/filter-pills";
 import { CreateProjectModal } from "@/components/features/project/create-project-modal";
 import { EditProjectModal } from "@/components/features/project/edit-project-modal";
+import { ImportJsonModal } from "@/components/features/project/import-json-modal";
+import { ExportJsonModal } from "@/components/features/project/export-json-modal";
 import { useUIStore } from "@/store/use-ui-store";
+import { useTheme } from "@/components/providers/theme-provider";
 import { PageContainer } from "@/components/ui/page-container";
+import { toast } from "sonner";
 
 type StatusFilter = "all" | "active" | "paused" | "completed" | "archived";
 
@@ -22,8 +27,11 @@ const STATUS_FILTER_OPTIONS: { key: StatusFilter; label: string }[] = [
 ];
 
 export default function ProjectsPage() {
+  const router = useRouter();
+  const { getProjectNavUrl } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [exportingProjectId, setExportingProjectId] = useState<string | null>(null);
   const {
     isCreateProjectOpen,
     openCreateProject,
@@ -31,6 +39,12 @@ export default function ProjectsPage() {
     isEditProjectOpen,
     editingProject,
     closeEditProject,
+    isImportJsonOpen,
+    openImportJson,
+    closeImportJson,
+    exportingProject,
+    openExportJson,
+    closeExportJson,
   } = useUIStore();
 
   const { data: projects = [], isLoading } = useProjects();
@@ -57,6 +71,22 @@ export default function ProjectsPage() {
     (p) => !p.is_pinned || p.status === "completed" || p.status === "archived" || p.is_archived
   );
 
+  const handleExportProject = async (project: ProjectData) => {
+    setExportingProjectId(project.id);
+    try {
+      const fullProject = await projectsService.getProject(project.id);
+      openExportJson(fullProject);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to load project data.");
+    } finally {
+      setExportingProjectId(null);
+    }
+  };
+
+  const handleImportSuccess = (created: ProjectData) => {
+    router.push(getProjectNavUrl(created.id));
+  };
+
   return (
     <main className="flex-1 overflow-y-auto">
       <div className="flex flex-col items-center">
@@ -66,13 +96,23 @@ export default function ProjectsPage() {
             <h1 className="text-2xl sm:text-3xl font-normal text-theme-primary tracking-tight">
               Projects
             </h1>
-            <button
-              onClick={openCreateProject}
-              className="h-10 sm:h-9 px-3.5 bg-brand-accent hover:opacity-90 active:scale-95 text-on-accent text-xs sm:text-sm font-semibold rounded-md flex items-center gap-2 transition-all"
-            >
-              <Plus className="w-4 h-4" />
-              <span>New project</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={openImportJson}
+                className="h-10 sm:h-9 w-10 sm:w-9 bg-surface-l3 hover:bg-surface-l4 text-theme-secondary hover:text-theme-primary border border-theme-subtle rounded-md flex items-center justify-center transition-colors cursor-pointer"
+                title="Import JSON — create a new project"
+                aria-label="Import JSON"
+              >
+                <Upload className="w-4 h-4" />
+              </button>
+              <button
+                onClick={openCreateProject}
+                className="h-10 sm:h-9 px-3.5 bg-brand-accent hover:opacity-90 active:scale-95 text-on-accent text-xs sm:text-sm font-semibold rounded-md flex items-center gap-2 transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                <span>New project</span>
+              </button>
+            </div>
           </div>
 
           {/* Toolbar */}
@@ -102,7 +142,13 @@ export default function ProjectsPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-stretch">
                 {pinnedProjects.map((proj) => (
-                  <ProjectCard key={proj.id} project={proj} variant="grid" />
+                  <ProjectCard
+                    key={proj.id}
+                    project={proj}
+                    variant="grid"
+                    onExport={handleExportProject}
+                    isExporting={exportingProjectId === proj.id}
+                  />
                 ))}
               </div>
             </div>
@@ -137,7 +183,13 @@ export default function ProjectsPage() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-stretch">
                 {unpinnedProjects.map((proj) => (
-                  <ProjectCard key={proj.id} project={proj} variant="grid" />
+                  <ProjectCard
+                    key={proj.id}
+                    project={proj}
+                    variant="grid"
+                    onExport={handleExportProject}
+                    isExporting={exportingProjectId === proj.id}
+                  />
                 ))}
               </div>
             )}
@@ -156,6 +208,21 @@ export default function ProjectsPage() {
         project={editingProject}
         onClose={closeEditProject}
       />
+
+      <ImportJsonModal
+        isOpen={isImportJsonOpen}
+        onClose={closeImportJson}
+        mode="create"
+        onSuccess={handleImportSuccess}
+      />
+
+      {exportingProject && (
+        <ExportJsonModal
+          isOpen={Boolean(exportingProject)}
+          project={exportingProject}
+          onClose={closeExportJson}
+        />
+      )}
     </main>
   );
 }

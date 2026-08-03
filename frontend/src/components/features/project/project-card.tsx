@@ -2,11 +2,18 @@
 
 import { memo, useMemo } from "react";
 import Link from "next/link";
-import { Pin, MoreVertical } from "lucide-react";
+import { Pin, MoreVertical, Download, Settings2, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ProjectData, useUpdateProject } from "@/lib/api";
 import { useTheme } from "@/components/providers/theme-provider";
 import { useUIStore } from "@/store/use-ui-store";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 
 interface ProjectCardProps {
@@ -14,6 +21,8 @@ interface ProjectCardProps {
   variant?: "grid" | "compact";
   className?: string;
   onEdit?: (project: ProjectData) => void;
+  onExport?: (project: ProjectData) => void;
+  isExporting?: boolean;
 }
 
 function relativeTime(dateStr: string): string {
@@ -29,6 +38,8 @@ export const ProjectCard = memo(function ProjectCard({
   variant = "grid",
   className = "",
   onEdit,
+  onExport,
+  isExporting = false,
 }: ProjectCardProps) {
   const { getProjectNavUrl } = useTheme();
   const openEditProject = useUIStore((s) => s.openEditProject);
@@ -129,7 +140,7 @@ export const ProjectCard = memo(function ProjectCard({
   return (
     <Link
       href={getProjectNavUrl(project.id)}
-      className={`group/card flex flex-col justify-between h-[175px] p-5 bg-surface-l2 rounded-xl hover:bg-surface-hover/80 transition-all duration-150 relative ${className}`}
+      className={`group/card flex flex-col justify-between h-[175px] p-5 bg-surface-l2 rounded-md hover:bg-surface-hover/80 transition-all duration-150 relative ${className}`}
     >
       <div>
         {/* Header: Color Dot + Title + Theme Accent Pinned Toggle + 3-dots Menu */}
@@ -164,15 +175,51 @@ export const ProjectCard = memo(function ProjectCard({
               />
             </button>
 
-            {/* 3 Dots Menu Trigger for Project Settings */}
-            <button
-              type="button"
-              onClick={handleOpenSettings}
-              className="p-1.5 rounded-md text-theme-tertiary hover:text-theme-primary hover:bg-surface-l3/80 opacity-0 group-hover/card:opacity-100 transition-all cursor-pointer"
-              title="Project settings"
-            >
-              <MoreVertical className="w-4 h-4" />
-            </button>
+            {/* 3 Dots Menu: Export JSON + Project Settings */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  className="p-1.5 rounded-md text-theme-tertiary hover:text-theme-primary hover:bg-surface-l3 opacity-0 group-hover/card:opacity-100 transition-all cursor-pointer"
+                  title="Project actions"
+                  aria-label="Project actions"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[180px]">
+                <DropdownMenuItem
+                  onSelect={() => onExport?.(project)}
+                  disabled={isExporting}
+                  className="flex items-center gap-2"
+                >
+                  {isExporting ? (
+                    <Loader2 className="w-3.5 h-3.5 text-theme-tertiary animate-spin" />
+                  ) : (
+                    <Download className="w-3.5 h-3.5 text-theme-secondary" />
+                  )}
+                  <span>{isExporting ? "Loading data…" : "Export JSON"}</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onSelect={() => {
+                    if (onEdit) {
+                      onEdit(project);
+                    } else {
+                      openEditProject(project);
+                    }
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Settings2 className="w-3.5 h-3.5 text-theme-secondary" />
+                  <span>Project settings</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 

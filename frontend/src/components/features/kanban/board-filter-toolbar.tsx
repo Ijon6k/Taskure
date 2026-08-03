@@ -1,9 +1,15 @@
 "use client";
 
-import { DownloadSimple, UploadSimple, ArrowCounterClockwise } from "@phosphor-icons/react";
+import { FileCode, DownloadSimple, UploadSimple, ArrowCounterClockwise } from "@phosphor-icons/react";
 import { BoardFilterState, DEFAULT_BOARD_FILTERS, countActiveFilters } from "@/lib/filter-tasks";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import { BoardFilterPopover } from "./board-filter-popover";
 import { BoardSortDropdown } from "./board-sort-dropdown";
 
@@ -40,20 +46,17 @@ export function BoardFilterToolbar({
             className="flex-1 min-w-[120px] sm:w-[200px]"
           />
 
-          {/* Unified Filter Popover Button */}
           <BoardFilterPopover
             filters={filters}
             onChangeFilters={onChangeFilters}
             boardTags={boardTags}
           />
 
-          {/* Dedicated Sort Control */}
           <BoardSortDropdown
             filters={filters}
             onChangeFilters={onChangeFilters}
           />
 
-          {/* Active Filter Reset Trigger */}
           {activeCount > 0 && (
             <Button
               variant="ghost"
@@ -68,32 +71,40 @@ export function BoardFilterToolbar({
           )}
         </div>
 
-        {/* Right Actions: Export / Import JSON (Icon Only) */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          {onExportJson && (
-            <button
-              type="button"
-              onClick={onExportJson}
-              title="Export JSON"
-              aria-label="Export JSON"
-              className="w-8 h-8 rounded-[6px] bg-surface-l2 hover:bg-surface-l3 text-theme-secondary hover:text-theme-primary border border-theme-subtle/50 flex items-center justify-center transition-colors cursor-pointer"
-            >
-              <DownloadSimple className="w-4 h-4" />
-            </button>
-          )}
+        {/* Right: unified import/export menu (icon only) */}
+        {(onExportJson || onImportJson) && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                title="Import / export JSON"
+                aria-label="Import or export JSON"
+                className="w-8 h-8 rounded-md bg-surface-l2 hover:bg-surface-l3 text-theme-secondary hover:text-theme-primary border border-theme-subtle flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <FileCode className="w-4 h-4" />
+              </button>
+            </DropdownMenuTrigger>
 
-          {onImportJson && (
-            <button
-              type="button"
-              onClick={onImportJson}
-              title="Import JSON"
-              aria-label="Import JSON"
-              className="w-8 h-8 rounded-[6px] bg-surface-l2 hover:bg-surface-l3 text-theme-secondary hover:text-theme-primary border border-theme-subtle/50 flex items-center justify-center transition-colors cursor-pointer"
-            >
-              <UploadSimple className="w-4 h-4 text-brand-accent" />
-            </button>
-          )}
-        </div>
+            <DropdownMenuContent align="end" className="w-[170px]">
+              <DropdownMenuItem
+                onClick={onExportJson}
+                disabled={!onExportJson}
+                className="flex items-center gap-2"
+              >
+                <DownloadSimple className="w-3.5 h-3.5 text-theme-secondary" />
+                <span>Export JSON</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={onImportJson}
+                disabled={!onImportJson}
+                className="flex items-center gap-2"
+              >
+                <UploadSimple className="w-3.5 h-3.5 text-theme-secondary" />
+                <span>Import JSON</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </div>
   );

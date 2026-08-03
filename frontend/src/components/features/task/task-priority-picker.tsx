@@ -31,7 +31,7 @@ export function TaskPriorityPicker({
               disabled={!isEditing}
               onClick={() => isEditing && onChange(p.id)}
               title={`Priority: ${p.label}`}
-              className={`h-6 px-2 rounded-[6px] text-[11px] font-medium inline-flex items-center gap-1 transition-all cursor-pointer ${
+              className={`h-6 px-2 rounded-md text-[11px] font-medium inline-flex items-center gap-1 transition-all cursor-pointer ${
                 isSelected
                   ? "bg-theme-elevated text-theme-primary ring-1 ring-theme-default shadow-xs font-semibold"
                   : "bg-surface-l2 hover:bg-surface-l3 text-theme-tertiary hover:text-theme-secondary opacity-75 hover:opacity-100"
@@ -63,7 +63,7 @@ export function TaskPriorityPicker({
               type="button"
               disabled={!isEditing}
               onClick={() => isEditing && onChange(p.id)}
-              className={`px-3 py-1.5 rounded-[6px] text-[13px] font-medium inline-flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-md text-[13px] font-medium inline-flex items-center gap-1.5 transition-all cursor-pointer ${
                 isSelected
                   ? "bg-theme-elevated text-theme-primary font-semibold ring-1 ring-theme-default shadow-xs"
                   : "bg-surface-l3 hover:bg-surface-l4 text-theme-secondary opacity-75 hover:opacity-100"

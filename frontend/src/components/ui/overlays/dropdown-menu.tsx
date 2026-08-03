@@ -21,7 +21,7 @@ const DropdownMenuSubTrigger = React.forwardRef<
   <DropdownMenuPrimitive.SubTrigger
     ref={ref}
     className={cn(
-      "flex cursor-pointer select-none items-center rounded-[6px] px-2.5 py-1.5 text-[13px] font-medium text-theme-primary outline-none transition-colors hover:bg-surface-hover focus:bg-surface-hover data-[state=open]:bg-surface-hover",
+      "flex cursor-pointer select-none items-center rounded-md px-2.5 py-1.5 text-[13px] font-medium text-theme-primary outline-none transition-colors hover:bg-surface-hover focus:bg-surface-hover data-[state=open]:bg-surface-hover",
       inset && "pl-8",
       className
     )}
@@ -76,7 +76,7 @@ const DropdownMenuItem = React.forwardRef<
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-pointer select-none items-center gap-2 rounded-[6px] px-2.5 py-1.5 text-[13px] font-medium outline-none transition-all data-[disabled]:pointer-events-none data-[disabled]:opacity-40",
+      "relative flex cursor-pointer select-none items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] font-medium outline-none transition-all data-[disabled]:pointer-events-none data-[disabled]:opacity-40",
       variant === "danger"
         ? "text-red-400 hover:bg-red-500/10 focus:bg-red-500/10 focus:text-red-400"
         : "text-theme-primary hover:bg-surface-hover focus:bg-surface-hover focus:text-theme-primary",
@@ -95,7 +95,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   <DropdownMenuPrimitive.CheckboxItem
     ref={ref}
     className={cn(
-      "relative flex cursor-pointer select-none items-center rounded-[6px] py-1.5 pl-8 pr-2.5 text-[13px] font-medium text-theme-primary outline-none transition-colors hover:bg-surface-hover focus:bg-surface-hover data-[disabled]:pointer-events-none data-[disabled]:opacity-40",
+      "relative flex cursor-pointer select-none items-center rounded-md py-1.5 pl-8 pr-2.5 text-[13px] font-medium text-theme-primary outline-none transition-colors hover:bg-surface-hover focus:bg-surface-hover data-[disabled]:pointer-events-none data-[disabled]:opacity-40",
       className
     )}
     checked={checked ?? false}
@@ -118,7 +118,7 @@ const DropdownMenuRadioItem = React.forwardRef<
   <DropdownMenuPrimitive.RadioItem
     ref={ref}
     className={cn(
-      "relative flex cursor-pointer select-none items-center rounded-[6px] py-1.5 pl-8 pr-2.5 text-[13px] font-medium text-theme-primary outline-none transition-colors hover:bg-surface-hover focus:bg-surface-hover data-[disabled]:pointer-events-none data-[disabled]:opacity-40",
+      "relative flex cursor-pointer select-none items-center rounded-md py-1.5 pl-8 pr-2.5 text-[13px] font-medium text-theme-primary outline-none transition-colors hover:bg-surface-hover focus:bg-surface-hover data-[disabled]:pointer-events-none data-[disabled]:opacity-40",
       className
     )}
     {...props}

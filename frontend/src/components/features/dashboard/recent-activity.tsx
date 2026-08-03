@@ -54,7 +54,7 @@ export function RecentActivity({ projects, limit = 5, loading }: RecentActivityP
           <Link
             key={project.id}
             href={navUrl}
-            className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-[6px] hover:bg-surface-hover transition-colors group/act cursor-pointer"
+            className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-md hover:bg-surface-hover transition-colors group/act cursor-pointer"
           >
             <span
               className="w-1.5 h-1.5 shrink-0 rounded-full"

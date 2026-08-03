@@ -218,7 +218,7 @@ function KanbanColumnInner({
             <button
               {...attributes}
               {...listeners}
-              className="w-7 h-7 md:w-5 md:h-5 rounded-[6px] flex items-center justify-center text-theme-tertiary opacity-100 md:opacity-0 md:group-hover/col:opacity-100 hover:text-theme-primary hover:bg-theme-elevated cursor-grab active:cursor-grabbing transition-all duration-200 touch-none shrink-0"
+              className="w-7 h-7 md:w-5 md:h-5 rounded-md flex items-center justify-center text-theme-tertiary opacity-100 md:opacity-0 md:group-hover/col:opacity-100 hover:text-theme-primary hover:bg-theme-elevated cursor-grab active:cursor-grabbing transition-all duration-200 touch-none shrink-0"
               tabIndex={0}
               aria-label="Drag to reorder column"
             >
@@ -236,7 +236,7 @@ function KanbanColumnInner({
                 onBlur={handleRenameSubmit}
                 onKeyDown={handleRenameKeyDown}
                 maxLength={50}
-                className="w-full max-w-[140px] bg-theme-elevated border border-brand-accent rounded-[6px] px-2 py-0.5 text-base font-medium text-theme-primary outline-none"
+                className="w-full max-w-[140px] bg-theme-elevated border border-brand-accent rounded-md px-2 py-0.5 text-base font-medium text-theme-primary outline-none"
               />
             ) : (
               <h3 className="text-base font-medium text-theme-primary truncate">{column.name}</h3>

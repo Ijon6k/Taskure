@@ -1,11 +1,14 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useProjectBoard, TaskData } from "@/lib/api";
 import { KanbanBoardContainer } from "@/features/board/components/kanban-board-container";
+import { BoardImportPreview } from "@/components/features/kanban/board-import-preview";
 import { useUIStore } from "@/store/use-ui-store";
+import { applyImportReplace, buildReplaceDiff, ImportDiff, ParsedImport } from "@/lib/workspace-backup";
+import { toast } from "sonner";
 
 // Lazy load heavy modals and drawers
 const TaskDrawer = dynamic(
@@ -25,11 +28,18 @@ const ExportJsonModal = dynamic(
   { ssr: false }
 );
 
+interface ImportPreviewState {
+  parsed: ParsedImport;
+  diff: ImportDiff;
+}
+
 export default function ProjectBoardPage() {
   const params = useParams<{ id: string }>();
   const projectId = params?.id || "";
 
   const { data: project, isLoading: loading, refetch } = useProjectBoard(projectId);
+  const [importPreview, setImportPreview] = useState<ImportPreviewState | null>(null);
+  const [isApplying, setIsApplying] = useState(false);
 
   const isCreateProjectOpen = useUIStore((s) => s.isCreateProjectOpen);
   const closeCreateProject = useUIStore((s) => s.closeCreateProject);
@@ -46,17 +56,55 @@ export default function ProjectBoardPage() {
     setSelectedTaskId(task.id);
   }, [setSelectedTaskId]);
 
+  // Replace-mode import: parse the JSON, close the modal, and let the user
+  // review an in-place board diff before anything is mutated.
+  const handleImportReady = useCallback(
+    (parsed: ParsedImport) => {
+      if (!project) return;
+      setImportPreview({ parsed, diff: buildReplaceDiff(project, parsed) });
+    },
+    [project]
+  );
+
+  const handleApplyImport = useCallback(async () => {
+    if (!project || !importPreview || isApplying) return;
+    setIsApplying(true);
+    try {
+      const result = await applyImportReplace(project.id, importPreview.parsed);
+      toast.success(
+        `Board updated: +${result.columnsAdded} columns, +${result.tasksAdded} tasks, −${result.tasksRemoved} removed.`
+      );
+      setImportPreview(null);
+      await refetch();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to apply import.");
+    } finally {
+      setIsApplying(false);
+    }
+  }, [project, importPreview, isApplying, refetch]);
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <KanbanBoardContainer
-        projectId={projectId}
-        project={project}
-        loading={loading}
-        onTaskClick={handleTaskClick}
-        onRefreshProject={refetch}
-        onExportJson={() => project && openExportJson(project)}
-        onImportJson={openImportJson}
-      />
+      {importPreview && project ? (
+        <BoardImportPreview
+          project={project}
+          diff={importPreview.diff}
+          isApplying={isApplying}
+          onApply={handleApplyImport}
+          onCancel={() => setImportPreview(null)}
+          onEditJson={openImportJson}
+        />
+      ) : (
+        <KanbanBoardContainer
+          projectId={projectId}
+          project={project}
+          loading={loading}
+          onTaskClick={handleTaskClick}
+          onRefreshProject={refetch}
+          onExportJson={() => project && openExportJson(project)}
+          onImportJson={openImportJson}
+        />
+      )}
 
       {/* Lazy Loaded Task Drawer & Modals */}
       {selectedTaskId && (
@@ -75,13 +123,13 @@ export default function ProjectBoardPage() {
         />
       )}
 
-      {isImportJsonOpen && (
-        <ImportJsonModal
-          isOpen={isImportJsonOpen}
-          onClose={closeImportJson}
-          onSuccess={() => refetch()}
-        />
-      )}
+      <ImportJsonModal
+        isOpen={isImportJsonOpen}
+        onClose={closeImportJson}
+        mode="replace"
+        project={project ?? null}
+        onReady={handleImportReady}
+      />
 
       {project && isExportJsonOpen && (
         <ExportJsonModal

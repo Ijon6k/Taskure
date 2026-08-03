@@ -59,12 +59,12 @@ export function AssetEditModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md bg-surface-l2 border border-theme-subtle rounded-xl p-5 shadow-2xl space-y-4"
+        className="w-full max-w-md bg-surface-l2 border border-theme-subtle rounded-md p-5 shadow-2xl space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between pb-1 border-b border-theme-subtle">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-brand-accent-subtle flex items-center justify-center">
+            <div className="w-8 h-8 rounded-md bg-brand-accent-subtle flex items-center justify-center">
               <Edit3 className="w-4 h-4 text-brand-accent" />
             </div>
             <div>

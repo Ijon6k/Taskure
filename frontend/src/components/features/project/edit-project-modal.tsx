@@ -134,7 +134,7 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
         <div className="flex items-center justify-between pb-2">
           <div className="flex items-center gap-3">
             <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center text-[18px] shrink-0"
+              className="w-9 h-9 rounded-md flex items-center justify-center text-[18px] shrink-0"
               style={{ backgroundColor: `${color}20` }}
             >
               {icon}

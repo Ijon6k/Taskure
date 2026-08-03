@@ -36,7 +36,7 @@ export function TodaysFocusHero({
   // ── Loading Skeleton ─────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="w-full bg-surface-l2 rounded-xl p-8 animate-pulse space-y-4 min-h-[180px]">
+      <div className="w-full bg-surface-l2 rounded-md p-8 animate-pulse space-y-4 min-h-[180px]">
         <div className="w-20 h-3 bg-surface-hover rounded" />
         <div className="w-2/3 h-7 bg-surface-hover rounded" />
         <div className="w-1/3 h-4 bg-surface-hover rounded" />
@@ -99,7 +99,7 @@ export function TodaysFocusHero({
   };
 
   return (
-    <div className="w-full bg-surface-l2 rounded-xl p-6 sm:p-8 space-y-5 relative overflow-hidden group/hero">
+    <div className="w-full bg-surface-l2 rounded-md p-6 sm:p-8 space-y-5 relative overflow-hidden group/hero">
       {/* Subtle ambient gradient — only on active hero */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -278,7 +278,7 @@ function FallbackCard({
   }
 
   return (
-    <div className="w-full bg-surface-l2 rounded-xl p-8 flex flex-col justify-center min-h-[160px] space-y-4">
+    <div className="w-full bg-surface-l2 rounded-md p-8 flex flex-col justify-center min-h-[160px] space-y-4">
       <div className="space-y-1.5 max-w-[480px]">
         <h2 className="text-xl font-semibold text-theme-primary tracking-tight">
           {title}

@@ -56,7 +56,7 @@ export function TaskSubtasksSection({
         {checklistItems.map((item) => (
           <div
             key={item.id}
-            className="flex items-center justify-between py-1.5 px-2 hover:bg-theme-hover rounded-[6px] group transition-colors text-[14px]"
+            className="flex items-center justify-between py-1.5 px-2 hover:bg-theme-hover rounded-md group transition-colors text-[14px]"
           >
             <label className="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0">
               <input
@@ -93,12 +93,12 @@ export function TaskSubtasksSection({
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
           placeholder="Add a subtask…"
-          className="flex-1 bg-theme-elevated border border-white/6 rounded-[6px] px-3 py-1.5 text-[14px] text-theme-primary placeholder-theme-tertiary focus:outline-none focus:border-brand-accent transition-colors"
+          className="flex-1 bg-theme-elevated border border-white/6 rounded-md px-3 py-1.5 text-[14px] text-theme-primary placeholder-theme-tertiary focus:outline-none focus:border-brand-accent transition-colors"
         />
         <button
           type="submit"
           disabled={!newTitle.trim()}
-          className="p-1.5 bg-theme-elevated hover:bg-theme-hover text-theme-primary rounded-[6px] border border-white/8 transition-colors shrink-0 disabled:opacity-40"
+          className="p-1.5 bg-theme-elevated hover:bg-theme-hover text-theme-primary rounded-md border border-white/8 transition-colors shrink-0 disabled:opacity-40"
         >
           <Plus className="w-4 h-4" />
         </button>

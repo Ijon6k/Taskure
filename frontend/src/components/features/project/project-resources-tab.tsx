@@ -111,7 +111,7 @@ export function ProjectResourcesTab({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-brand-accent-subtle flex items-center justify-center">
+              <div className="w-8 h-8 rounded-md bg-brand-accent-subtle flex items-center justify-center">
                 <FolderOpen className="w-4 h-4 text-brand-accent" />
               </div>
               <h1 className="text-xl font-semibold text-theme-primary tracking-tight">
@@ -124,7 +124,7 @@ export function ProjectResourcesTab({
           </div>
 
           {/* Navigation Tabs */}
-          <div className="flex items-center gap-1 bg-surface-l1 p-1 border border-theme-subtle rounded-lg text-[13px]">
+          <div className="flex items-center gap-1 bg-surface-l1 p-1 border border-theme-subtle rounded-md text-[13px]">
             <button
               type="button"
               onClick={() => setActiveTab("explorer")}
@@ -173,7 +173,7 @@ export function ProjectResourcesTab({
             {showAddLink && (
               <form
                 onSubmit={handleAddLinkSubmit}
-                className="p-4 bg-surface-l3 border border-theme-subtle rounded-xl space-y-3 animate-in fade-in duration-150"
+                className="p-4 bg-surface-l3 border border-theme-subtle rounded-md space-y-3 animate-in fade-in duration-150"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[14px] font-semibold text-theme-primary flex items-center gap-1.5">
@@ -247,7 +247,7 @@ export function ProjectResourcesTab({
 
             {/* Asset Groups Listing */}
             {assetGroups.length === 0 && uploadQueue.length === 0 ? (
-              <div className="py-16 text-center text-theme-tertiary space-y-2 border border-dashed border-theme-subtle rounded-xl">
+              <div className="py-16 text-center text-theme-tertiary space-y-2 border border-dashed border-theme-subtle rounded-md">
                 <FolderOpen className="w-8 h-8 mx-auto text-theme-tertiary/60" />
                 <p className="text-[14px]">No project assets found.</p>
                 <p className="text-[12px] text-theme-tertiary">

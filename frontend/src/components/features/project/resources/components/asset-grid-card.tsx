@@ -44,7 +44,7 @@ export function AssetGridCard({
     >
       {/* 1. Image Canvas */}
       <div
-        className={`relative aspect-[4/3] w-full rounded-xl overflow-hidden bg-surface-l0 border transition-all ${
+        className={`relative aspect-[4/3] w-full rounded-md overflow-hidden bg-surface-l0 border transition-all ${
           isSelected
             ? "border-brand-accent ring-2 ring-brand-accent/40"
             : "border-theme-subtle group-hover:border-theme-default"

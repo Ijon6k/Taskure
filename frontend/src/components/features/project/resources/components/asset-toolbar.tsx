@@ -58,7 +58,7 @@ export function AssetToolbar({
   // 1. SLEEK SELECTION ACTION BAR (Apple Photos / Linear Style)
   if (isSelecting) {
     return (
-      <div className="w-full py-2 px-4 bg-surface-l2 border border-theme-subtle rounded-xl flex items-center justify-between gap-4 animate-in fade-in duration-150 shadow-xs select-none">
+      <div className="w-full py-2 px-4 bg-surface-l2 border border-theme-subtle rounded-md flex items-center justify-between gap-4 animate-in fade-in duration-150 shadow-xs select-none">
         <div className="flex items-center gap-3">
           <span className="text-[13px] font-semibold text-theme-primary tracking-tight">
             {selectedCount} Selected
@@ -87,7 +87,7 @@ export function AssetToolbar({
             type="button"
             onClick={onRequestDeleteSelected}
             disabled={selectedCount === 0}
-            className="px-3 py-1.5 bg-semantic-danger text-on-accent text-[12.5px] font-medium rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1.5 disabled:opacity-30 cursor-pointer shadow-2xs"
+            className="px-3 py-1.5 bg-semantic-danger text-on-accent text-[12.5px] font-medium rounded-md hover:opacity-90 transition-opacity flex items-center gap-1.5 disabled:opacity-30 cursor-pointer shadow-2xs"
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>Delete Selected ({selectedCount})</span>
@@ -96,7 +96,7 @@ export function AssetToolbar({
           <button
             type="button"
             onClick={onToggleSelecting}
-            className="px-3 py-1.5 bg-surface-l3 hover:bg-surface-hover border border-theme-subtle text-theme-primary text-[12.5px] font-medium rounded-lg transition-colors cursor-pointer"
+            className="px-3 py-1.5 bg-surface-l3 hover:bg-surface-hover border border-theme-subtle text-theme-primary text-[12.5px] font-medium rounded-md transition-colors cursor-pointer"
           >
             <span>Done</span>
           </button>
@@ -117,12 +117,12 @@ export function AssetToolbar({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search assets..."
-            className="pl-8 pr-3 py-1.5 bg-surface-l1 border border-theme-subtle rounded-lg text-[13px] text-theme-primary placeholder-theme-tertiary outline-none focus:border-brand-accent w-48 sm:w-60 transition-colors"
+            className="pl-8 pr-3 py-1.5 bg-surface-l1 border border-theme-subtle rounded-md text-[13px] text-theme-primary placeholder-theme-tertiary outline-none focus:border-brand-accent w-48 sm:w-60 transition-colors"
           />
         </div>
 
         {/* Group By Selector */}
-        <div className="flex items-center border border-theme-subtle rounded-lg bg-surface-l1 p-0.5 text-[12px] font-medium">
+        <div className="flex items-center border border-theme-subtle rounded-md bg-surface-l1 p-0.5 text-[12px] font-medium">
           <button
             type="button"
             onClick={() => onGroupByChange("source")}
@@ -177,7 +177,7 @@ export function AssetToolbar({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
-          className="px-3 py-1.5 bg-surface-l2 hover:bg-surface-hover border border-theme-subtle text-theme-primary text-[13px] font-medium rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+          className="px-3 py-1.5 bg-surface-l2 hover:bg-surface-hover border border-theme-subtle text-theme-primary text-[13px] font-medium rounded-md transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
         >
           <Upload className="w-3.5 h-3.5 text-brand-accent" />
           <span>{isUploading ? "Uploading..." : "Upload File"}</span>
@@ -186,7 +186,7 @@ export function AssetToolbar({
         <button
           type="button"
           onClick={onToggleAddLink}
-          className="px-3 py-1.5 bg-surface-l2 hover:bg-surface-hover border border-theme-subtle text-theme-primary text-[13px] font-medium rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+          className="px-3 py-1.5 bg-surface-l2 hover:bg-surface-hover border border-theme-subtle text-theme-primary text-[13px] font-medium rounded-md transition-colors flex items-center gap-1.5 cursor-pointer"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Add Link</span>
@@ -195,7 +195,7 @@ export function AssetToolbar({
         <button
           type="button"
           onClick={onToggleSelecting}
-          className="px-3 py-1.5 bg-brand-accent hover:opacity-90 text-on-accent text-[13px] font-medium rounded-lg transition-opacity flex items-center gap-1.5 cursor-pointer shadow-xs"
+          className="px-3 py-1.5 bg-brand-accent hover:opacity-90 text-on-accent text-[13px] font-medium rounded-md transition-opacity flex items-center gap-1.5 cursor-pointer shadow-xs"
         >
           <CheckSquare className="w-3.5 h-3.5" />
           <span>Select</span>

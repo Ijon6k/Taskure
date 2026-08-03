@@ -38,7 +38,7 @@ export function DeleteConfirmDialog({
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-md bg-surface-l2 border border-theme-subtle rounded-lg p-5 shadow-2xl space-y-4"
+        className="w-full max-w-md bg-surface-l2 border border-theme-subtle rounded-md p-5 shadow-2xl space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3">

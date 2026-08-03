@@ -301,7 +301,7 @@ export function ProjectResourcesSection({
 
       {/* Inline Add Link Form */}
       {showAddLinkForm && (
-        <div className="p-3 bg-surface-l2 border border-theme-subtle rounded-xl space-y-2 animate-in fade-in duration-150">
+        <div className="p-3 bg-surface-l2 border border-theme-subtle rounded-md space-y-2 animate-in fade-in duration-150">
           <div className="flex items-center justify-between">
             <span className="text-[13px] font-semibold text-theme-primary flex items-center gap-1.5">
               <Link2 className="w-3.5 h-3.5 text-semantic-info" />
@@ -398,7 +398,7 @@ export function ProjectResourcesSection({
             ))}
           </div>
         ) : (
-          <div className="py-6 border border-dashed border-theme-subtle rounded-xl text-center text-theme-tertiary space-y-1">
+          <div className="py-6 border border-dashed border-theme-subtle rounded-md text-center text-theme-tertiary space-y-1">
             <p className="text-[13px]">No Overview photos uploaded yet.</p>
             <p className="text-[11px] text-theme-tertiary">
               Click &quot;Upload Photo&quot; above to add images directly to Overview.
@@ -412,7 +412,7 @@ export function ProjectResourcesSection({
             <button
               type="button"
               onClick={() => setVisiblePhotoCount((prev) => prev + PHOTO_INITIAL_LIMIT)}
-              className="px-3.5 py-1.5 border border-theme-subtle hover:bg-surface-hover text-theme-secondary hover:text-theme-primary font-medium text-[12px] rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-1.5 border border-theme-subtle hover:bg-surface-hover text-theme-secondary hover:text-theme-primary font-medium text-[12px] rounded-md transition-colors flex items-center gap-1.5 cursor-pointer"
             >
               <ChevronDown className="w-3.5 h-3.5" />
               <span>Load More Photos ({photoAssets.length - visiblePhotoCount} remaining)</span>

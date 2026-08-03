@@ -35,7 +35,7 @@ export function AssetListRow({
           onToggleSelect(asset.id);
         }
       }}
-      className={`group flex items-center justify-between py-2 px-3 rounded-lg transition-colors select-none ${
+      className={`group flex items-center justify-between py-2 px-3 rounded-md transition-colors select-none ${
         isSelected
           ? "bg-brand-accent-subtle"
           : "hover:bg-surface-hover"

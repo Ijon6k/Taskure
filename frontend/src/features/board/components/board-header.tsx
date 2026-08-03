@@ -42,7 +42,7 @@ export function BoardHeader({
               <DropdownMenu.Trigger asChild>
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1.5 px-2 py-1 rounded-[6px] text-theme-primary font-semibold hover:bg-surface-hover transition-colors cursor-pointer outline-none group"
+                  className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-theme-primary font-semibold hover:bg-surface-hover transition-colors cursor-pointer outline-none group"
                 >
                   <span className="truncate max-w-[160px] md:max-w-[220px]">
                     {project?.name || "Loading..."}
@@ -53,7 +53,7 @@ export function BoardHeader({
 
               <DropdownMenu.Portal>
                 <DropdownMenu.Content
-                  className="z-50 w-64 max-h-72 overflow-y-auto rounded-[8px] bg-theme-elevated border border-theme-subtle p-1.5 shadow-xl animate-in fade-in duration-100"
+                  className="z-50 w-64 max-h-72 overflow-y-auto rounded-md bg-theme-elevated border border-theme-subtle p-1.5 shadow-xl animate-in fade-in duration-100"
                   sideOffset={4}
                   align="start"
                 >
@@ -66,7 +66,7 @@ export function BoardHeader({
                       <DropdownMenu.Item
                         key={p.id}
                         onSelect={() => router.push(getProjectNavUrl(p.id))}
-                        className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-[6px] text-xs font-medium outline-none cursor-pointer transition-colors ${
+                        className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md text-xs font-medium outline-none cursor-pointer transition-colors ${
                           isSelected
                             ? "bg-surface-hover text-theme-primary font-semibold"
                             : "text-theme-secondary hover:text-theme-primary hover:bg-surface-hover"
@@ -95,7 +95,7 @@ export function BoardHeader({
           <nav className="flex items-center gap-1 text-xs md:text-sm font-medium">
             <button
               onClick={() => onTabChange("overview")}
-              className={`px-2.5 py-1 rounded-[6px] flex items-center gap-1.5 transition-colors cursor-pointer ${
+              className={`px-2.5 py-1 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer ${
                 activeTab === "overview"
                   ? "bg-theme-elevated text-theme-primary font-semibold shadow-xs"
                   : "text-theme-secondary hover:text-theme-primary hover:bg-surface-hover"
@@ -107,7 +107,7 @@ export function BoardHeader({
 
             <button
               onClick={() => onTabChange("board")}
-              className={`px-2.5 py-1 rounded-[6px] flex items-center gap-1.5 transition-colors cursor-pointer ${
+              className={`px-2.5 py-1 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer ${
                 activeTab === "board"
                   ? "bg-theme-elevated text-theme-primary font-semibold shadow-xs"
                   : "text-theme-secondary hover:text-theme-primary hover:bg-surface-hover"
@@ -119,7 +119,7 @@ export function BoardHeader({
 
             <button
               onClick={() => onTabChange("resources")}
-              className={`px-2.5 py-1 rounded-[6px] flex items-center gap-1.5 transition-colors cursor-pointer ${
+              className={`px-2.5 py-1 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer ${
                 activeTab === "resources"
                   ? "bg-theme-elevated text-theme-primary font-semibold shadow-xs"
                   : "text-theme-secondary hover:text-theme-primary hover:bg-surface-hover"
@@ -136,7 +136,7 @@ export function BoardHeader({
           <button
             type="button"
             onClick={onOpenEditProject}
-            className="w-8 h-8 rounded-[6px] text-theme-secondary hover:text-theme-primary hover:bg-surface-hover flex items-center justify-center transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-md text-theme-secondary hover:text-theme-primary hover:bg-surface-hover flex items-center justify-center transition-colors cursor-pointer"
             title="Project Settings"
             aria-label="Project Settings"
           >

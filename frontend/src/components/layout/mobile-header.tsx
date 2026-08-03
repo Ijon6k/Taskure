@@ -18,7 +18,7 @@ export function MobileHeader({ title = "My Kanban", onOpenCreateProject }: Mobil
         <button
           type="button"
           onClick={toggleMobileMenu}
-          className="w-8 h-8 rounded-[6px] flex items-center justify-center text-theme-secondary hover:text-theme-primary active:bg-theme-hover transition-colors -ml-1 cursor-pointer"
+          className="w-8 h-8 rounded-md flex items-center justify-center text-theme-secondary hover:text-theme-primary active:bg-theme-hover transition-colors -ml-1 cursor-pointer"
           aria-label="Open Navigation Menu"
           title="Open Menu"
         >
@@ -26,7 +26,7 @@ export function MobileHeader({ title = "My Kanban", onOpenCreateProject }: Mobil
         </button>
 
         <Link href="/" className="flex items-center gap-1.5 shrink-0" aria-label="Go Home">
-          <span className="w-6 h-6 bg-brand-accent rounded-[6px] flex items-center justify-center text-black font-bold text-xs shrink-0 shadow-xs">
+          <span className="w-6 h-6 bg-brand-accent rounded-md flex items-center justify-center text-black font-bold text-xs shrink-0 shadow-xs">
             K
           </span>
         </Link>
@@ -35,7 +35,7 @@ export function MobileHeader({ title = "My Kanban", onOpenCreateProject }: Mobil
       <div className="flex items-center gap-1 shrink-0 text-xs font-medium text-theme-tertiary">
         <Link
           href="/projects"
-          className="px-2.5 py-1 rounded-[6px] text-theme-secondary hover:text-theme-primary hover:bg-surface-hover transition-colors flex items-center gap-1.5"
+          className="px-2.5 py-1 rounded-md text-theme-secondary hover:text-theme-primary hover:bg-surface-hover transition-colors flex items-center gap-1.5"
           title="Browse All Projects"
         >
           <Kanban className="w-3.5 h-3.5" />

@@ -200,6 +200,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
       <ImportJsonModal
         isOpen={isImportJsonOpen}
         onClose={() => setIsImportJsonOpen(false)}
+        mode="create"
         onSuccess={(created) => {
           if (onSuccess) onSuccess(created);
           onClose();

@@ -26,7 +26,7 @@ export function UploadQueueCard({
 
   return (
     <div
-      className={`group relative flex flex-col rounded-xl overflow-hidden bg-surface-l2 border transition-colors select-none ${
+      className={`group relative flex flex-col rounded-md overflow-hidden bg-surface-l2 border transition-colors select-none ${
         isError
           ? "border-semantic-danger/40 bg-surface-l2"
           : "border-theme-subtle/80 hover:border-theme-subtle"

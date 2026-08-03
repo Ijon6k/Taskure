@@ -68,7 +68,7 @@ export function ThemePreviewCard({
       >
         {/* Mini Sidebar */}
         <div
-          className="w-8 h-full rounded-[6px] p-1.5 flex flex-col gap-1.5 shrink-0"
+          className="w-8 h-full rounded-md p-1.5 flex flex-col gap-1.5 shrink-0"
           style={{ backgroundColor: palette.sidebar }}
         >
           <div className="w-3 h-3 rounded-[3px]" style={{ backgroundColor: accentColor }} />
@@ -90,7 +90,7 @@ export function ThemePreviewCard({
           {/* Mini Kanban Columns */}
           <div className="flex-1 flex gap-1.5 min-w-0">
             <div
-              className="flex-1 h-full rounded-[6px] p-1.5 flex flex-col gap-1.5"
+              className="flex-1 h-full rounded-md p-1.5 flex flex-col gap-1.5"
               style={{ backgroundColor: palette.column }}
             >
               <div className="w-7 h-1 rounded-[1px] opacity-50" style={{ backgroundColor: palette.text }} />
@@ -107,7 +107,7 @@ export function ThemePreviewCard({
             </div>
 
             <div
-              className="flex-1 h-full rounded-[6px] p-1.5 flex flex-col gap-1.5"
+              className="flex-1 h-full rounded-md p-1.5 flex flex-col gap-1.5"
               style={{ backgroundColor: palette.column }}
             >
               <div className="w-6 h-1 rounded-[1px] opacity-50" style={{ backgroundColor: palette.text }} />

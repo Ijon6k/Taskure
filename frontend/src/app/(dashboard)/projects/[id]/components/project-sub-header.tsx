@@ -47,7 +47,7 @@ export function ProjectSubHeader({
                 <DropdownMenu.Trigger asChild>
                   <button
                     type="button"
-                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded-[6px] text-theme-primary font-semibold hover:bg-surface-hover transition-colors cursor-pointer outline-none group min-w-0"
+                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-theme-primary font-semibold hover:bg-surface-hover transition-colors cursor-pointer outline-none group min-w-0"
                   >
                     <span className="truncate max-w-[150px] sm:max-w-[200px] md:max-w-[240px]">
                       {project?.name || "Loading..."}
@@ -58,7 +58,7 @@ export function ProjectSubHeader({
 
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content
-                    className="z-50 w-64 max-h-72 overflow-y-auto rounded-[8px] bg-theme-elevated border border-theme-subtle p-1.5 shadow-xl animate-in fade-in duration-100"
+                    className="z-50 w-64 max-h-72 overflow-y-auto rounded-md bg-theme-elevated border border-theme-subtle p-1.5 shadow-xl animate-in fade-in duration-100"
                     sideOffset={4}
                     align="start"
                   >
@@ -71,7 +71,7 @@ export function ProjectSubHeader({
                         <DropdownMenu.Item
                           key={p.id}
                           onSelect={() => router.push(getProjectNavUrl(p.id))}
-                          className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-[6px] text-xs font-medium outline-none cursor-pointer transition-colors ${
+                          className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md text-xs font-medium outline-none cursor-pointer transition-colors ${
                             isSelected
                               ? "bg-surface-hover text-theme-primary font-semibold"
                               : "text-theme-secondary hover:text-theme-primary hover:bg-surface-hover"
@@ -98,7 +98,7 @@ export function ProjectSubHeader({
               <button
                 type="button"
                 onClick={() => onOpenEditProject(project)}
-                className="w-8 h-8 rounded-[6px] text-theme-secondary hover:text-theme-primary hover:bg-surface-hover flex items-center justify-center transition-colors cursor-pointer shrink-0 md:hidden"
+                className="w-8 h-8 rounded-md text-theme-secondary hover:text-theme-primary hover:bg-surface-hover flex items-center justify-center transition-colors cursor-pointer shrink-0 md:hidden"
                 title="Project Settings"
                 aria-label="Project Settings"
               >
@@ -114,7 +114,7 @@ export function ProjectSubHeader({
           <nav className="flex items-center gap-1 text-xs md:text-sm font-medium overflow-x-auto no-scrollbar scrollbar-none py-0.5 min-w-0">
             <Link
               href={`/projects/${projectId}/overview`}
-              className={`px-2.5 md:px-3 py-1.5 md:py-1 rounded-[6px] flex items-center gap-1.5 transition-colors shrink-0 ${
+              className={`px-2.5 md:px-3 py-1.5 md:py-1 rounded-md flex items-center gap-1.5 transition-colors shrink-0 ${
                 isOverview
                   ? "bg-theme-elevated text-theme-primary font-semibold shadow-xs"
                   : "text-theme-secondary hover:text-theme-primary hover:bg-surface-hover"
@@ -126,7 +126,7 @@ export function ProjectSubHeader({
 
             <Link
               href={`/projects/${projectId}/board`}
-              className={`px-2.5 md:px-3 py-1.5 md:py-1 rounded-[6px] flex items-center gap-1.5 transition-colors shrink-0 ${
+              className={`px-2.5 md:px-3 py-1.5 md:py-1 rounded-md flex items-center gap-1.5 transition-colors shrink-0 ${
                 isBoard
                   ? "bg-theme-elevated text-theme-primary font-semibold shadow-xs"
                   : "text-theme-secondary hover:text-theme-primary hover:bg-surface-hover"
@@ -138,7 +138,7 @@ export function ProjectSubHeader({
 
             <Link
               href={`/projects/${projectId}/resources`}
-              className={`px-2.5 md:px-3 py-1.5 md:py-1 rounded-[6px] flex items-center gap-1.5 transition-colors shrink-0 ${
+              className={`px-2.5 md:px-3 py-1.5 md:py-1 rounded-md flex items-center gap-1.5 transition-colors shrink-0 ${
                 isResources
                   ? "bg-theme-elevated text-theme-primary font-semibold shadow-xs"
                   : "text-theme-secondary hover:text-theme-primary hover:bg-surface-hover"
@@ -155,7 +155,7 @@ export function ProjectSubHeader({
           <button
             type="button"
             onClick={() => onOpenEditProject(project)}
-            className="w-8 h-8 rounded-[6px] text-theme-secondary hover:text-theme-primary hover:bg-surface-hover hidden md:flex items-center justify-center transition-colors cursor-pointer shrink-0 ml-auto"
+            className="w-8 h-8 rounded-md text-theme-secondary hover:text-theme-primary hover:bg-surface-hover hidden md:flex items-center justify-center transition-colors cursor-pointer shrink-0 ml-auto"
             title="Project Settings"
             aria-label="Project Settings"
           >
