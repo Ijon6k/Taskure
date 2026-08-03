@@ -27,6 +27,11 @@ type CreateTaskInput struct {
 	Tags        []string   `json:"tags"`
 }
 
+// Enum whitelists — invalid values fall back to defaults so the API never
+// persists garbage, mirroring the import parser's tolerance.
+var validTaskPriorities = map[string]bool{"none": true, "low": true, "medium": true, "high": true, "urgent": true}
+var validTaskStatuses = map[string]bool{"todo": true, "in_progress": true, "done": true}
+
 type MoveTaskInput struct {
 	ColumnID string `json:"column_id" binding:"required"`
 	Position int    `json:"position"`
@@ -104,7 +109,7 @@ func (s *taskService) CreateTask(projectIDOrPublicID string, input CreateTaskInp
 	}
 
 	priority := strings.ToLower(strings.TrimSpace(input.Priority))
-	if priority == "" {
+	if !validTaskPriorities[priority] {
 		priority = "none"
 	}
 
@@ -150,6 +155,23 @@ func (s *taskService) UpdateTask(idOrPublicID string, updates map[string]interfa
 	task, err := s.taskRepo.FindTask(idOrPublicID)
 	if err != nil {
 		return nil, err
+	}
+
+	// Enum whitelist: reject unknown priority/status values so garbage never
+	// reaches the column.
+	if priorityRaw, ok := updates["priority"]; ok {
+		priority := strings.ToLower(strings.TrimSpace(fmt.Sprintf("%v", priorityRaw)))
+		if !validTaskPriorities[priority] {
+			priority = "none"
+		}
+		updates["priority"] = priority
+	}
+	if statusRaw, ok := updates["status"]; ok {
+		status := strings.ToLower(strings.TrimSpace(fmt.Sprintf("%v", statusRaw)))
+		if !validTaskStatuses[status] {
+			status = "todo"
+		}
+		updates["status"] = status
 	}
 
 	// Safely parse due_date string into time.Time struct or nil for GORM map updates

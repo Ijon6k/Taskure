@@ -32,12 +32,37 @@ type CreateProjectInput struct {
 	Template     string `json:"template"`
 }
 
+// Enum whitelist for project status — invalid values fall back to "active".
+var validProjectStatuses = map[string]bool{
+	"active": true, "paused": true, "completed": true, "archived": true,
+}
+
+// UpdateProjectInput is the typed PATCH payload. Pointer fields distinguish
+// "absent" (no change) from explicit values; nil never reaches the DB.
+type UpdateProjectInput struct {
+	Name         *string      `json:"name"`
+	Description  *string      `json:"description"`
+	Color        *string      `json:"color"`
+	Icon         *string      `json:"icon"`
+	Status       *string      `json:"status"`
+	IsPinned     *bool        `json:"is_pinned"`
+	IsArchived   *bool        `json:"is_archived"`
+	FocusEnabled *bool        `json:"focus_enabled"`
+	// Overview metadata — merged into the settings JSONB column.
+	TargetGoal    *string      `json:"target_goal"`
+	TargetDate    *string      `json:"target_date"`
+	Tags          *[]string    `json:"tags"`
+	Resources     *interface{} `json:"resources"`
+	StrategyNotes *string      `json:"strategy_notes"`
+	Settings      map[string]interface{} `json:"settings"`
+}
+
 type ProjectService interface {
 	ListProjects(status string, search string, pinned bool) ([]models.Project, error)
 	CreateProject(input CreateProjectInput) (*models.Project, error)
 	GetProject(idOrPublicID string) (*models.Project, error)
 	GetProjectBoard(idOrPublicID string) (*models.Project, error)
-	UpdateProject(idOrPublicID string, updates map[string]interface{}) (*models.Project, error)
+	UpdateProject(idOrPublicID string, input *UpdateProjectInput) (*models.Project, error)
 	DeleteProject(idOrPublicID string) error
 
 	// MinIO Resource Upload
@@ -143,10 +168,44 @@ func (s *projectService) GetProjectBoard(idOrPublicID string) (*models.Project, 
 	return s.projectRepo.FindProject(idOrPublicID)
 }
 
-func (s *projectService) UpdateProject(idOrPublicID string, updates map[string]interface{}) (*models.Project, error) {
+func (s *projectService) UpdateProject(idOrPublicID string, input *UpdateProjectInput) (*models.Project, error) {
 	project, err := s.projectRepo.FindProject(idOrPublicID)
 	if err != nil {
 		return nil, err
+	}
+
+	updates := make(map[string]interface{})
+	if input == nil {
+		return s.projectRepo.FindProject(project.ID)
+	}
+
+	if input.Name != nil {
+		updates["name"] = *input.Name
+	}
+	if input.Description != nil {
+		updates["description"] = *input.Description
+	}
+	if input.Color != nil {
+		updates["color"] = *input.Color
+	}
+	if input.Icon != nil {
+		updates["icon"] = *input.Icon
+	}
+	if input.Status != nil {
+		status := strings.ToLower(strings.TrimSpace(*input.Status))
+		if !validProjectStatuses[status] {
+			status = "active"
+		}
+		updates["status"] = status
+	}
+	if input.IsPinned != nil {
+		updates["is_pinned"] = *input.IsPinned
+	}
+	if input.IsArchived != nil {
+		updates["is_archived"] = *input.IsArchived
+	}
+	if input.FocusEnabled != nil {
+		updates["focus_enabled"] = *input.FocusEnabled
 	}
 
 	// Automatically unpin project if status is changed to completed or archived
@@ -154,35 +213,42 @@ func (s *projectService) UpdateProject(idOrPublicID string, updates map[string]i
 		updates["is_pinned"] = false
 	}
 
-	// Parse current settings JSON into a map
+	// Merge the overview metadata keys into the settings JSONB column.
 	settingsMap := make(map[string]interface{})
 	if len(project.Settings) > 0 {
 		_ = json.Unmarshal(project.Settings, &settingsMap)
 	}
 
-	// Dynamic overview metadata keys to store in Settings JSONB
-	overviewKeys := []string{"target_goal", "target_date", "tags", "resources", "strategy_notes", "settings"}
-
 	hasSettingsUpdate := false
-	for _, key := range overviewKeys {
-		if val, exists := updates[key]; exists {
-			if key == "settings" {
-				if subMap, ok := val.(map[string]interface{}); ok {
-					for subK, subV := range subMap {
-						settingsMap[subK] = subV
-					}
-				}
-			} else {
-				settingsMap[key] = val
-			}
-			hasSettingsUpdate = true
-			delete(updates, key) // Remove from root map so GORM column match won't fail
+	if input.TargetGoal != nil {
+		settingsMap["target_goal"] = *input.TargetGoal
+		hasSettingsUpdate = true
+	}
+	if input.TargetDate != nil {
+		settingsMap["target_date"] = *input.TargetDate
+		hasSettingsUpdate = true
+	}
+	if input.Tags != nil {
+		settingsMap["tags"] = *input.Tags
+		hasSettingsUpdate = true
+	}
+	if input.Resources != nil {
+		settingsMap["resources"] = *input.Resources
+		hasSettingsUpdate = true
+	}
+	if input.StrategyNotes != nil {
+		settingsMap["strategy_notes"] = *input.StrategyNotes
+		hasSettingsUpdate = true
+	}
+	if input.Settings != nil {
+		for subK, subV := range input.Settings {
+			settingsMap[subK] = subV
 		}
+		hasSettingsUpdate = true
 	}
 
 	if hasSettingsUpdate {
-		bytes, err := json.Marshal(settingsMap)
-		if err == nil {
+		if bytes, err := json.Marshal(settingsMap); err == nil {
 			updates["settings"] = datatypes.JSON(bytes)
 		}
 	}

@@ -71,13 +71,13 @@ func (h *ProjectHandler) GetProjectBoard(c *gin.Context) {
 
 func (h *ProjectHandler) UpdateProject(c *gin.Context) {
 	idParam := c.Param("id")
-	var updates map[string]interface{}
-	if err := c.ShouldBindJSON(&updates); err != nil {
+	var input service.UpdateProjectInput
+	if err := c.ShouldBindJSON(&input); err != nil {
 		response.BadRequest(c, err)
 		return
 	}
 
-	project, err := h.service.UpdateProject(idParam, updates)
+	project, err := h.service.UpdateProject(idParam, &input)
 	if err != nil {
 		response.NotFound(c, "Project not found")
 		return

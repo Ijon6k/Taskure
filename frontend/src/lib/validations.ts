@@ -25,7 +25,7 @@ export const createTaskSchema = z.object({
     .min(1, "Task title is required")
     .max(200, "Task title cannot exceed 200 characters"),
   description: z.string().optional(),
-  priority: z.enum(["urgent", "high", "medium", "low"]),
+  priority: z.enum(["urgent", "high", "medium", "low", "none"]),
   due_date: z.string().nullable().optional(),
   column_id: z.string().min(1, "Column ID is required"),
 });

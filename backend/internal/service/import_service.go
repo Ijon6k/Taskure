@@ -17,14 +17,8 @@ const (
 	maxImportChecklistItems = 5000
 )
 
-var validImportPriorities = map[string]bool{
-	"none": true, "low": true, "medium": true, "high": true, "urgent": true,
-}
-
-var validImportProjectStatuses = map[string]bool{
-	"active": true, "paused": true, "completed": true, "archived": true,
-}
-
+// Shared enum whitelists (see task_service.go / project_service.go) — invalid
+// values fall back to defaults, never rejected, so imports tolerate any input.
 // ImportChecklistInput is a single checklist item inside an import payload.
 type ImportChecklistInput struct {
 	Title       string `json:"title" binding:"required"`
@@ -100,7 +94,7 @@ func normalizeImportKey(value string) string {
 
 func importPriority(value string) string {
 	priority := strings.ToLower(strings.TrimSpace(value))
-	if !validImportPriorities[priority] {
+	if !validTaskPriorities[priority] {
 		return "none"
 	}
 	return priority
@@ -231,7 +225,7 @@ func (s *importService) ImportProject(input ImportBoardInput) (*ImportResult, er
 		name = "Imported Board"
 	}
 	status := strings.TrimSpace(input.Status)
-	if !validImportProjectStatuses[status] {
+	if !validProjectStatuses[status] {
 		status = "active"
 	}
 	color := strings.TrimSpace(input.Color)
