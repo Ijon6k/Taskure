@@ -27,7 +27,9 @@ interface SidebarProps {
 
 export function Sidebar({ onOpenCreateProject }: SidebarProps) {
   const pathname = usePathname();
-  const { getProjectNavUrl } = useTheme();
+  const { theme, getProjectNavUrl } = useTheme();
+  const logoSrc =
+    theme === "light" ? "/logotaskureblack.webp" : "/logotaskurewhite.webp";
   const { data: projects = [] } = useProjects();
   const seedDemoMutation = useSeedDemo();
   const [isLogoHovered, setIsLogoHovered] = useState(false);
@@ -93,12 +95,12 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
               <SidebarSimple className="w-[18px] h-[18px] text-theme-primary" />
             ) : (
               <Image
-                src="/taskurelogo.webp"
+                src={logoSrc}
                 alt="Taskure"
                 width={32}
                 height={32}
-                // ~120% zoom of a 28px tile, then rounded like the old "K" badge.
-                className="w-[32px] h-[32px] scale-[1.2] rounded-md object-contain"
+                // Transparent icon — scale up for visibility.
+                className="w-[32px] h-[32px] scale-[1.6] object-contain"
               />
             )}
           </button>
@@ -106,12 +108,12 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
           <>
             <Link href="/" onClick={() => isMobileView && closeMobileMenu()} className="flex items-center gap-2.5 min-w-0">
               <Image
-                src="/taskurelogo.webp"
+                src={logoSrc}
                 alt="Taskure"
                 width={32}
                 height={32}
-                // ~120% zoom of a 28px tile, then rounded like the old "K" badge.
-                className="w-[32px] h-[32px] scale-[1.2] rounded-md object-contain shrink-0"
+                // Transparent icon — scale up for visibility.
+                className="w-[32px] h-[32px] scale-[1.6] object-contain shrink-0"
               />
               <span className="text-[15px] font-medium tracking-tight text-theme-primary whitespace-nowrap">
                 Taskure

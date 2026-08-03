@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/taskurelogo.webp" alt="Taskure" width="96" />
+  <img src="assets/taskurelogo2.webp" alt="Taskure" width="96" />
 </div>
 
 <div align="center">

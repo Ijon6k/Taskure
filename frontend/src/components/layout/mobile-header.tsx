@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { SidebarSimple, Kanban } from "@phosphor-icons/react";
 import { useUIStore } from "@/store/use-ui-store";
+import { useTheme } from "@/components/providers/theme-provider";
 
 interface MobileHeaderProps {
   title?: string;
@@ -12,6 +13,8 @@ interface MobileHeaderProps {
 
 export function MobileHeader({ title = "Taskure", onOpenCreateProject }: MobileHeaderProps) {
   const toggleMobileMenu = useUIStore((s) => s.toggleMobileMenu);
+  const { theme } = useTheme();
+  const logoSrc = theme === "light" ? "/logotaskureblack.webp" : "/logotaskurewhite.webp";
 
   return (
     <header className="h-11 px-3 border-b border-theme-subtle bg-surface-l1 flex items-center justify-between shrink-0 md:hidden z-30 select-none">
@@ -28,12 +31,12 @@ export function MobileHeader({ title = "Taskure", onOpenCreateProject }: MobileH
 
         <Link href="/" className="flex items-center gap-1.5 shrink-0" aria-label="Go Home">
           <Image
-            src="/taskurelogo.webp"
+            src={logoSrc}
             alt="Taskure"
             width={24}
             height={24}
-            // ~120% zoom of the tile, rounded like the old "K" badge.
-            className="w-6 h-6 scale-[1.2] rounded-md object-contain shrink-0 shadow-xs"
+            // Transparent icon — scale up for visibility.
+            className="w-6 h-6 scale-[1.6] object-contain shrink-0"
           />
         </Link>
       </div>
