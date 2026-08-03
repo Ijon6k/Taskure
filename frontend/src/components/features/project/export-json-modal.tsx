@@ -66,8 +66,11 @@ export function ExportJsonModal({ isOpen, project, onClose }: ExportJsonModalPro
     toast.success(`Downloaded ${scope === "project" ? "full project" : "board only"} JSON.`);
   };
 
-  const lineCount = jsonString.split("\n").length;
-  const byteSize = jsonString ? (new Blob([jsonString]).size / 1024).toFixed(1) : "0";
+  const lineCount = useMemo(() => jsonString.split("\n").length, [jsonString]);
+  const byteSize = useMemo(
+    () => (jsonString ? (new Blob([jsonString]).size / 1024).toFixed(1) : "0"),
+    [jsonString]
+  );
 
   return (
     <ModalContainer isOpen={isOpen} onClose={onClose} maxWidth="max-w-[540px]">

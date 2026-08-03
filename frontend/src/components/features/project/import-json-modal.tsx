@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   X,
   FileCode,
@@ -177,8 +177,11 @@ export function ImportJsonModal({ isOpen, onClose, mode, project, onReady, onSuc
     }
   };
 
-  const lineCount = jsonText.split("\n").length;
-  const byteSize = jsonText ? (new Blob([jsonText]).size / 1024).toFixed(1) : "0";
+  const lineCount = useMemo(() => jsonText.split("\n").length, [jsonText]);
+  const byteSize = useMemo(
+    () => (jsonText ? (new Blob([jsonText]).size / 1024).toFixed(1) : "0"),
+    [jsonText]
+  );
 
   return (
     <ModalContainer isOpen={isOpen} onClose={onClose} maxWidth="max-w-[560px]">

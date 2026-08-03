@@ -55,6 +55,7 @@ func main() {
 	projectRepo := repository.NewProjectRepository(conn)
 	columnRepo := repository.NewColumnRepository(conn)
 	taskRepo := repository.NewTaskRepository(conn)
+	importRepo := repository.NewImportRepository(conn)
 	variantJobRepo := repository.NewVariantJobRepository(conn)
 
 	// Start the background image-variant worker when object storage is
@@ -70,6 +71,7 @@ func main() {
 	taskService := service.NewTaskService(taskRepo, projectRepo, columnRepo, variantJobRepo, storageSvc)
 	projectService := service.NewProjectService(projectRepo, workspaceRepo, columnRepo, variantJobRepo, storageSvc)
 	columnService := service.NewColumnService(columnRepo, projectRepo)
+	importService := service.NewImportService(workspaceRepo, projectRepo, importRepo)
 	seedService := service.NewSeedService(workspaceRepo, projectRepo, columnRepo, taskRepo)
 
 	// Backfill missing NanoIDs on startup
@@ -81,7 +83,7 @@ func main() {
 	}
 
 	// HTTP Handler Container
-	container := handler.NewContainer(workspaceService, projectService, columnService, taskService, seedService, storageSvc)
+	container := handler.NewContainer(workspaceService, projectService, columnService, taskService, importService, seedService, storageSvc)
 
 	if cfg.AppEnv == "production" {
 		gin.SetMode(gin.ReleaseMode)

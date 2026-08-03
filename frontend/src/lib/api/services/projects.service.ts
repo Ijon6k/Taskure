@@ -60,4 +60,18 @@ export const projectsService = {
   getSuggestedTags: (projectId: string) => {
     return fetcher<string[]>(`/projects/${projectId}/suggested-tags`);
   },
+
+  importProject: (data: unknown) => {
+    return fetcher<{ project: ProjectData; counts: Record<string, number> }>("/projects/import", {
+      method: "POST",
+      data,
+    });
+  },
+
+  importBoard: (id: string, data: unknown) => {
+    return fetcher<{ counts: Record<string, number> }>(`/projects/${id}/import`, {
+      method: "POST",
+      data,
+    });
+  },
 };

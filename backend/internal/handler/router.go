@@ -14,6 +14,7 @@ type Container struct {
 	TaskHandler      *TaskHandler
 	ChecklistHandler *ChecklistHandler
 	FocusHandler     *FocusHandler
+	ImportHandler    *ImportHandler
 	SeedHandler      *SeedHandler
 	StorageHandler   *StorageHandler
 }
@@ -23,6 +24,7 @@ func NewContainer(
 	projectService service.ProjectService,
 	columnService service.ColumnService,
 	taskService service.TaskService,
+	importService service.ImportService,
 	seedService service.SeedService,
 	storageSvc storage.StorageService,
 ) *Container {
@@ -33,6 +35,7 @@ func NewContainer(
 		TaskHandler:      NewTaskHandler(taskService),
 		ChecklistHandler: NewChecklistHandler(taskService),
 		FocusHandler:     NewFocusHandler(taskService),
+		ImportHandler:    NewImportHandler(importService),
 		SeedHandler:      NewSeedHandler(seedService),
 		StorageHandler:   NewStorageHandler(storageSvc),
 	}
@@ -61,6 +64,10 @@ func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 		projects.POST("/:id/columns", c.ColumnHandler.CreateColumn)
 		projects.POST("/:id/tasks", c.TaskHandler.CreateTask)
 		projects.GET("/:id/suggested-tags", c.TaskHandler.GetSuggestedTags)
+
+		// Bulk import: one request creates/replaces an entire board atomically.
+		projects.POST("/import", c.ImportHandler.ImportProject)
+		projects.POST("/:id/import", c.ImportHandler.ReplaceBoard)
 	}
 
 	columns := r.Group("/columns")

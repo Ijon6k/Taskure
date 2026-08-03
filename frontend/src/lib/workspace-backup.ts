@@ -1,5 +1,5 @@
 import { getGlobalCategories, getGlobalTags, saveGlobalCategory, saveGlobalTag } from "./tags";
-import { projectsService, columnsService, tasksService } from "./api/services";
+import { projectsService } from "./api/services";
 import type { ColumnData, ProjectData, TaskData } from "./api/types";
 import { format } from "date-fns";
 
@@ -134,7 +134,12 @@ export function parseImportJSON(jsonString: string): ParsedImport {
   } catch {
     throw new Error("Invalid JSON syntax.");
   }
+  return parseImportObject(raw);
+}
 
+/** Parses an already-deserialized object (e.g. a workspace-backup project
+ *  row) without the JSON round-trip that `parseImportJSON` would require. */
+export function parseImportObject(raw: unknown): ParsedImport {
   const source = unwrapRoot(raw);
   if (!source || typeof source !== "object" || Array.isArray(source)) {
     throw new Error("JSON must be a project or board object.");
@@ -243,7 +248,10 @@ function parseTask(raw: unknown): ParsedTask | null {
 function normalizeDueDate(value: string | undefined): string | undefined {
   if (!value) return undefined;
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return Number.isNaN(Date.parse(`${value}T00:00:00`)) ? undefined : new Date(`${value}T00:00:00`).toISOString();
+    // Date-only shorthand: treat as UTC midnight, matching the DatePicker and
+    // the backend's time.Parse("2006-01-02"), so the calendar day never shifts.
+    const date = new Date(`${value}T00:00:00Z`);
+    return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
   }
   return Number.isNaN(Date.parse(value)) ? undefined : value;
 }
@@ -385,203 +393,38 @@ export function buildReplaceDiff(project: ProjectData, parsed: ParsedImport): Im
     tasksRemoved,
   };
 }
+// ─── Apply: single bulk request per import ──────────────────────────────────
 
-// ─── Apply: create a new project from JSON ──────────────────────────────────
+const COUNT_KEYS: ReadonlyArray<[keyof BoardMutationCounts, string]> = [
+  ["columnsAdded", "columns_added"],
+  ["columnsRemoved", "columns_removed"],
+  ["tasksAdded", "tasks_added"],
+  ["tasksRemoved", "tasks_removed"],
+  ["checklistItemsAdded", "checklist_items_added"],
+];
+
+function mapImportCounts(raw: Record<string, number>): BoardMutationCounts {
+  const counts: BoardMutationCounts = {
+    columnsAdded: 0,
+    columnsRemoved: 0,
+    tasksAdded: 0,
+    tasksRemoved: 0,
+    checklistItemsAdded: 0,
+  };
+  for (const [camel, snake] of COUNT_KEYS) {
+    counts[camel] = raw[snake] ?? 0;
+  }
+  return counts;
+}
 
 export async function applyImportCreate(parsed: ParsedImport): Promise<ImportApplyResult> {
-  const project = await projectsService.createProject({
-    name: parsed.name ?? "Imported Board",
-    description: parsed.description ?? "",
-    color: parsed.color ?? DEFAULT_PROJECT_COLOR,
-    icon: parsed.icon ?? DEFAULT_PROJECT_ICON,
-    status: parsed.status ?? "active",
-    template: "blank",
-  });
-
-  const counts = await populateBoard(project.id, parsed.columns);
-  return { project, ...counts };
+  const result = await projectsService.importProject(parsed);
+  return { project: result.project, ...mapImportCounts(result.counts) };
 }
-
-async function populateBoard(projectId: string, columns: ParsedColumn[]): Promise<BoardMutationCounts> {
-  const counts: BoardMutationCounts = {
-    columnsAdded: 0,
-    columnsRemoved: 0,
-    tasksAdded: 0,
-    tasksRemoved: 0,
-    checklistItemsAdded: 0,
-  };
-
-  for (const parsedColumn of columns) {
-    const column = await columnsService.createColumn(projectId, {
-      name: parsedColumn.name,
-      ...(parsedColumn.color ? { color: parsedColumn.color } : {}),
-    });
-    counts.columnsAdded++;
-    await createTasks(projectId, column.id, parsedColumn.tasks, counts);
-  }
-
-  return counts;
-}
-
-// ─── Apply: replace the current board + project metadata ───────────────────
 
 export async function applyImportReplace(projectId: string, parsed: ParsedImport): Promise<BoardMutationCounts> {
-  const current = await projectsService.getProject(projectId);
-  const existingColumns = current.columns ?? [];
-  const existingByName = new Map(existingColumns.map((col) => [normalizeKey(col.name), col]));
-  const parsedNames = new Set(parsed.columns.map((col) => normalizeKey(col.name)));
-
-  const counts: BoardMutationCounts = {
-    columnsAdded: 0,
-    columnsRemoved: 0,
-    tasksAdded: 0,
-    tasksRemoved: 0,
-    checklistItemsAdded: 0,
-  };
-
-  // 1. Create missing columns first so every parsed column has a target id.
-  const columnIds = new Map<string, string>();
-  for (const parsedColumn of parsed.columns) {
-    const key = normalizeKey(parsedColumn.name);
-    const existing = existingByName.get(key);
-    if (existing) {
-      columnIds.set(key, existing.id);
-      continue;
-    }
-    const column = await columnsService.createColumn(projectId, {
-      name: parsedColumn.name,
-      ...(parsedColumn.color ? { color: parsedColumn.color } : {}),
-    });
-    columnIds.set(key, column.id);
-    counts.columnsAdded++;
-  }
-
-  // 2. Sync tasks per column: delete only tasks whose title is absent from the
-  //    JSON, create only tasks absent from the column. Title-matched tasks are
-  //    kept as-is (content, checklist and attachments survive the import).
-  for (const parsedColumn of parsed.columns) {
-    const key = normalizeKey(parsedColumn.name);
-    const columnId = columnIds.get(key);
-    if (!columnId) continue;
-
-    const existing = existingByName.get(key);
-    if (!existing) {
-      await createTasks(projectId, columnId, parsedColumn.tasks, counts);
-      continue;
-    }
-
-    const existingTitles = new Set((existing.tasks ?? []).map((task) => normalizeKey(task.title)));
-    const parsedTitles = new Set(parsedColumn.tasks.map((task) => normalizeKey(task.title)));
-    const kept = (existing.tasks ?? []).filter((task) => parsedTitles.has(normalizeKey(task.title)));
-    const toDelete = (existing.tasks ?? []).filter((task) => !parsedTitles.has(normalizeKey(task.title)));
-    await deleteTasks(toDelete, counts);
-
-    const missingTasks = parsedColumn.tasks.filter((task) => !existingTitles.has(normalizeKey(task.title)));
-    const createdIds = await createTasks(projectId, columnId, missingTasks, counts);
-    await reorderColumnTasks(columnId, parsedColumn.tasks, kept, createdIds);
-  }
-
-  // 3. Delete columns absent from the JSON. The backend does not cascade, so
-  //    delete the column's tasks explicitly first to avoid orphans.
-  for (const existing of existingColumns) {
-    if (parsedNames.has(normalizeKey(existing.name))) continue;
-    await deleteTasks(existing.tasks ?? [], counts);
-    try {
-      await columnsService.deleteColumn(existing.id);
-      counts.columnsRemoved++;
-    } catch {
-      // Column may already be gone; count only successful removals.
-    }
-  }
-
-  // 4. Reorder columns to match the JSON order.
-  await reorderColumns(columnIds, parsed.columns);
-
-  // Replace is board-scoped: project metadata (name, color, …) in the JSON is
-  // ignored — it only ever matters when creating a brand-new project.
-  return counts;
-}
-
-async function deleteTasks(tasks: TaskData[], counts: BoardMutationCounts): Promise<void> {
-  const settled = await Promise.allSettled(tasks.map((task) => tasksService.deleteTask(task.id)));
-  counts.tasksRemoved += settled.filter((result) => result.status === "fulfilled").length;
-}
-
-/** Reorders a column's tasks to match the JSON order. Kept tasks hold their
- *  original positions; newly created tasks are appended in creation order. */
-async function reorderColumnTasks(
-  columnId: string,
-  parsedTasks: ParsedTask[],
-  kept: TaskData[],
-  createdIds: Map<string, string>
-): Promise<void> {
-  const target = parsedTasks.map((task) => normalizeKey(task.title));
-  const current: (string | undefined)[] = [
-    ...kept.map((task) => normalizeKey(task.title)),
-    ...parsedTasks
-      .map((task) => normalizeKey(task.title))
-      .filter((title) => createdIds.has(title)),
-  ];
-  if (current.length !== target.length || current.some((title, i) => title !== target[i])) {
-    for (let position = 0; position < target.length; position++) {
-      const title = target[position];
-      if (!title || current[position] === title) continue;
-      const id = createdIds.get(title) ?? kept.find((task) => normalizeKey(task.title) === title)?.id;
-      if (!id) continue;
-      await tasksService.moveTask(id, { column_id: columnId, position });
-      const from = current.indexOf(title);
-      if (from !== -1) {
-        current.splice(from, 1);
-        current.splice(position, 0, title);
-      }
-    }
-  }
-}
-
-async function createTasks(
-  projectId: string,
-  columnId: string,
-  tasks: ParsedTask[],
-  counts: BoardMutationCounts
-): Promise<Map<string, string>> {
-  const createdIds = new Map<string, string>();
-  for (const parsedTask of tasks) {
-    const task = await tasksService.createTask(projectId, {
-      column_id: columnId,
-      title: parsedTask.title,
-      ...(parsedTask.description ? { description: parsedTask.description } : {}),
-      ...(parsedTask.priority ? { priority: parsedTask.priority } : {}),
-      ...(parsedTask.due_date ? { due_date: parsedTask.due_date } : {}),
-      ...(parsedTask.tags && parsedTask.tags.length > 0 ? { tags: parsedTask.tags } : {}),
-    });
-    if (!createdIds.has(normalizeKey(parsedTask.title))) {
-      createdIds.set(normalizeKey(parsedTask.title), task.id);
-    }
-    counts.tasksAdded++;
-
-    if (parsedTask.checklist && parsedTask.checklist.length > 0) {
-      for (const item of parsedTask.checklist) {
-        const created = await tasksService.addChecklistItem(task.id, item.title);
-        counts.checklistItemsAdded++;
-        if (item.is_completed) {
-          await tasksService.updateChecklistItem(created.id, { is_completed: true });
-        }
-      }
-    }
-  }
-
-  return createdIds;
-}
-
-async function reorderColumns(columnIds: Map<string, string>, parsedColumns: ParsedColumn[]): Promise<void> {
-  for (let position = 0; position < parsedColumns.length; position++) {
-    const parsedColumn = parsedColumns[position];
-    if (!parsedColumn) continue;
-    const columnId = columnIds.get(normalizeKey(parsedColumn.name));
-    if (columnId) {
-      await columnsService.updateColumn(columnId, { position });
-    }
-  }
+  const result = await projectsService.importBoard(projectId, parsed);
+  return mapImportCounts(result.counts);
 }
 
 // ─── Legacy workspace backup (Settings page) ────────────────────────────────
@@ -629,12 +472,6 @@ export async function exportFullWorkspaceJSON(): Promise<void> {
   URL.revokeObjectURL(url);
 }
 
-export async function importSingleProjectJSON(jsonString: string): Promise<ProjectData> {
-  const parsed = parseImportJSON(jsonString);
-  const result = await applyImportCreate(parsed);
-  return result.project;
-}
-
 export async function importFullWorkspaceJSON(
   jsonString: string
 ): Promise<{ success: boolean; projectCount: number; taskCount: number }> {
@@ -656,7 +493,7 @@ export async function importFullWorkspaceJSON(
 
     for (const proj of data.projects) {
       try {
-        await importSingleProjectJSON(JSON.stringify(proj));
+        await applyImportCreate(parseImportObject(proj));
         restoredProjectsCount++;
       } catch (err: any) {
         console.error("Failed to restore project:", proj.name, err);
