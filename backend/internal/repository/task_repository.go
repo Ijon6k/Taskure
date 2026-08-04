@@ -97,7 +97,7 @@ func (r *taskRepository) DeleteTask(task *models.Task) error {
 // GetPendingTasks returns the oldest non-done tasks for a project (focus/upcoming feeds).
 func (r *taskRepository) GetPendingTasks(projectID string, limit int) ([]models.Task, error) {
 	var tasks []models.Task
-	query := r.db.Where("status != ?", "done")
+	query := r.db.Where("status IS DISTINCT FROM ?", "done")
 	if projectID != "" {
 		if util.IsUUID(projectID) {
 			query = query.Where("project_id = ?", projectID)
@@ -113,7 +113,12 @@ func (r *taskRepository) GetPendingTasks(projectID string, limit int) ([]models.
 	if limit <= 0 {
 		limit = 100
 	}
-	err := query.Limit(limit).
+	err := query.
+		Order("due_date ASC NULLS LAST").
+		Order("CASE priority WHEN 'urgent' THEN 4 WHEN 'high' THEN 3 WHEN 'medium' THEN 2 WHEN 'low' THEN 1 ELSE 0 END DESC").
+		Order("created_at ASC").
+		Order("id ASC").
+		Limit(limit).
 		Preload("Column").
 		Preload("ChecklistItems", func(db *gorm.DB) *gorm.DB {
 			return db.Order("position asc")

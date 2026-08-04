@@ -449,7 +449,7 @@ func (s *taskService) GetFocusTask(projectID string, limit int, loc *time.Locati
 		}
 	}
 
-	result := focusengine.Evaluate(pendingTasks, projectMap, time.Now(), loc)
+	result := focusengine.Evaluate(pendingTasks, projectMap, time.Now(), loc, focusengine.DefaultConfig())
 	return &result, nil
 }
 

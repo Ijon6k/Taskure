@@ -27,9 +27,13 @@ func priorityRank(priority string) int {
 // Evaluate evaluates workspace tasks and project metadata into quantitative domain facts.
 // The Focus Engine is strictly isolated from presentation state codes (FRESH, ARCHIVED, EMPTY, etc.).
 // loc is the client timezone; all calendar-day comparisons are resolved against it.
-func Evaluate(tasks []models.Task, projectMap map[string]models.Project, now time.Time, loc *time.Location) FocusResult {
+// cfg supplies the configurable weights and lambdas for the MCDE scoring pipeline.
+func Evaluate(tasks []models.Task, projectMap map[string]models.Project, now time.Time, loc *time.Location, cfg FocusEngineConfig) FocusResult {
 	if loc == nil {
 		loc = time.UTC
+	}
+	if cfg.PriorityMapping == nil {
+		cfg = DefaultConfig()
 	}
 
 	var items []FocusItem
@@ -144,11 +148,11 @@ func Evaluate(tasks []models.Task, projectMap map[string]models.Project, now tim
 			continue
 		}
 
-		if strings.EqualFold(proj.Status, "paused") || strings.EqualFold(proj.Status, "completed") || proj.IsArchived || strings.EqualFold(proj.Status, "archived") {
+		if !proj.FocusEnabled || strings.EqualFold(proj.Status, "paused") || strings.EqualFold(proj.Status, "completed") || proj.IsArchived || strings.EqualFold(proj.Status, "archived") {
 			continue
 		}
 
-		score := EvaluateScore(task, now, loc)
+		score := ComputeAggregateScore(task, now, loc, cfg)
 		items = append(items, FocusItem{
 			Task:    task,
 			Project: proj,
