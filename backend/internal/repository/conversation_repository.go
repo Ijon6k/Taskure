@@ -9,6 +9,7 @@ type ConversationRepository interface {
 	Create(conv *models.Conversation) error
 	ListByProject(projectID string) ([]models.Conversation, error)
 	FindByID(id string) (*models.Conversation, error)
+	Delete(id string) error
 
 	CreateMessage(msg *models.ConversationMessage) error
 	ListMessages(conversationID string, limit int, offset int) ([]models.ConversationMessage, error)
@@ -40,6 +41,15 @@ func (r *conversationRepository) FindByID(id string) (*models.Conversation, erro
 		return nil, err
 	}
 	return &conv, nil
+}
+
+func (r *conversationRepository) Delete(id string) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("conversation_id = ?", id).Delete(&models.ConversationMessage{}).Error; err != nil {
+			return err
+		}
+		return tx.Where("id = ?", id).Delete(&models.Conversation{}).Error
+	})
 }
 
 func (r *conversationRepository) CreateMessage(msg *models.ConversationMessage) error {

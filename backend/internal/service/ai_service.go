@@ -10,7 +10,7 @@ import (
 )
 
 type AIService interface {
-	ProxyChat(messages []ChatMessage, mode string, projectID string, providerConfig map[string]string) (*http.Response, error)
+	ProxyChat(messages []ChatMessage, mode string, projectID string, providerConfig map[string]interface{}) (*http.Response, error)
 	ProxySearch(query string, projectID string) (*http.Response, error)
 	ProxyEmbed(text string) ([]float64, error)
 	GetContextBudget(projectID string) (map[string]interface{}, error)
@@ -36,7 +36,7 @@ func NewAIService(aiServiceURL string) AIService {
 	}
 }
 
-func (s *aiService) ProxyChat(messages []ChatMessage, mode string, projectID string, providerConfig map[string]string) (*http.Response, error) {
+func (s *aiService) ProxyChat(messages []ChatMessage, mode string, projectID string, providerConfig map[string]interface{}) (*http.Response, error) {
 	body := map[string]interface{}{
 		"messages":   messages,
 		"project_id": projectID,

@@ -13,7 +13,8 @@ import (
 const DefaultNotebookTitle = "Untitled"
 
 type CreateNotebookPageInput struct {
-	Title string `json:"title"`
+	Title   string `json:"title"`
+	Content string `json:"content"`
 }
 
 type UpdateNotebookPageInput struct {
@@ -69,6 +70,7 @@ func (s *notebookService) CreatePage(projectIDOrPublicID string, input CreateNot
 
 	page := models.NotebookPage{
 		Title:     title,
+		Content:   input.Content,
 		Position:  int(count),
 		ProjectID: project.ID,
 	}

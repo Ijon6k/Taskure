@@ -108,6 +108,15 @@ func (h *ConversationHandler) AddMessage(c *gin.Context) {
 	response.Created(c, msg)
 }
 
+func (h *ConversationHandler) DeleteConversation(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.service.DeleteConversation(id); err != nil {
+		response.InternalServerError(c, err)
+		return
+	}
+	response.OK(c, gin.H{"status": "deleted", "id": id})
+}
+
 func (h *ConversationHandler) GetMessageContext(c *gin.Context) {
 	ctx, err := h.service.GetMessageContext(c.Param("id"))
 	if err != nil {

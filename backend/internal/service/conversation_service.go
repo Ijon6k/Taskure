@@ -14,6 +14,7 @@ type ConversationService interface {
 	CreateConversation(projectNanoID string, title string, mode string) (*models.Conversation, error)
 	ListConversations(projectNanoID string) ([]models.Conversation, error)
 	GetConversation(id string) (*models.Conversation, error)
+	DeleteConversation(id string) error
 	AddMessage(conversationID string, role string, content string, metadata map[string]interface{}) (*models.ConversationMessage, error)
 	ListMessages(conversationID string, limit int, offset int) ([]models.ConversationMessage, error)
 	GetMessageContext(messageID string) (map[string]interface{}, error)
@@ -65,6 +66,10 @@ func (s *conversationService) ListConversations(projectNanoID string) ([]models.
 
 func (s *conversationService) GetConversation(id string) (*models.Conversation, error) {
 	return s.repo.FindByID(id)
+}
+
+func (s *conversationService) DeleteConversation(id string) error {
+	return s.repo.Delete(id)
 }
 
 func (s *conversationService) AddMessage(conversationID string, role string, content string, metadata map[string]interface{}) (*models.ConversationMessage, error) {

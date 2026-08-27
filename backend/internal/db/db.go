@@ -64,6 +64,7 @@ func Connect(cfg config.Config) (*gorm.DB, error) {
 		CREATE INDEX IF NOT EXISTS idx_project_contexts_public_id ON project_contexts (public_id);
 		CREATE INDEX IF NOT EXISTS idx_project_contexts_deleted_at ON project_contexts (deleted_at);
 		CREATE INDEX IF NOT EXISTS idx_project_contexts_embedding ON project_contexts USING hnsw (embedding vector_cosine_ops);
+		CREATE INDEX IF NOT EXISTS idx_project_contexts_fts ON project_contexts USING gin (to_tsvector('english', content));
 	`).Error; err != nil {
 		log.Printf("warning: could not ensure project_contexts table (%v)", err)
 	}

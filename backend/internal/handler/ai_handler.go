@@ -70,15 +70,33 @@ func (h *AIHandler) Chat(c *gin.Context) {
 		req.Mode = "thinking"
 	}
 
-	providerConfig := map[string]string{}
+	providerConfig := map[string]interface{}{}
+	var fullProvider *service.DecryptedProvider
 	if req.ProviderID != "" {
-		provider, apiKey, endpoint, model, err := h.providerService.GetDecrypted(req.ProviderID)
-		if err == nil {
-			providerConfig["api_key"] = apiKey
-			providerConfig["model"] = model
-			providerConfig["provider"] = service.NormalizeProviderName(provider)
-			if endpoint != "" {
-				providerConfig["endpoint"] = endpoint
+		if p, err := h.providerService.GetDecryptedFull(req.ProviderID); err == nil {
+			fullProvider = p
+		}
+	} else {
+		// No explicit provider → fall back to the default provider so the chat
+		// works out-of-the-box without requiring the user to select a model.
+		if p, err := h.providerService.GetDefaultFull(); err == nil {
+			fullProvider = p
+		}
+	}
+
+	if fullProvider != nil {
+		providerConfig["api_key"] = fullProvider.APIKey
+		providerConfig["model"] = fullProvider.Model
+		providerConfig["provider"] = service.NormalizeProviderName(fullProvider.Provider)
+		if fullProvider.Endpoint != "" {
+			providerConfig["endpoint"] = fullProvider.Endpoint
+		}
+		if len(fullProvider.Config) > 0 {
+			var adv map[string]interface{}
+			if err := json.Unmarshal(fullProvider.Config, &adv); err == nil {
+				for k, v := range adv {
+					providerConfig[k] = v
+				}
 			}
 		}
 	}
@@ -99,8 +117,20 @@ func (h *AIHandler) Chat(c *gin.Context) {
 	c.Header("Content-Type", "text/event-stream")
 	c.Header("Cache-Control", "no-cache")
 	c.Header("Connection", "keep-alive")
+	c.Header("X-Accel-Buffering", "no")
 	c.Status(http.StatusOK)
-	io.Copy(c.Writer, resp.Body)
+
+	c.Stream(func(w io.Writer) bool {
+		buf := make([]byte, 1024)
+		n, err := resp.Body.Read(buf)
+		if n > 0 {
+			w.Write(buf[:n])
+			if f, ok := w.(http.Flusher); ok {
+				f.Flush()
+			}
+		}
+		return err == nil
+	})
 }
 
 func (h *AIHandler) GetContextBudget(c *gin.Context) {
@@ -120,7 +150,12 @@ func (h *AIHandler) GetContextBudget(c *gin.Context) {
 }
 
 func (h *AIHandler) GetProjectMemory(c *gin.Context) {
-	memory, err := h.memoryService.GetProjectMemory(c.Param("id"))
+	project, err := h.projectService.GetProject(c.Param("id"))
+	if err != nil {
+		response.OK(c, map[string]interface{}{})
+		return
+	}
+	memory, err := h.memoryService.GetProjectMemory(project.ID)
 	if err != nil {
 		response.OK(c, map[string]interface{}{})
 		return
@@ -129,13 +164,18 @@ func (h *AIHandler) GetProjectMemory(c *gin.Context) {
 }
 
 func (h *AIHandler) GetProjectJournal(c *gin.Context) {
+	project, err := h.projectService.GetProject(c.Param("id"))
+	if err != nil {
+		response.OK(c, []interface{}{})
+		return
+	}
 	limit := 10
 	if l := c.Query("limit"); l != "" {
 		if n, err := strconv.Atoi(l); err == nil && n > 0 {
 			limit = n
 		}
 	}
-	entries, err := h.journalService.GetRecentEntries(c.Param("id"), limit)
+	entries, err := h.journalService.GetRecentEntries(project.ID, limit)
 	if err != nil {
 		response.OK(c, []interface{}{})
 		return
@@ -179,20 +219,24 @@ func (h *AIHandler) GetProjectDiscussions(c *gin.Context) {
 }
 
 func (h *AIHandler) GetAIContext(c *gin.Context) {
+	project, err := h.projectService.GetProject(c.Param("id"))
+	if err != nil {
+		response.OK(c, map[string]interface{}{})
+		return
+	}
 	result := map[string]interface{}{}
 
-	memory, err := h.memoryService.GetProjectMemory(c.Param("id"))
+	memory, err := h.memoryService.GetProjectMemory(project.ID)
 	if err == nil && memory != nil {
 		result["memory"] = memory
 	}
 
-	entries, err := h.journalService.GetRecentEntries(c.Param("id"), 10)
+	entries, err := h.journalService.GetRecentEntries(project.ID, 10)
 	if err == nil && len(entries) > 0 {
 		result["journal"] = entries
 	}
 
-	project, err := h.projectService.GetProjectOverview(c.Param("id"))
-	if err == nil && project != nil {
+	if project != nil {
 		result["project"] = project
 	}
 
@@ -225,25 +269,28 @@ func (h *AIHandler) AssembleContext(c *gin.Context) {
 		return
 	}
 
+	project, err := h.projectService.GetProject(req.ProjectID)
+	if err != nil {
+		response.BadRequest(c, fmt.Errorf("project not found: %w", err))
+		return
+	}
+
 	result := map[string]interface{}{}
 
-	memory, err := h.memoryService.GetProjectMemory(req.ProjectID)
+	memory, err := h.memoryService.GetProjectMemory(project.ID)
 	if err == nil && memory != nil {
 		result["memory"] = memory
 	}
 
-	entries, err := h.journalService.GetRecentEntries(req.ProjectID, 10)
+	entries, err := h.journalService.GetRecentEntries(project.ID, 10)
 	if err == nil && len(entries) > 0 {
 		result["journal"] = entries
 	}
 
-	project, err := h.projectService.GetProjectOverview(req.ProjectID)
-	if err == nil && project != nil {
-		result["project"] = project
-	}
+	result["project"] = project
 
 	if req.Query != "" {
-		ragResp, err := h.aiService.ProxySearch(req.Query, req.ProjectID)
+		ragResp, err := h.aiService.ProxySearch(req.Query, project.ID)
 		if err == nil {
 			defer ragResp.Body.Close()
 			var ragResult interface{}

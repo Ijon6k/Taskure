@@ -19,12 +19,25 @@ import (
 	"github.com/Ijon6k/Taskure/apps/api/internal/models"
 	"github.com/Ijon6k/Taskure/apps/api/internal/repository"
 	"gorm.io/datatypes"
+	"gorm.io/gorm"
 )
+
+type DecryptedProvider struct {
+	ID       string         `json:"id"`
+	Provider string         `json:"provider"`
+	APIKey   string         `json:"api_key"`
+	Endpoint string         `json:"endpoint"`
+	Model    string         `json:"model"`
+	Config   datatypes.JSON `json:"config"`
+}
 
 type ProviderService interface {
 	List() ([]models.ProviderConfig, error)
 	Get(id string) (*models.ProviderConfig, error)
+	GetDefault() (id string, provider string, apiKey string, endpoint string, model string, err error)
 	GetDecrypted(id string) (provider string, apiKey string, endpoint string, model string, err error)
+	GetDefaultFull() (*DecryptedProvider, error)
+	GetDecryptedFull(id string) (*DecryptedProvider, error)
 	Create(req CreateProviderRequest) (*models.ProviderConfig, error)
 	Update(id string, req UpdateProviderRequest) (*models.ProviderConfig, error)
 	Delete(id string) error
@@ -98,16 +111,65 @@ func (s *providerService) Get(id string) (*models.ProviderConfig, error) {
 	return cfg, nil
 }
 
+// GetDefault returns the decrypted default provider (is_default = true), used
+// when the UI sends no explicit provider_id.
+func (s *providerService) GetDefault() (string, string, string, string, string, error) {
+	full, err := s.GetDefaultFull()
+	if err != nil {
+		return "", "", "", "", "", err
+	}
+	return full.ID, full.Provider, full.APIKey, full.Endpoint, full.Model, nil
+}
+
+func (s *providerService) GetDefaultFull() (*DecryptedProvider, error) {
+	configs, err := s.repo.List()
+	if err != nil {
+		return nil, err
+	}
+	for _, cfg := range configs {
+		if cfg.IsDefault {
+			key, err := s.decryptAPIKey(cfg.APIKeyEncrypted)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decrypt default provider key: %w", err)
+			}
+			return &DecryptedProvider{
+				ID:       cfg.ID,
+				Provider: cfg.Provider,
+				APIKey:   key,
+				Endpoint: cfg.Endpoint,
+				Model:    cfg.Model,
+				Config:   cfg.Config,
+			}, nil
+		}
+	}
+	return nil, gorm.ErrRecordNotFound
+}
+
 func (s *providerService) GetDecrypted(id string) (string, string, string, string, error) {
-	cfg, err := s.repo.FindByID(id)
+	full, err := s.GetDecryptedFull(id)
 	if err != nil {
 		return "", "", "", "", err
 	}
+	return full.Provider, full.APIKey, full.Endpoint, full.Model, nil
+}
+
+func (s *providerService) GetDecryptedFull(id string) (*DecryptedProvider, error) {
+	cfg, err := s.repo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
 	key, err := s.decryptAPIKey(cfg.APIKeyEncrypted)
 	if err != nil {
-		return "", "", "", "", fmt.Errorf("failed to decrypt API key: %w", err)
+		return nil, fmt.Errorf("failed to decrypt API key: %w", err)
 	}
-	return cfg.Provider, key, cfg.Endpoint, cfg.Model, nil
+	return &DecryptedProvider{
+		ID:       cfg.ID,
+		Provider: cfg.Provider,
+		APIKey:   key,
+		Endpoint: cfg.Endpoint,
+		Model:    cfg.Model,
+		Config:   cfg.Config,
+	}, nil
 }
 
 func (s *providerService) Create(req CreateProviderRequest) (*models.ProviderConfig, error) {

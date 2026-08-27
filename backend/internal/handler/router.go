@@ -191,6 +191,7 @@ func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 	conversations := r.Group("/conversations")
 	{
 		conversations.GET("/:id", c.ConversationHandler.GetConversation)
+		conversations.DELETE("/:id", c.ConversationHandler.DeleteConversation)
 		conversations.GET("/:id/messages", c.ConversationHandler.ListMessages)
 		conversations.POST("/:id/messages", c.ConversationHandler.AddMessage)
 	}

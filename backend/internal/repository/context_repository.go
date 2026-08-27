@@ -49,24 +49,26 @@ func (r *contextRepository) HybridSearch(
 		topK = 5
 	}
 	if threshold <= 0 {
-		threshold = 0.7
+		threshold = 0.45
 	}
 
 	var chunks []models.ProjectContext
-	// vector_weight 0.7 / keyword_weight 0.3 — mirrors the AI service's fusion.
+	// Vector (0.7) + Keyword FTS (0.3) Hybrid Fusion with soft vector boundary
+	// and explicit keyword fallback to maximize high-precision recall.
 	err := r.db.Raw(`
 		SELECT * FROM (
 			SELECT pc.*,
-				(0.7 * (1 - (pc.embedding <=> ?::vector)) +
+				(0.7 * GREATEST(0.0, 1 - (pc.embedding <=> ?::vector)) +
 				 0.3 * COALESCE(ts_rank(to_tsvector('english', pc.content),
 				                        plainto_tsquery('english', ?)), 0)) AS fusion_score
 			FROM project_contexts pc
 			WHERE pc.project_id = ? AND pc.deleted_at IS NULL
-			  AND (1 - (pc.embedding <=> ?::vector)) >= ?
+			  AND ((1 - (pc.embedding <=> ?::vector)) >= ? OR to_tsvector('english', pc.content) @@ plainto_tsquery('english', ?))
 		) fused
+		WHERE fusion_score > 0
 		ORDER BY fusion_score DESC
 		LIMIT ?`,
-		embedding, query, projectID, embedding, threshold, topK,
+		embedding, query, projectID, embedding, threshold, query, topK,
 	).Scan(&chunks).Error
 	if err != nil {
 		return nil, err
