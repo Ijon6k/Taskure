@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { ProjectSummaryData, ProjectData } from "@/lib/api";
 
+import { ParsedImport } from "@/lib/workspace-backup";
+
 // EditableProject is whatever source opened the modal: a summary from the
 // list, or the full light payload from the project detail layout. Both
 // expose the fields the edit modal reads.
@@ -28,6 +30,10 @@ interface UIStoreState {
   exportingProject: ProjectData | null;
   openExportJson: (project: ProjectData) => void;
   closeExportJson: () => void;
+
+  // Staged AI Board Plan Preview
+  stagedBoardPlan: ParsedImport | null;
+  setStagedBoardPlan: (plan: ParsedImport | null) => void;
 
   // Shortcuts Guide Modal
   isShortcutsOpen: boolean;
@@ -78,6 +84,10 @@ export const useUIStore = create<UIStoreState>((set) => ({
   exportingProject: null,
   openExportJson: (project) => set({ isExportJsonOpen: true, exportingProject: project }),
   closeExportJson: () => set({ isExportJsonOpen: false, exportingProject: null }),
+
+  // Staged AI Board Plan Preview
+  stagedBoardPlan: null,
+  setStagedBoardPlan: (plan) => set({ stagedBoardPlan: plan }),
 
   // Shortcuts Guide
   isShortcutsOpen: false,

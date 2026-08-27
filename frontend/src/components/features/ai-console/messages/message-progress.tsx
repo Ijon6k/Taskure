@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import type { ExecutionState } from "../store";
+import { useAIConsoleStore, type ExecutionState } from "../store";
 
 interface MessageProgressProps {
   executionState: ExecutionState;
@@ -12,6 +12,7 @@ const STATE_LABELS: Record<ExecutionState, string> = {
   streaming: "Responding…",
   "tool-call": "Using tools…",
   "context-retrieval": "Retrieving context…",
+  analyzing: "Analyzing…",
   done: "Done",
   error: "Error",
 };
@@ -19,9 +20,18 @@ const STATE_LABELS: Record<ExecutionState, string> = {
 export const MessageProgress = memo(function MessageProgress({
   executionState,
 }: MessageProgressProps) {
+  const progressDetail = useAIConsoleStore((s) => s.progressDetail);
+
   if (executionState === "idle" || executionState === "done") return null;
 
   const isError = executionState === "error";
+
+  // Prefer the live detail from SSE (e.g. "Loading project memory…") over the
+  // generic state label.
+  const label =
+    executionState === "context-retrieval" || executionState === "tool-call"
+      ? progressDetail || STATE_LABELS[executionState]
+      : STATE_LABELS[executionState];
 
   return (
     <div className="flex items-center gap-2 px-1 py-1">
@@ -33,17 +43,15 @@ export const MessageProgress = memo(function MessageProgress({
         </span>
       ) : (
         <div
-          className={`w-1.5 h-1.5 rounded-full ${
-            isError ? "bg-semantic-danger" : "bg-brand-accent"
-          } ${executionState !== "error" ? "animate-pulse" : ""}`}
+          className={`w-1.5 h-1.5 rounded-full ${isError ? "bg-semantic-danger" : "bg-brand-accent"
+            } ${executionState !== "error" ? "animate-pulse" : ""}`}
         />
       )}
       <span
-        className={`text-xs font-mono ${
-          isError ? "text-semantic-danger" : "text-theme-tertiary"
-        }`}
+        className={`text-xs font-mono ${isError ? "text-semantic-danger" : "text-theme-tertiary"
+          }`}
       >
-        {STATE_LABELS[executionState]}
+        {label}
       </span>
     </div>
   );

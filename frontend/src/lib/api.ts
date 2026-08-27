@@ -58,6 +58,7 @@ export const api = {
 
   listConversations: conversationsService.list,
   getConversation: conversationsService.get,
+  deleteConversation: conversationsService.delete,
   createConversation: conversationsService.create,
   addMessage: conversationsService.addMessage,
   getMessages: conversationsService.getMessages,

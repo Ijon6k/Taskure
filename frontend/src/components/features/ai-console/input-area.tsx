@@ -1,18 +1,20 @@
 "use client";
 
 import { useCallback, useRef, useEffect, useState, memo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAIConsoleStore, createUserMessage, createAssistantPlaceholder } from "./store";
 import { providersService, type ProviderConfig } from "@/lib/api/services/providers.service";
 import { conversationsService } from "@/lib/api/services/conversations.service";
 
 const PLACEHOLDERS: Record<string, string> = {
-  fast: "Ask anything — quick answers…",
-  thinking: "Ask something that needs careful thought…",
-  planning: "Describe what you need planned…",
-  agent: "Give me a task to work on…",
+  fast: "Ask anything…",
+  thinking: "Ask a question requiring reasoning…",
+  planning: "Describe what you want to plan…",
+  agent: "Ask AI to create, edit, or clean board…",
 };
 
 export const InputArea = memo(function InputArea() {
+  const queryClient = useQueryClient();
   const input = useAIConsoleStore((s) => s.input);
   const setInput = useAIConsoleStore((s) => s.setInput);
   const mode = useAIConsoleStore((s) => s.mode);
@@ -24,6 +26,7 @@ export const InputArea = memo(function InputArea() {
   const addMessage = useAIConsoleStore((s) => s.addMessage);
   const updateMessage = useAIConsoleStore((s) => s.updateMessage);
   const setExecutionState = useAIConsoleStore((s) => s.setExecutionState);
+  const setProgressDetail = useAIConsoleStore((s) => s.setProgressDetail);
   const setContextUsage = useAIConsoleStore((s) => s.setContextUsage);
   const setError = useAIConsoleStore((s) => s.setError);
   const setAbortController = useAIConsoleStore((s) => s.setAbortController);
@@ -32,7 +35,19 @@ export const InputArea = memo(function InputArea() {
   const [providers, setProviders] = useState<ProviderConfig[]>([]);
 
   useEffect(() => {
-    providersService.list().then(setProviders).catch(() => {});
+    providersService
+      .list()
+      .then((list) => {
+        setProviders(list);
+        const current = useAIConsoleStore.getState().selectedProviderId;
+        if (!current) {
+          const def = list.find((p) => p.is_default);
+          if (def) {
+            useAIConsoleStore.getState().setSelectedProviderId(def.id);
+          }
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // Auto-resize textarea
@@ -43,9 +58,20 @@ export const InputArea = memo(function InputArea() {
     el.style.height = Math.min(el.scrollHeight, 160) + "px";
   }, [input]);
 
-  	const handleSend = useCallback(async () => {
+  const addActivityToMessage = useAIConsoleStore((s) => s.addActivityToMessage);
+  const setActiveConversationId = useAIConsoleStore((s) => s.setActiveConversationId);
+
+  const handleSend = useCallback(async () => {
     const trimmed = input.trim();
     if (!trimmed || isStreaming) return;
+
+    // Collect prior conversation history with Sliding Window (last 14 turns)
+    const currentMessages = useAIConsoleStore.getState().messages;
+    const historyPayload = currentMessages
+      .filter((m) => m.content && m.content.trim() !== "" && m.executionState !== "error")
+      .map((m) => ({ role: m.role, content: m.content }));
+    const windowedHistory = historyPayload.length > 14 ? historyPayload.slice(-14) : historyPayload;
+    const messagesToSend = [...windowedHistory, { role: "user", content: trimmed }];
 
     const userMsg = createUserMessage(trimmed);
     const assistantMsg = createAssistantPlaceholder();
@@ -59,10 +85,28 @@ export const InputArea = memo(function InputArea() {
     const controller = new AbortController();
     setAbortController(controller);
 
-    // Persist the user message to the active conversation (sessions).
-    if (activeConversationId) {
+    // Auto-create conversation if none is active
+    let currentConvId = activeConversationId;
+    if (!currentConvId && projectId) {
+      try {
+        const autoTitle = trimmed.length > 35 ? `${trimmed.slice(0, 35)}...` : trimmed;
+        const resp = await conversationsService.create(projectId, {
+          title: autoTitle,
+          mode,
+        });
+        if (resp.data && resp.data.id) {
+          currentConvId = resp.data.id;
+          setActiveConversationId(currentConvId);
+        }
+      } catch (e) {
+        console.warn("Failed to auto-create conversation", e);
+      }
+    }
+
+    // Persist user message to the conversation
+    if (currentConvId) {
       conversationsService
-        .addMessage(activeConversationId, { role: "user", content: trimmed })
+        .addMessage(currentConvId, { role: "user", content: trimmed })
         .catch((e) => console.warn("Failed to save user message", e));
     }
 
@@ -81,7 +125,7 @@ export const InputArea = memo(function InputArea() {
           project_id: projectId,
           mode,
           provider_id: selectedProviderId || undefined,
-          messages: [{ role: "user", content: trimmed }],
+          messages: messagesToSend,
         }),
         signal: controller.signal,
       });
@@ -124,10 +168,49 @@ export const InputArea = memo(function InputArea() {
                 break;
               case "state":
                 setExecutionState(parsed.state);
+                if (parsed.details) {
+                  setProgressDetail(parsed.details);
+                }
                 updateMessage(assistantMsg.id, {
                   executionState: parsed.state,
                 });
                 break;
+              case "tool_call":
+                addActivityToMessage(assistantMsg.id, {
+                  id: `act-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                  type: "tool_call",
+                  name: parsed.name,
+                  arguments: parsed.arguments,
+                  status: "running",
+                  timestamp: Date.now(),
+                });
+                break;
+              case "tool_result": {
+                addActivityToMessage(assistantMsg.id, {
+                  id: `act-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                  type: "tool_result",
+                  name: parsed.name,
+                  status: parsed.status === "error" ? "error" : "success",
+                  result: parsed.result,
+                  timestamp: Date.now(),
+                });
+                // Invalidate board/project/notebook cache immediately if tool modified data
+                if (parsed.status !== "error" && typeof parsed.name === "string") {
+                  const n = parsed.name.toLowerCase();
+                  if (
+                    n.startsWith("task_") ||
+                    n.startsWith("column_") ||
+                    n.startsWith("project_") ||
+                    n.startsWith("kanban_") ||
+                    n.startsWith("notebook_")
+                  ) {
+                    queryClient.invalidateQueries({ queryKey: ["projects"] });
+                    queryClient.invalidateQueries({ queryKey: ["notebooks"] });
+                    window.dispatchEvent(new CustomEvent("taskure:board-updated"));
+                  }
+                }
+                break;
+              }
               case "context":
                 setContextUsage(parsed.usage);
                 updateMessage(assistantMsg.id, {
@@ -146,15 +229,17 @@ export const InputArea = memo(function InputArea() {
             console.warn("SSE parse error", e);
           }
         }
-  	    }
+      }
 
       setExecutionState("done");
       updateMessage(assistantMsg.id, { executionState: "done" });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      window.dispatchEvent(new CustomEvent("taskure:board-updated"));
 
       // Persist the assistant message once streaming finishes.
-      if (activeConversationId && fullContent) {
+      if (currentConvId && fullContent) {
         conversationsService
-          .addMessage(activeConversationId, {
+          .addMessage(currentConvId, {
             role: "assistant",
             content: fullContent,
           })
@@ -173,7 +258,7 @@ export const InputArea = memo(function InputArea() {
       setAbortController(null);
       setIsStreaming(false);
     }
-  }, [input, isStreaming, projectId, mode, activeConversationId, selectedProviderId, addMessage, updateMessage, setInput, setExecutionState, setContextUsage, setError, setAbortController, setIsStreaming]);
+  }, [input, isStreaming, projectId, mode, activeConversationId, selectedProviderId, addMessage, updateMessage, addActivityToMessage, setActiveConversationId, setInput, setExecutionState, setProgressDetail, setContextUsage, setError, setAbortController, setIsStreaming]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -185,60 +270,91 @@ export const InputArea = memo(function InputArea() {
     [handleSend]
   );
 
+  const abortController = useAIConsoleStore((s) => s.abortController);
+
+  const handleStop = useCallback(() => {
+    if (abortController) {
+      abortController.abort();
+      setAbortController(null);
+      setIsStreaming(false);
+      setExecutionState("idle");
+    }
+  }, [abortController, setAbortController, setIsStreaming, setExecutionState]);
+
   return (
     <div className="shrink-0 px-4 pb-4 pt-2">
-      {/* Provider selector */}
-      {providers.length > 0 && (
-        <div className="flex items-center justify-end gap-2 mb-2">
-          <span className="text-[11px] font-medium text-theme-tertiary uppercase tracking-wider">
-            Model
-          </span>
-          <select
-            value={selectedProviderId}
-            onChange={(e) => useAIConsoleStore.getState().setSelectedProviderId(e.target.value)}
-            className="bg-surface-l2 border border-theme-subtle rounded-md px-2 py-1 text-[13px] text-theme-primary outline-none focus:ring-1 focus:ring-brand-accent/30"
-          >
-            <option value="">None (env vars)</option>
-            {providers.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.provider} — {p.model}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+      <div className="max-w-3xl mx-auto w-full">
+        {/* Model selector & active indicator */}
+        <div className="flex items-center justify-between mb-2 px-1 text-[11.5px] text-theme-tertiary">
+          <div className="flex items-center gap-1.5 font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-semantic-success" />
+            <span className="capitalize">{mode} Mode</span>
+          </div>
 
-      <div className="flex items-end gap-2 bg-surface-l2 border border-theme-default rounded-xl px-3 py-2 focus-within:border-accent transition-colors duration-150">
-        <textarea
-          ref={textareaRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={PLACEHOLDERS[mode] || "Ask anything…"}
-          rows={1}
-          disabled={isStreaming}
-          className="flex-1 bg-transparent text-[15px] text-theme-primary placeholder:text-theme-tertiary outline-none resize-none min-h-6 max-h-40 py-0.5"
-        />
-        <button
-          onClick={handleSend}
-          disabled={!input.trim() || isStreaming}
-          className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-brand-accent text-text-on-accent disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 active:scale-95 transition-all"
-          aria-label="Send message"
-        >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="m22 2-7 20-4-9-9-4Z" />
-            <path d="M22 2 11 13" />
-          </svg>
-        </button>
+          {providers.length > 0 && (
+            <div className="flex items-center gap-1.5">
+              <span className="font-medium uppercase tracking-wider text-[10.5px]">Model</span>
+              <select
+                value={selectedProviderId}
+                onChange={(e) => useAIConsoleStore.getState().setSelectedProviderId(e.target.value)}
+                className="bg-surface-l2 border border-theme-subtle rounded-md px-2 py-0.5 text-[11.5px] text-theme-secondary hover:text-theme-primary outline-none cursor-pointer"
+              >
+                <option value="">Default (Auto / .env)</option>
+                {providers.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.provider} — {p.model} {p.is_default ? "(Default)" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+
+        {/* Input Card Container */}
+        <div className="flex items-end gap-2 bg-surface-l1 border border-theme-subtle focus-within:border-brand-accent/60 focus-within:ring-1 focus-within:ring-brand-accent/20 rounded-2xl p-2.5 transition-all shadow-xs">
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={PLACEHOLDERS[mode] || "Ask anything…"}
+            rows={1}
+            disabled={isStreaming}
+            className="flex-1 bg-transparent text-[14.5px] text-theme-primary placeholder:text-theme-tertiary outline-none resize-none min-h-6 max-h-40 px-2 py-0.5 leading-relaxed"
+          />
+
+          {isStreaming ? (
+            <button
+              onClick={handleStop}
+              className="shrink-0 h-8 px-3 flex items-center gap-1.5 rounded-xl bg-semantic-danger/10 hover:bg-semantic-danger/20 text-semantic-danger border border-semantic-danger/30 text-[12px] font-medium transition-all active:scale-95 cursor-pointer"
+              title="Stop response"
+            >
+              <span className="w-2 h-2 rounded-xs bg-semantic-danger" />
+              <span>Stop</span>
+            </button>
+          ) : (
+            <button
+              onClick={handleSend}
+              disabled={!input.trim()}
+              className="shrink-0 w-8 h-8 flex items-center justify-center rounded-xl bg-brand-accent text-text-on-accent disabled:opacity-20 disabled:cursor-not-allowed hover:opacity-90 active:scale-95 transition-all cursor-pointer shadow-xs"
+              aria-label="Send message"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="m22 2-7 20-4-9-9-4Z" />
+                <path d="M22 2 11 13" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

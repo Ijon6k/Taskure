@@ -25,6 +25,9 @@ export const conversationsService = {
       .get<Conversation>(`/conversations/${id}`)
       .then((r) => r.data),
 
+  delete: (id: string) =>
+    apiClient.delete(`/conversations/${id}`).then((r) => r.data),
+
   create: (projectId: string, data: CreateConversationRequest) =>
     apiClient.post(`/projects/${projectId}/conversations`, data),
 

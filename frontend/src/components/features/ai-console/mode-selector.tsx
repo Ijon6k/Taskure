@@ -13,22 +13,22 @@ const MODES: ModeOption[] = [
   {
     id: "fast",
     label: "Fast",
-    description: "Quick, direct answers with minimal latency",
+    description: "Quick, direct answers with minimal latency — no tools",
   },
   {
     id: "thinking",
     label: "Thinking",
-    description: "Step-by-step reasoning before responding",
+    description: "Step-by-step reasoning before responding — read-only tools",
   },
   {
     id: "planning",
-    label: "Planning",
-    description: "Structured planning and task decomposition",
+    label: "Plan",
+    description: "Structured planning + can create/edit tasks, columns, notebooks",
   },
   {
     id: "agent",
     label: "Agent",
-    description: "Autonomous execution with tool access",
+    description: "Autonomous execution with full tool access — create kanban, write notebooks",
   },
 ];
 
@@ -56,9 +56,9 @@ export const ModeSelector = memo(function ModeSelector() {
   }, [mode]);
 
   return (
-    <div className="relative inline-flex items-center gap-0.5 p-0.5 rounded-lg bg-surface-l2 border border-theme-subtle">
+    <div className="relative inline-flex items-center gap-0.5 p-1 rounded-xl bg-surface-l2/80 backdrop-blur-sm">
       <div
-        className="absolute top-0.5 bottom-0.5 rounded-md bg-surface-l3 border border-theme-default shadow-elevation-l3 transition-all duration-200 ease-out"
+        className="absolute top-1 bottom-1 rounded-lg bg-surface-l3 transition-all duration-200 ease-out"
         style={{ left: indicatorStyle.left, width: indicatorStyle.width }}
       />
       {MODES.map((opt) => (
@@ -67,9 +67,9 @@ export const ModeSelector = memo(function ModeSelector() {
           data-mode-active={mode === opt.id || undefined}
           onClick={() => setMode(opt.id)}
           title={opt.description}
-          className={`relative z-10 px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors duration-150 whitespace-nowrap ${
+          className={`relative z-10 px-2.5 py-1 text-[12px] font-medium rounded-lg transition-colors duration-150 whitespace-nowrap cursor-pointer select-none focus:outline-none focus-visible:ring-0 ${
             mode === opt.id
-              ? "text-theme-primary"
+              ? "text-theme-primary font-semibold"
               : "text-theme-tertiary hover:text-theme-secondary"
           }`}
         >
