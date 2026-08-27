@@ -1,5 +1,3 @@
-"""AI Service — LLM Gateway + RAG Pipeline"""
-import os
 from contextlib import asynccontextmanager
 
 import structlog
@@ -8,19 +6,16 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from .routers import chat, embedding, health, rag
+from .routers import ai_modes, chat, embedding, health, providers, rag
 
 load_dotenv()
 
 log = structlog.get_logger()
 
-AI_HOST = os.getenv("AI_HOST", "0.0.0.0")
-AI_PORT = int(os.getenv("AI_PORT", "5000"))
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    log.info("ai_service.starting", host=AI_HOST, port=AI_PORT)
+    log.info("ai_service.starting")
     yield
     log.info("ai_service.shutting_down")
 
@@ -45,7 +40,7 @@ app.add_middleware(
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    log.error("unhandled_exception", path=request.url.path, error=str(exc))
+    log.error("unhandled_exception", path=request.url.path)
     return JSONResponse(
         status_code=500,
         content={"error": {"code": "INTERNAL_ERROR", "message": "Internal server error"}},
@@ -56,8 +51,11 @@ app.include_router(health.router, prefix="", tags=["health"])
 app.include_router(chat.router, prefix="/api/ai/chat", tags=["chat"])
 app.include_router(embedding.router, prefix="/api/ai/embedding", tags=["embedding"])
 app.include_router(rag.router, prefix="/api/ai/rag", tags=["rag"])
+app.include_router(providers.router, prefix="/api/ai/providers", tags=["providers"])
+app.include_router(ai_modes.router, prefix="/api/ai", tags=["ai_modes"])
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("services.ai.main:app", host=AI_HOST, port=AI_PORT, reload=True)
+
+    uvicorn.run("services.ai.main:app", host="0.0.0.0", port=5000, reload=True)

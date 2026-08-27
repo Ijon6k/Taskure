@@ -58,6 +58,12 @@ func main() {
 	importRepo := repository.NewImportRepository(conn)
 	variantJobRepo := repository.NewVariantJobRepository(conn)
 	notebookRepo := repository.NewNotebookRepository(conn)
+	providerRepo := repository.NewProviderRepository(conn)
+	conversationRepo := repository.NewConversationRepository(conn)
+	memoryRepo := repository.NewMemoryRepository(conn)
+	journalRepo := repository.NewJournalRepository(conn)
+	contextRepo := repository.NewContextRepository(conn)
+	outboxRepo := repository.NewOutboxRepository(conn)
 
 	// Start the background image-variant worker when object storage is
 	// available. Without storage there are no objects to process.
@@ -68,13 +74,22 @@ func main() {
 		variantWorker.Start(workerCtx)
 	}
 
-	workspaceService := service.NewWorkspaceService(workspaceRepo)
-	taskService := service.NewTaskService(taskRepo, projectRepo, columnRepo, variantJobRepo, storageSvc)
-	projectService := service.NewProjectService(projectRepo, workspaceRepo, columnRepo, taskRepo, variantJobRepo, storageSvc)
-	columnService := service.NewColumnService(columnRepo, projectRepo)
+	workspaceService := service.NewWorkspaceService(conn, workspaceRepo)
+	taskService := service.NewTaskService(conn, taskRepo, projectRepo, columnRepo, variantJobRepo, storageSvc)
+	projectService := service.NewProjectService(conn, projectRepo, workspaceRepo, columnRepo, taskRepo, variantJobRepo, storageSvc)
+	columnService := service.NewColumnService(conn, columnRepo, projectRepo)
 	importService := service.NewImportService(workspaceRepo, projectRepo, importRepo)
 	seedService := service.NewSeedService(workspaceRepo, projectRepo, columnRepo, taskRepo)
-	notebookService := service.NewNotebookService(notebookRepo, projectRepo)
+	notebookService := service.NewNotebookService(conn, notebookRepo, projectRepo)
+	providerService, err := service.NewProviderServiceWithAI(providerRepo, cfg.EncryptionKey, cfg.AIServiceURL)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to initialize provider service")
+	}
+	aiSvc := service.NewAIService(cfg.AIServiceURL)
+	conversationService := service.NewConversationService(conversationRepo, projectRepo)
+	memoryService := service.NewMemoryService(conn, memoryRepo)
+	journalService := service.NewJournalService(journalRepo)
+	toolService := service.NewToolExecutionService(conn, taskService, projectService, columnService, notebookService, memoryService, journalService, aiSvc, contextRepo)
 
 	// Backfill missing NanoIDs on startup
 	_ = workspaceService.BackfillNanoIDs()
@@ -85,7 +100,7 @@ func main() {
 	}
 
 	// HTTP Handler Container
-	container := handler.NewContainer(workspaceService, projectService, columnService, taskService, importService, seedService, storageSvc, notebookService)
+	container := handler.NewContainer(workspaceService, projectService, columnService, taskService, importService, seedService, storageSvc, notebookService, providerService, aiSvc, conversationService, toolService, memoryService, journalService, contextRepo, outboxRepo)
 
 	if cfg.AppEnv == "production" {
 		gin.SetMode(gin.ReleaseMode)

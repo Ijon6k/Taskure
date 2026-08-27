@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { CaretRight, CaretUpDown, Gear, FileText, SquaresFour, FolderOpen, Check, Notebook } from "@phosphor-icons/react";
+import { CaretRight, CaretUpDown, Gear, FileText, SquaresFour, FolderOpen, Check, Notebook, Sparkle } from "@phosphor-icons/react";
 import { ProjectData } from "@/lib/api";
 import { useProjects } from "@/lib/api/queries/use-projects";
 import { useTheme } from "@/components/providers/theme-provider";
@@ -28,6 +28,7 @@ export function ProjectSubHeader({
   const isBoard = pathname.endsWith("/board") || pathname === `/projects/${projectId}`;
   const isResources = pathname.endsWith("/resources");
   const isNotebook = pathname.endsWith("/notebook");
+  const isAI = pathname.includes("/ai");
 
   return (
     <header className="px-3 md:px-6 py-2 md:py-2.5 shrink-0 border-b border-theme-subtle bg-surface-l1 select-none">
@@ -159,6 +160,18 @@ export function ProjectSubHeader({
             >
               <Notebook className="w-3.5 h-3.5 shrink-0" />
               <span>Notebook</span>
+            </Link>
+
+            <Link
+              href={`/projects/${projectId}/ai`}
+              className={`px-2.5 md:px-3 py-1.5 md:py-1 rounded-md flex items-center gap-1.5 transition-colors shrink-0 ${
+                isAI
+                  ? "bg-theme-elevated text-theme-primary font-semibold shadow-xs"
+                  : "text-theme-secondary hover:text-theme-primary hover:bg-surface-hover"
+              }`}
+            >
+              <Sparkle className="w-3.5 h-3.5 shrink-0" />
+              <span>AI</span>
             </Link>
           </nav>
         </div>

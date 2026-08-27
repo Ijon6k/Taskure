@@ -1,8 +1,12 @@
 package service
 
 import (
+	"log"
+
+	"github.com/Ijon6k/Taskure/apps/api/internal/domain"
 	"github.com/Ijon6k/Taskure/apps/api/internal/models"
 	"github.com/Ijon6k/Taskure/apps/api/internal/repository"
+	"gorm.io/gorm"
 )
 
 type WorkspaceService interface {
@@ -13,17 +17,27 @@ type WorkspaceService interface {
 }
 
 type workspaceService struct {
+	db   *gorm.DB
 	repo repository.WorkspaceRepository
 }
 
 // NewWorkspaceService creates the workspace service.
-func NewWorkspaceService(repo repository.WorkspaceRepository) WorkspaceService {
-	return &workspaceService{repo: repo}
+func NewWorkspaceService(db *gorm.DB, repo repository.WorkspaceRepository) WorkspaceService {
+	return &workspaceService{db: db, repo: repo}
 }
 
 // EnsureDefaultWorkspace seeds the default workspace on a fresh database.
 func (s *workspaceService) EnsureDefaultWorkspace() (*models.Workspace, error) {
-	return s.repo.EnsureUserAndWorkspace()
+	ws, err := s.repo.EnsureUserAndWorkspace()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := domain.EmitEvent(s.db, nil, "workspace", ws.ID, "workspace.created", map[string]string{"name": ws.Name}); err != nil {
+		log.Printf("WARNING: failed to emit workspace.created event: %v", err)
+	}
+
+	return ws, nil
 }
 
 // GetDefaultWorkspace returns the default workspace with its projects.

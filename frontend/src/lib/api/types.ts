@@ -307,3 +307,25 @@ export interface UpdateNotebookPageInput {
   is_pinned?: boolean;
   position?: number;
 }
+
+// ─── Conversation ─────────────────────────────────────────────────────────────
+
+export interface Conversation {
+  id: string;
+  project_id: string;
+  title: string;
+  mode: "fast" | "thinking" | "planning" | "agent";
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConversationMessage {
+  id: string;
+  conversation_id: string;
+  role: "user" | "assistant" | "system" | "tool";
+  content: string;
+  tool_calls?: unknown;
+  metadata?: Record<string, unknown>;
+  token_count?: number;
+  created_at: string;
+}

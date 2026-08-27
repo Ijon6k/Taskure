@@ -1,43 +1,59 @@
-# Stage 1: Builder with Astral uv
+# Stage 1: Build dependencies with uv
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
 WORKDIR /app
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 
-ENV UV_COMPILE_BYTECODE=1 \
-    UV_LINK_MODE=copy
-
-# Copy dependency definition files
-COPY pyproject.toml uv.lock* ./
-
-# Install dependencies using uv into virtualenv with BuildKit caching
+# Install only production dependencies first (layer caching)
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --no-install-project
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    uv sync --frozen --no-install-project --no-dev
 
-# Stage 2: Development Target with Uvicorn Reload
+# Stage 2: Dev target with uv (reload support)
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS dev
 WORKDIR /app
+
+# curl needed for healthcheck
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder /app/.venv /app/.venv
-COPY . .
 ENV PATH="/app/.venv/bin:$PATH" PYTHONPATH=/app UV_CACHE_DIR=/tmp/.uv-cache
 EXPOSE 5000
 CMD ["uvicorn", "services.ai.main:app", "--host", "0.0.0.0", "--port", "5000", "--reload"]
 
-# Stage 3: Lightweight Production Runner
-FROM python:3.12-slim AS runner
+# Stage 3: Slim production runner
+FROM python:3.12-slim-bookworm AS runner
 WORKDIR /app
 
+# Install only runtime system deps (nothing extra)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
 RUN addgroup --system --gid 10001 appgroup && \
-    adduser --system --uid 10001 appuser
+    adduser --system --uid 10001 --gid 10001 appuser
 
-COPY --from=builder /app/.venv /app/.venv
-COPY . .
+# Copy only venv from builder (no source code yet)
+COPY --from=builder --chown=appuser:appgroup /app/.venv /app/.venv
 
-ENV PATH="/app/.venv/bin:$PATH" PYTHONPATH=/app
-RUN chown -R appuser:appgroup /app
+# Copy only runtime Python files (exclude tests, cache, docs)
+COPY --chown=appuser:appgroup services/ ./services/
+COPY --chown=appuser:appgroup docker-entrypoint.sh ./docker-entrypoint.sh
+
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONPATH=/app \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
 
 USER appuser
 EXPOSE 5000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"
+# Fast healthcheck using curl instead of Python
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:5000/health || exit 1
 
-CMD ["uvicorn", "services.ai.main:app", "--host", "0.0.0.0", "--port", "5000", "--workers", "4"]
+# Runs the outbox worker (background) + uvicorn (foreground)
+CMD ["/app/docker-entrypoint.sh"]

@@ -1,0 +1,12 @@
+{
+  "include": ["services/ai"],
+  "exclude": ["**/__pycache__", "**/.venv"],
+  "reportAny": false,
+  "reportUnknownMemberType": false,
+  "reportUnknownParameterType": false,
+  "reportUnknownArgumentType": false,
+  "reportMissingTypeStubs": false,
+  "reportUnusedCallResult": false,
+  "reportAttributeAccessIssue": "warning",
+  "typeCheckingMode": "basic"
+}

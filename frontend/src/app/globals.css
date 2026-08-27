@@ -15,6 +15,47 @@
 @layer base {
 
   /* ============================================================
+     MARKDOWN RENDERING (AI chat responses)
+     ============================================================ */
+  .markdown-body > :first-child {
+    margin-top: 0;
+  }
+  .markdown-body > :last-child {
+    margin-bottom: 0;
+  }
+  .markdown-body p {
+    margin: 0.4em 0;
+  }
+  .markdown-body ul,
+  .markdown-body ol {
+    margin: 0.4em 0;
+    padding-left: 1.4em;
+  }
+  .markdown-body ul {
+    list-style: disc;
+  }
+  .markdown-body ol {
+    list-style: decimal;
+  }
+  .markdown-body blockquote {
+    margin: 0.5em 0;
+    padding-left: 0.8em;
+    border-left: 3px solid var(--border-default);
+    color: var(--text-secondary);
+  }
+  .markdown-body hr {
+    margin: 0.8em 0;
+    border: 0;
+    border-top: 1px solid var(--border-default);
+  }
+  .markdown-body strong {
+    font-weight: 600;
+  }
+  .markdown-body code {
+    font-family: var(--font-mono, ui-monospace, monospace);
+  }
+
+  /* ============================================================
      GLOBAL / ROOT SHARED DESIGN TOKENS
      ============================================================ */
   :root {

@@ -18,6 +18,7 @@ import {
   Kanban,
   FileText,
   Trash2,
+  Sparkle,
 } from "lucide-react";
 import { CreateProjectModal } from "@/components/features/project/create-project-modal";
 import { EditProjectModal } from "@/components/features/project/edit-project-modal";
@@ -30,6 +31,7 @@ import { useTheme } from "@/components/providers/theme-provider";
 import { PageContainer } from "@/components/ui/page-container";
 import { ThemePreviewCard } from "@/components/features/settings/theme-preview-card";
 import { DeleteWorkspaceModal } from "@/components/modals/delete-workspace-modal";
+import { AIProviderSettings } from "@/components/features/settings/ai-provider-settings";
 import { useProjects, useSeedDemo } from "@/lib/api";
 import { exportFullWorkspaceJSON, deleteAllWorkspaceData } from "@/lib/workspace-backup";
 import { useQueryClient } from "@tanstack/react-query";
@@ -325,7 +327,19 @@ export default function SettingsPage() {
             </div>
           </section>
 
-          {/* ── 5. FULL WORKSPACE BACKUP SECTION ── */}
+          {/* ── 5. AI PROVIDERS SECTION ── */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-2 pb-2 border-b border-theme-subtle">
+              <Sparkle className="w-4 h-4 text-brand-accent" />
+              <h2 className="text-[13px] font-semibold text-theme-tertiary uppercase tracking-wider">
+                AI Providers
+              </h2>
+            </div>
+
+            <AIProviderSettings />
+          </section>
+
+          {/* ── 6. FULL WORKSPACE BACKUP SECTION ── */}
           <section className="space-y-4">
             <div className="flex items-center gap-2 pb-2 border-b border-theme-subtle">
               <HardDrive className="w-4 h-4 text-brand-accent" />
@@ -364,7 +378,7 @@ export default function SettingsPage() {
             </div>
           </section>
 
-          {/* ── 6. WORKSPACE TAG LIBRARY SECTION ── */}
+          {/* ── 7. WORKSPACE TAG LIBRARY SECTION ── */}
           <section className="space-y-4">
             <div className="flex items-center gap-2 pb-2 border-b border-theme-subtle">
               <FolderKanban className="w-4 h-4 text-brand-accent" />
@@ -376,7 +390,7 @@ export default function SettingsPage() {
             <GlobalTagsManager onOpenJsonModal={() => setIsTagsJsonModalOpen(true)} />
           </section>
 
-          {/* ── 7. ADVANCED & DIAGNOSTICS SECTION ── */}
+          {/* ── 8. ADVANCED & DIAGNOSTICS SECTION ── */}
           <section className="space-y-4">
             <div className="flex items-center gap-2 pb-2 border-b border-theme-subtle">
               <Shield className="w-4 h-4 text-brand-accent" />

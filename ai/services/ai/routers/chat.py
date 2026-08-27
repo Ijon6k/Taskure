@@ -1,26 +1,14 @@
-"""Chat router — dual LLM provider (OpenAI + Anthropic)"""
-import os
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
-import anthropic
-import openai
-
 from ..config import settings
+from ..providers import build_provider, resolve_provider_config
+from ..providers.base import ProviderConfig
 
 router = APIRouter()
-
-
-class ChatRequest(BaseModel):
-    message: str = Field(..., max_length=4000)
-    workspace_id: str
-    project_id: str | None = None
-    provider: Literal["openai", "anthropic"] | None = None
-    model: str | None = None
-    stream: bool = True
 
 
 class ChatMessage(BaseModel):
@@ -28,77 +16,97 @@ class ChatMessage(BaseModel):
     content: str
 
 
+class ChatRequest(BaseModel):
+    messages: list[ChatMessage] = Field(min_length=1)
+    provider: Literal["openai", "anthropic"] | None = None
+    model: str | None = None
+    stream: bool = True
+    mode: Literal["fast", "thinking"] = "thinking"
+    api_key: str | None = None
+    endpoint: str | None = None
+
+
 class ChatResponse(BaseModel):
     content: str
     provider: str
     model: str
-    usage: dict | None = None
+    prompt_tokens: int
+    completion_tokens: int
 
 
-async def chat_openai(messages: list[ChatMessage], model: str, stream: bool = True):
-    client = openai.OpenAI(api_key=settings.openai_api_key or os.getenv("OPENAI_API_KEY"))
+def _resolve_provider_config(req: ChatRequest) -> ProviderConfig:
+    provider_name = req.provider or settings.ai_default_provider
 
-    def generate():
-        response = client.chat.completions.create(
-            model=model or settings.openai_model,
-            messages=[{"role": m.role, "content": m.content} for m in messages],
-            stream=True,
-            temperature=settings.openai_temperature,
-            max_tokens=settings.openai_max_tokens,
+    if provider_name not in ("openai", "anthropic"):
+        raise HTTPException(400, f"Unknown provider: {provider_name}")
+
+    key = req.api_key or getattr(settings, f"{provider_name}_api_key", None)
+    if not key:
+        raise HTTPException(
+            400,
+            f"No API key configured for provider '{provider_name}'. "
+            "Add it in Settings → AI Providers, or set the API key in the request body.",
         )
-        for chunk in response:
-            delta = chunk.choices[0].delta.content
-            if delta:
-                yield {"event": "message", "data": delta}
+
+    max_tokens = settings.fast_max_tokens if req.mode == "fast" else settings.thinking_max_tokens
+
+    return resolve_provider_config(
+        api_key=req.api_key,
+        endpoint=req.endpoint,
+        model=req.model,
+        provider=req.provider,
+        max_tokens=max_tokens,
+        temperature=settings.openai_temperature
+        if provider_name == "openai"
+        else settings.anthropic_temperature,
+    )
+
+
+def _build_sse_stream(stream_generator):
+    async def event_generator():
+        async for chunk in stream_generator:
+            if chunk:
+                yield {"event": "message", "data": chunk}
         yield {"event": "done", "data": "[DONE]"}
 
-    return EventSourceResponse(generate())
-
-
-async def chat_anthropic(messages: list[ChatMessage], model: str, stream: bool = True):
-    client = anthropic.Anthropic(api_key=settings.anthropic_api_key or os.getenv("ANTHROPIC_API_KEY"))
-
-    system_msg = "You are an AI assistant in a personal project workspace called Kanban. Be helpful, concise, and context-aware."
-
-    def generate():
-        with client.messages.stream(
-            model=model or settings.anthropic_model,
-            max_tokens=settings.anthropic_max_tokens,
-            temperature=settings.anthropic_temperature,
-            system=system_msg,
-            messages=[{"role": m.role, "content": m.content} for m in messages if m.role != "system"],
-        ) as stream:
-            for text in stream.text_stream:
-                yield {"event": "message", "data": text}
-            yield {"event": "done", "data": "[DONE]"}
-
-    return EventSourceResponse(generate())
+    return EventSourceResponse(event_generator())
 
 
 @router.post("")
 async def chat(req: ChatRequest):
-    if not settings.openai_api_key and not settings.anthropic_api_key:
-        raise HTTPException(400, "No AI provider configured")
+    config = _resolve_provider_config(req)
+    provider = build_provider(config)
 
-    provider = req.provider or settings.ai_default_provider
-    model = req.model
+    messages = [{"role": m.role, "content": m.content} for m in req.messages]
 
-    user_message = ChatMessage(role="user", content=req.message)
+    if req.stream:
+        stream_gen = provider.stream(messages)
+        return _build_sse_stream(stream_gen)
 
-    if provider == "openai":
-        return await chat_openai([user_message], model or settings.openai_model, req.stream)
-    elif provider == "anthropic":
-        return await chat_anthropic([user_message], model or settings.anthropic_model, req.stream)
-    else:
-        raise HTTPException(400, f"Unknown provider: {provider}")
+    result = await provider.complete(messages)
+    return ChatResponse(
+        content=result.content,
+        provider=req.provider or settings.ai_default_provider,
+        model=config.model,
+        prompt_tokens=result.prompt_tokens,
+        completion_tokens=result.completion_tokens,
+    )
 
 
 @router.get("/providers")
 async def list_providers():
     return {
         "providers": [
-            {"id": "openai", "configured": bool(settings.openai_api_key)},
-            {"id": "anthropic", "configured": bool(settings.anthropic_api_key)},
+            {
+                "id": "openai",
+                "configured": bool(settings.openai_api_key),
+                "models": [settings.openai_model, settings.openai_fast_model],
+            },
+            {
+                "id": "anthropic",
+                "configured": bool(settings.anthropic_api_key),
+                "models": [settings.anthropic_model],
+            },
         ],
         "default": settings.ai_default_provider,
     }

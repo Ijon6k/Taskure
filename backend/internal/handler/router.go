@@ -2,22 +2,27 @@ package handler
 
 import (
 	"github.com/Ijon6k/Taskure/apps/api/internal/middleware"
+	"github.com/Ijon6k/Taskure/apps/api/internal/repository"
 	"github.com/Ijon6k/Taskure/apps/api/internal/service"
 	"github.com/Ijon6k/Taskure/apps/api/internal/storage"
 	"github.com/gin-gonic/gin"
 )
 
 type Container struct {
-	WorkspaceHandler *WorkspaceHandler
-	ProjectHandler   *ProjectHandler
-	ColumnHandler    *ColumnHandler
-	TaskHandler      *TaskHandler
-	ChecklistHandler *ChecklistHandler
-	FocusHandler     *FocusHandler
-	ImportHandler    *ImportHandler
-	SeedHandler      *SeedHandler
-	StorageHandler   *StorageHandler
-	NotebookHandler  *NotebookHandler
+	WorkspaceHandler    *WorkspaceHandler
+	ProjectHandler      *ProjectHandler
+	ColumnHandler       *ColumnHandler
+	TaskHandler         *TaskHandler
+	ChecklistHandler    *ChecklistHandler
+	FocusHandler        *FocusHandler
+	ImportHandler       *ImportHandler
+	SeedHandler         *SeedHandler
+	StorageHandler      *StorageHandler
+	NotebookHandler     *NotebookHandler
+	ProviderHandler     *ProviderHandler
+	AIHandler           *AIHandler
+	ConversationHandler *ConversationHandler
+	ToolHandler         *ToolHandler
 }
 
 // NewContainer bundles all services and storage into the handler container used by route registration.
@@ -30,18 +35,30 @@ func NewContainer(
 	seedService service.SeedService,
 	storageSvc storage.StorageService,
 	notebookService service.NotebookService,
+	providerService service.ProviderService,
+	aiService service.AIService,
+	conversationService service.ConversationService,
+	toolService service.ToolExecutionService,
+	memoryService service.MemoryService,
+	journalService service.JournalService,
+	contextRepo repository.ContextRepository,
+	outboxRepo repository.OutboxRepository,
 ) *Container {
 	return &Container{
-		WorkspaceHandler: NewWorkspaceHandler(workspaceService),
-		ProjectHandler:   NewProjectHandler(projectService),
-		ColumnHandler:    NewColumnHandler(columnService),
-		TaskHandler:      NewTaskHandler(taskService),
-		ChecklistHandler: NewChecklistHandler(taskService),
-		FocusHandler:     NewFocusHandler(taskService),
-		ImportHandler:    NewImportHandler(importService),
-		SeedHandler:      NewSeedHandler(seedService),
-		StorageHandler:   NewStorageHandler(storageSvc),
-		NotebookHandler:  NewNotebookHandler(notebookService),
+		WorkspaceHandler:    NewWorkspaceHandler(workspaceService),
+		ProjectHandler:      NewProjectHandler(projectService),
+		ColumnHandler:       NewColumnHandler(columnService),
+		TaskHandler:         NewTaskHandler(taskService),
+		ChecklistHandler:    NewChecklistHandler(taskService),
+		FocusHandler:        NewFocusHandler(taskService),
+		ImportHandler:       NewImportHandler(importService),
+		SeedHandler:         NewSeedHandler(seedService),
+		StorageHandler:      NewStorageHandler(storageSvc),
+		NotebookHandler:     NewNotebookHandler(notebookService),
+		ProviderHandler:     NewProviderHandler(providerService),
+		AIHandler:           NewAIHandler(aiService, conversationService, toolService, memoryService, journalService, projectService, taskService, providerService, contextRepo, outboxRepo),
+		ConversationHandler: NewConversationHandler(conversationService),
+		ToolHandler:         NewToolHandler(toolService),
 	}
 }
 
@@ -75,6 +92,14 @@ func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 		// Notebook pages scoped under project
 		projects.GET("/:id/notebook", c.NotebookHandler.ListPages)
 		projects.POST("/:id/notebook", c.NotebookHandler.CreatePage)
+
+		// AI context endpoints (used by the AI orchestrator's GoAPIClient)
+		projects.GET("/:id/memory", c.AIHandler.GetProjectMemory)
+		projects.GET("/:id/journal", c.AIHandler.GetProjectJournal)
+		projects.GET("/:id/tasks", c.AIHandler.GetProjectTasks)
+		projects.GET("/:id/columns", c.AIHandler.GetProjectColumns)
+		projects.GET("/:id/discussions", c.AIHandler.GetProjectDiscussions)
+		projects.GET("/:id/ai-context", c.AIHandler.GetAIContext)
 
 		// Bulk import: one request creates/replaces an entire board atomically.
 		projects.POST("/import", c.ImportHandler.ImportProject)
@@ -131,4 +156,44 @@ func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 	{
 		seed.POST("", c.SeedHandler.SeedDemoData)
 	}
+
+	providers := r.Group("/providers")
+	{
+		providers.GET("", c.ProviderHandler.ListProviders)
+		providers.POST("", c.ProviderHandler.CreateProvider)
+		providers.PUT("/:id", c.ProviderHandler.UpdateProvider)
+		providers.DELETE("/:id", c.ProviderHandler.DeleteProvider)
+		providers.POST("/:id/test", c.ProviderHandler.TestProvider)
+	}
+
+	aiGroup := r.Group("/ai")
+	{
+		aiGroup.POST("/chat", c.AIHandler.Chat)
+		aiGroup.GET("/context-budget", c.AIHandler.GetContextBudget)
+		aiGroup.GET("/approvals/pending", c.AIHandler.ListPendingApprovals)
+		aiGroup.POST("/approvals/:id/approve", c.AIHandler.ApproveAction)
+		aiGroup.POST("/approvals/:id/reject", c.AIHandler.RejectAction)
+		aiGroup.POST("/tools/execute", c.ToolHandler.ExecuteTool)
+		aiGroup.POST("/tools/execute-batch", c.ToolHandler.ExecuteBatch)
+		aiGroup.POST("/context/assemble", c.AIHandler.AssembleContext)
+		aiGroup.POST("/index", c.AIHandler.Index)
+		aiGroup.POST("/rag/search", c.AIHandler.SearchRAG)
+		aiGroup.GET("/outbox/pending", c.AIHandler.PollOutbox)
+		aiGroup.POST("/outbox/:id/ack", c.AIHandler.AckOutbox)
+	}
+
+	projectConversations := r.Group("/projects/:id/conversations")
+	{
+		projectConversations.POST("", c.ConversationHandler.CreateConversation)
+		projectConversations.GET("", c.ConversationHandler.ListConversations)
+	}
+
+	conversations := r.Group("/conversations")
+	{
+		conversations.GET("/:id", c.ConversationHandler.GetConversation)
+		conversations.GET("/:id/messages", c.ConversationHandler.ListMessages)
+		conversations.POST("/:id/messages", c.ConversationHandler.AddMessage)
+	}
+
+	r.GET("/messages/:id/context", c.ConversationHandler.GetMessageContext)
 }

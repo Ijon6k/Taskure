@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Ijon6k/Taskure/apps/api/internal/domain"
 	"github.com/Ijon6k/Taskure/apps/api/internal/focusengine"
 	"github.com/Ijon6k/Taskure/apps/api/internal/imageutil"
 	"github.com/Ijon6k/Taskure/apps/api/internal/models"
@@ -16,6 +17,7 @@ import (
 	"github.com/Ijon6k/Taskure/apps/api/internal/storage"
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
+	"gorm.io/gorm"
 )
 
 type CreateTaskInput struct {
@@ -76,6 +78,7 @@ type TaskService interface {
 }
 
 type taskService struct {
+	db          *gorm.DB
 	taskRepo    repository.TaskRepository
 	projectRepo repository.ProjectRepository
 	columnRepo  repository.ColumnRepository
@@ -84,8 +87,9 @@ type taskService struct {
 }
 
 // NewTaskService creates the task service.
-func NewTaskService(taskRepo repository.TaskRepository, projectRepo repository.ProjectRepository, columnRepo repository.ColumnRepository, variantJobs repository.VariantJobRepository, storage storage.StorageService) TaskService {
+func NewTaskService(db *gorm.DB, taskRepo repository.TaskRepository, projectRepo repository.ProjectRepository, columnRepo repository.ColumnRepository, variantJobs repository.VariantJobRepository, storage storage.StorageService) TaskService {
 	return &taskService{
+		db:          db,
 		taskRepo:    taskRepo,
 		projectRepo: projectRepo,
 		columnRepo:  columnRepo,
@@ -136,14 +140,26 @@ func (s *taskService) CreateTask(projectIDOrPublicID string, input CreateTaskInp
 		task.Tags = datatypes.JSON(tagsJSON)
 	}
 
-	if err := s.taskRepo.CreateTask(&task); err != nil {
-		return nil, err
-	}
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		if err := s.taskRepo.CreateTask(&task); err != nil {
+			return err
+		}
 
-	// Record tag usage only after the task persists, so a failed insert never
-	// pollutes the suggestion stats.
-	if len(input.Tags) > 0 {
-		_ = s.taskRepo.RecordTagUsage(project.ID, input.Tags)
+		if err := domain.EmitEvent(s.db, tx, "task", task.ID, "task.created", map[string]string{"title": task.Title, "project_id": project.ID}); err != nil {
+			return err
+		}
+
+		// Record tag usage only after the task persists, so a failed insert never
+		// pollutes the suggestion stats.
+		if len(input.Tags) > 0 {
+			if err := s.taskRepo.RecordTagUsage(project.ID, input.Tags); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return s.taskRepo.FindTask(task.PublicID)
@@ -333,9 +349,16 @@ func (s *taskService) DeleteTask(idOrPublicID string) error {
 	}
 	// Collect object keys first; the task row still holds them until deletion.
 	keys := extractAttachmentKeys(task.AttachmentsJSON)
-	if err := s.taskRepo.DeleteTask(task); err != nil {
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		if err := s.taskRepo.DeleteTask(task); err != nil {
+			return err
+		}
+		return domain.EmitEvent(s.db, tx, "task", task.ID, "task.deleted", map[string]string{"title": task.Title, "project_id": task.ProjectID})
+	})
+	if err != nil {
 		return err
 	}
+
 	// Best-effort cleanup of orphaned objects and pending variant jobs after
 	// the DB delete succeeds.
 	_ = s.variantJobs.DeleteByObjectKeys(keys)

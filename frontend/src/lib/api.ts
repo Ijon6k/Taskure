@@ -9,6 +9,8 @@ import { columnsService } from "./api/services/columns.service";
 import { tasksService } from "./api/services/tasks.service";
 import { workspaceService } from "./api/services/workspace.service";
 import { notebookService } from "./api/services/notebook.service";
+import { providersService } from "./api/services/providers.service";
+import { conversationsService } from "./api/services/conversations.service";
 
 /** Backward-compatible facade exposing every API service under one object. */
 export const api = {
@@ -47,4 +49,17 @@ export const api = {
   getNotebookPage: notebookService.getPage,
   updateNotebookPage: notebookService.updatePage,
   deleteNotebookPage: notebookService.deletePage,
+
+  listProviders: providersService.list,
+  createProvider: providersService.create,
+  updateProvider: providersService.update,
+  deleteProvider: providersService.delete,
+  testProvider: providersService.test,
+
+  listConversations: conversationsService.list,
+  getConversation: conversationsService.get,
+  createConversation: conversationsService.create,
+  addMessage: conversationsService.addMessage,
+  getMessages: conversationsService.getMessages,
+  getMessageContext: conversationsService.getMessageContext,
 };

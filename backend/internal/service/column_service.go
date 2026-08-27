@@ -1,8 +1,12 @@
 package service
 
 import (
+	"log"
+
+	"github.com/Ijon6k/Taskure/apps/api/internal/domain"
 	"github.com/Ijon6k/Taskure/apps/api/internal/models"
 	"github.com/Ijon6k/Taskure/apps/api/internal/repository"
+	"gorm.io/gorm"
 )
 
 type CreateColumnInput struct {
@@ -13,21 +17,25 @@ type CreateColumnInput struct {
 
 type ColumnService interface {
 	CreateColumn(projectIDOrPublicID string, input CreateColumnInput) (*models.Column, error)
+	GetColumn(id string) (*models.Column, error)
 	UpdateColumn(id string, updates map[string]interface{}) (*models.Column, error)
 	DeleteColumn(id string) error
 }
 
 type columnService struct {
+	db          *gorm.DB
 	columnRepo  repository.ColumnRepository
 	projectRepo repository.ProjectRepository
 }
 
 // NewColumnService creates the column service.
 func NewColumnService(
+	db *gorm.DB,
 	columnRepo repository.ColumnRepository,
 	projectRepo repository.ProjectRepository,
 ) ColumnService {
 	return &columnService{
+		db:          db,
 		columnRepo:  columnRepo,
 		projectRepo: projectRepo,
 	}
@@ -61,7 +69,17 @@ func (s *columnService) CreateColumn(projectIDOrPublicID string, input CreateCol
 	if err := s.columnRepo.CreateColumn(&col); err != nil {
 		return nil, err
 	}
+
+	if err := domain.EmitEvent(s.db, nil, "column", col.ID, "column.created", map[string]string{"name": col.Name, "project_id": project.ID}); err != nil {
+		log.Printf("WARNING: failed to emit column.created event: %v", err)
+	}
+
 	return &col, nil
+}
+
+// GetColumn returns a single column by ID.
+func (s *columnService) GetColumn(id string) (*models.Column, error) {
+	return s.columnRepo.FindColumnByID(id)
 }
 
 // UpdateColumn renames or repositions a column.
@@ -79,5 +97,18 @@ func (s *columnService) UpdateColumn(id string, updates map[string]interface{}) 
 
 // DeleteColumn removes a column (tasks cascade).
 func (s *columnService) DeleteColumn(id string) error {
-	return s.columnRepo.DeleteColumn(id)
+	col, err := s.columnRepo.FindColumnByID(id)
+	if err != nil {
+		return err
+	}
+
+	if err := s.columnRepo.DeleteColumn(id); err != nil {
+		return err
+	}
+
+	if err := domain.EmitEvent(s.db, nil, "column", col.ID, "column.deleted", map[string]string{"name": col.Name, "project_id": col.ProjectID}); err != nil {
+		log.Printf("WARNING: failed to emit column.deleted event: %v", err)
+	}
+
+	return nil
 }
