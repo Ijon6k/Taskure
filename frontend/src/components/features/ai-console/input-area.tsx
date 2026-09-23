@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAIConsoleStore, createUserMessage, createAssistantPlaceholder } from "./store";
 import { providersService, type ProviderConfig } from "@/lib/api/services/providers.service";
 import { conversationsService } from "@/lib/api/services/conversations.service";
+import { ModelSelectorDropdown } from "./model-selector-dropdown";
 
 const PLACEHOLDERS: Record<string, string> = {
   fast: "Ask anything…",
@@ -292,21 +293,12 @@ export const InputArea = memo(function InputArea() {
           </div>
 
           {providers.length > 0 && (
-            <div className="flex items-center gap-1.5">
-              <span className="font-medium uppercase tracking-wider text-[10.5px]">Model</span>
-              <select
-                value={selectedProviderId}
-                onChange={(e) => useAIConsoleStore.getState().setSelectedProviderId(e.target.value)}
-                className="bg-surface-l2 border border-theme-subtle rounded-md px-2 py-0.5 text-[11.5px] text-theme-secondary hover:text-theme-primary outline-none cursor-pointer"
-              >
-                <option value="">Default (Auto / .env)</option>
-                {providers.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.provider} — {p.model} {p.is_default ? "(Default)" : ""}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <ModelSelectorDropdown
+              providers={providers}
+              selectedProviderId={selectedProviderId}
+              onSelectProvider={(id) => useAIConsoleStore.getState().setSelectedProviderId(id)}
+              disabled={isStreaming}
+            />
           )}
         </div>
 

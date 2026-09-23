@@ -6,16 +6,16 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-accent disabled:pointer-events-none disabled:opacity-40 select-none cursor-pointer active:scale-[0.98] duration-100",
+  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md text-[13px] font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40 select-none cursor-pointer active:scale-[0.98] duration-100",
   {
     variants: {
       variant: {
-        default: "bg-brand-accent text-black hover:bg-brand-accent-hover font-semibold shadow-xs",
-        primary: "bg-brand-accent text-black hover:bg-brand-accent-hover font-semibold shadow-xs",
-        secondary: "bg-surface-l3 hover:bg-surface-l4 border border-theme-subtle text-theme-primary",
-        outline: "bg-transparent border border-theme-default hover:bg-surface-hover text-theme-primary",
-        ghost: "bg-transparent hover:bg-surface-hover text-theme-secondary hover:text-theme-primary",
-        danger: "bg-semantic-danger text-white hover:opacity-90 shadow-xs",
+        default: "bg-brand-accent text-black hover:bg-brand-accent-hover active:brightness-95 font-semibold shadow-xs",
+        primary: "bg-brand-accent text-black hover:bg-brand-accent-hover active:brightness-95 font-semibold shadow-xs",
+        secondary: "bg-surface-l3 hover:bg-surface-l4 active:bg-surface-l5 border border-theme-subtle text-theme-primary",
+        outline: "bg-transparent border border-theme-default hover:bg-surface-hover active:bg-surface-active text-theme-primary",
+        ghost: "bg-transparent hover:bg-surface-hover active:bg-surface-active text-theme-secondary hover:text-theme-primary",
+        danger: "bg-semantic-danger text-white hover:opacity-90 active:opacity-100 shadow-xs",
         link: "text-brand-accent underline-offset-4 hover:underline p-0 h-auto",
       },
       size: {

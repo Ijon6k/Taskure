@@ -144,12 +144,12 @@ export function ProjectContextTab({
                 <select
                   value={docType}
                   onChange={(e) => setDocType(e.target.value)}
-                  className="document-input text-sm cursor-pointer"
+                  className="document-input text-sm cursor-pointer bg-transparent text-theme-primary"
                 >
-                  <option value="api_spec">API Specification</option>
-                  <option value="database_schema">Database Schema</option>
-                  <option value="architecture">Architecture Note</option>
-                  <option value="requirement">Requirements</option>
+                  <option value="api_spec" className="bg-surface-l3 text-theme-primary">API Specification</option>
+                  <option value="database_schema" className="bg-surface-l3 text-theme-primary">Database Schema</option>
+                  <option value="architecture" className="bg-surface-l3 text-theme-primary">Architecture Note</option>
+                  <option value="requirement" className="bg-surface-l3 text-theme-primary">Requirements</option>
                 </select>
               </div>
             </div>

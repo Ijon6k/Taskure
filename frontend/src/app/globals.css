@@ -6,6 +6,51 @@
 
 @theme {
   --font-mono: var(--font-space-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-accent-hover: var(--brand-accent-hover);
+  --color-brand-accent-subtle: var(--brand-accent-subtle);
+  --color-brand-accent-glow: var(--brand-accent-glow);
+  --color-brand-accent-text: var(--brand-accent-text);
+
+  --color-surface-l0: var(--surface-l0);
+  --color-surface-l1: var(--surface-l1);
+  --color-surface-l2: var(--surface-l2);
+  --color-surface-l3: var(--surface-l3);
+  --color-surface-l4: var(--surface-l4);
+  --color-surface-l5: var(--surface-l5);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-active: var(--surface-active);
+
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-disabled: var(--text-disabled);
+  --color-text-on-accent: var(--text-on-accent);
+
+  --color-semantic-success: var(--semantic-success);
+  --color-semantic-success-subtle: var(--semantic-success-subtle);
+  --color-semantic-warning: var(--semantic-warning);
+  --color-semantic-warning-subtle: var(--semantic-warning-subtle);
+  --color-semantic-danger: var(--semantic-danger);
+  --color-semantic-danger-subtle: var(--semantic-danger-subtle);
+  --color-semantic-info: var(--semantic-info);
+  --color-semantic-info-subtle: var(--semantic-info-subtle);
+
+  --color-theme-primary: var(--text-primary);
+  --color-theme-secondary: var(--text-secondary);
+  --color-theme-tertiary: var(--text-tertiary);
+  --color-theme-disabled: var(--text-disabled);
+  --color-theme-subtle: var(--border-subtle);
+  --color-theme-default: var(--border-default);
+  --color-theme-strong: var(--border-strong);
+  --color-theme-elevated: var(--surface-l3);
+  --color-theme-surface: var(--surface-l1);
+  --color-theme-hover: var(--surface-hover);
 }
 
 .font-mono {

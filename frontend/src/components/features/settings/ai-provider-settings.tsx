@@ -13,6 +13,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { providersService, type ProviderConfig } from "@/lib/api/services/providers.service";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/inputs/select";
 
 interface ProviderEntry {
   id: string;
@@ -243,17 +250,18 @@ export function AIProviderSettings() {
               <label className="text-[12px] font-medium text-theme-tertiary uppercase tracking-wider">
                 Provider
               </label>
-              <select
-                value={formProvider}
-                onChange={(e) => setFormProvider(e.target.value)}
-                className="w-full bg-surface-l3 border border-theme-subtle rounded-md px-3 py-2 text-[14px] text-theme-primary outline-none focus:ring-2 focus:ring-brand-accent/20"
-              >
-                {PROVIDER_OPTIONS.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
+              <Select value={formProvider} onValueChange={(val) => setFormProvider(val)}>
+                <SelectTrigger className="w-full bg-surface-l3 border border-theme-subtle h-[38px]">
+                  <SelectValue placeholder="Select provider" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PROVIDER_OPTIONS.map((p) => (
+                    <SelectItem key={p} value={p}>
+                      {p}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Model */}
