@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Docker + Docker Compose (for Postgres, MinIO and full-stack runs)
+- Docker / Podman + Compose (for Postgres, SeaweedFS and full-stack runs)
 - Go 1.25+ (backend)
 - Bun (frontend + dev scripts)
 - Node.js (optional; Bun covers it)
@@ -22,7 +22,7 @@ Services (from `compose.yaml`):
 | api | `kanban-api` | 4000 (internal) | Go API |
 | ai | `kanban-ai` | 5000 (internal) | FastAPI (WIP) |
 | postgres | `kanban-postgres` | 5432 (internal) | pgvector/pg16 |
-| minio | `kanban-minio` | 9000 / 9001 (internal) | S3 + console |
+| seaweedfs | `kanban-seaweedfs` | 9000 (internal) | S3-compatible object storage |
 
 App: http://localhost:1106
 
@@ -60,11 +60,11 @@ bun install
 bun run dev            # http://localhost:3000
 ```
 
-> The API reads `.env` from its working directory (`godotenv`); defaults point at `localhost` Postgres/MinIO with user `kanban` / `kanban` DB.
+> The API reads `.env` from its working directory (`godotenv`); defaults point at `localhost` Postgres/SeaweedFS with user `kanban` / `kanban` DB.
 
-### MinIO console
+### SeaweedFS Filer console (optional)
 
-http://localhost:9001 — credentials from `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` (default `minioadmin` / `minioadmin`).
+http://localhost:8888 — file browser for SeaweedFS volume data.
 
 ## Environment Variables
 
@@ -77,11 +77,11 @@ Defined in `backend/internal/config/config.go`. Frontend reads `NEXT_PUBLIC_API_
 | `JWT_SECRET` | dev placeholder | auth scaffolding |
 | `API_CORS_ORIGINS` | `http://localhost:3000,http://localhost:8080` | allowed origins |
 | `POSTGRES_HOST/PORT/USER/PASSWORD/DB` | `localhost/5432/kanban/changeme/kanban` | Postgres DSN |
-| `MINIO_ENDPOINT` (or `S3_ENDPOINT`) | `minio:9000` | MinIO API |
-| `MINIO_ROOT_USER/PASSWORD` | `minioadmin` | MinIO creds |
-| `MINIO_BUCKET` | `kanban-uploads` | default bucket |
-| `MINIO_PUBLIC_URL` | `/storage/kanban-uploads` | public serving prefix |
-| `MINIO_USE_SSL` | `false` | TLS toggle |
+| `S3_ENDPOINT` (or `MINIO_ENDPOINT`) | `seaweedfs:9000` | SeaweedFS S3 API |
+| `S3_ACCESS_KEY/SECRET_KEY` | `seaweedadmin` | S3 credentials |
+| `S3_BUCKET` | `kanban-uploads` | default bucket |
+| `S3_PUBLIC_URL` | `/storage/kanban-uploads` | public serving prefix |
+| `S3_USE_SSL` | `false` | TLS toggle |
 | `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | empty | AI service (WIP) |
 | `VARIANT_WORKERS` | `2` | image worker concurrency |
 

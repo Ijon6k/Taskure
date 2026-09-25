@@ -38,15 +38,15 @@ func main() {
 		logger.Fatal().Err(err).Msg("failed to connect to database")
 	}
 
-	// Initialize MinIO S3 Object Storage
-	storageSvc, err := storage.NewMinIOStorage(cfg, logger)
+	// Initialize SeaweedFS S3 Object Storage
+	storageSvc, err := storage.NewSeaweedFSStorage(cfg, logger)
 	if err != nil {
-		logger.Warn().Err(err).Msg("could not initialize minio storage service, fallback storage will be used")
+		logger.Warn().Err(err).Msg("could not initialize seaweedfs storage service, fallback storage will be used")
 	} else {
 		if err := storageSvc.EnsureBucket(context.Background()); err != nil {
-			logger.Warn().Err(err).Msg("could not auto-initialize minio bucket")
+			logger.Warn().Err(err).Msg("could not auto-initialize seaweedfs bucket")
 		} else {
-			logger.Info().Str("bucket", cfg.MinIOBucket).Msg("minio bucket ready")
+			logger.Info().Str("bucket", cfg.MinIOBucket).Msg("seaweedfs bucket ready")
 		}
 	}
 

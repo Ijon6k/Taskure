@@ -1,5 +1,5 @@
 # Stage 1: Builder
-FROM golang:1.24-alpine AS builder
+FROM golang:alpine AS builder
 WORKDIR /app
 
 RUN apk add --no-cache gcc musl-dev libwebp-dev
@@ -14,7 +14,7 @@ COPY . .
 RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-s -w" -o /server ./cmd/server
 
 # Stage 2: Development Target with Air Hot Reload
-FROM golang:1.24-alpine AS dev
+FROM golang:alpine AS dev
 WORKDIR /app
 
 RUN apk add --no-cache gcc musl-dev libwebp-dev

@@ -53,12 +53,12 @@ func Load() Config {
 		PostgresPassword: getenv("POSTGRES_PASSWORD", "changeme"),
 		PostgresDB:       getenv("POSTGRES_DB", "kanban"),
 
-		MinIOEndpoint:  getenvFirst([]string{"MINIO_ENDPOINT", "S3_ENDPOINT"}, "minio:9000"),
-		MinIOUser:      getenvFirst([]string{"MINIO_ACCESS_KEY", "MINIO_ROOT_USER", "MINIO_USER", "AWS_ACCESS_KEY_ID"}, "minioadmin"),
-		MinIOPassword:  getenvFirst([]string{"MINIO_SECRET_KEY", "MINIO_ROOT_PASSWORD", "MINIO_PASSWORD", "AWS_SECRET_ACCESS_KEY"}, "minioadmin"),
-		MinIOBucket:    getenvFirst([]string{"MINIO_BUCKET", "S3_BUCKET"}, "kanban-uploads"),
-		MinIOPublicURL: getenvFirst([]string{"MINIO_PUBLIC_URL", "S3_PUBLIC_URL"}, "/storage/kanban-uploads"),
-		MinIOUseSSL:    getenvFirst([]string{"MINIO_USE_SSL", "S3_USE_SSL"}, "false") == "true",
+		MinIOEndpoint:  getenvFirst([]string{"S3_ENDPOINT", "SEAWEEDFS_ENDPOINT", "MINIO_ENDPOINT"}, "seaweedfs:9000"),
+		MinIOUser:      getenvFirst([]string{"S3_ACCESS_KEY", "SEAWEEDFS_ACCESS_KEY", "MINIO_ACCESS_KEY", "MINIO_ROOT_USER", "MINIO_USER", "AWS_ACCESS_KEY_ID"}, "seaweedadmin"),
+		MinIOPassword:  getenvFirst([]string{"S3_SECRET_KEY", "SEAWEEDFS_SECRET_KEY", "MINIO_SECRET_KEY", "MINIO_ROOT_PASSWORD", "MINIO_PASSWORD", "AWS_SECRET_ACCESS_KEY"}, "seaweedadmin"),
+		MinIOBucket:    getenvFirst([]string{"S3_BUCKET", "SEAWEEDFS_BUCKET", "MINIO_BUCKET"}, "kanban-uploads"),
+		MinIOPublicURL: getenvFirst([]string{"S3_PUBLIC_URL", "MINIO_PUBLIC_URL"}, "/storage/kanban-uploads"),
+		MinIOUseSSL:    getenvFirst([]string{"S3_USE_SSL", "MINIO_USE_SSL"}, "false") == "true",
 
 		OpenAIKey:    getenv("OPENAI_API_KEY", ""),
 		AnthropicKey: getenv("ANTHROPIC_API_KEY", ""),

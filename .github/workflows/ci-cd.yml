@@ -16,7 +16,7 @@ jobs:
   # Job 1: Backend CI (Go 1.24 Vet & Tests)
   # ---------------------------------------------------------------------------
   backend-ci:
-    name: Backend CI (Go 1.24)
+    name: Backend CI (Go)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -33,7 +33,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version-file: backend/go.mod
           cache-dependency-path: backend/go.sum
 
       - name: Download Go dependencies

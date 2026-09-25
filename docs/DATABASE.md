@@ -102,7 +102,7 @@ Task attachments persisted outside `attachments_json` (legacy-path rows):
 | Column | Notes |
 |---|---|
 | `filename` (255), `file_size` (int8), `mime_type` (100) | not null |
-| `storage_key` (500) | MinIO object key |
+| `storage_key` (500) | S3 / SeaweedFS object key |
 | `task_id` | indexed, cascade |
 | `uploader_id` | not null |
 

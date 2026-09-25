@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-Taskure is a self-hosted, single-user project workspace: a Kanban board with a "Today's Focus" engine, S3-based asset storage, and (WIP) AI RAG integration. The system is a flat multi-service monorepo with a Go API, a Next.js web app, a FastAPI AI service, and Postgres/MinIO backing stores — all behind a single nginx gateway.
+Taskure is a self-hosted, single-user project workspace: a Kanban board with a "Today's Focus" engine, S3-based asset storage, and (WIP) AI RAG integration. The system is a flat multi-service monorepo with a Go API, a Next.js web app, a FastAPI AI service, and Postgres/SeaweedFS backing stores — all behind a single nginx gateway.
 
 ## 2. Service Layout
 
@@ -12,7 +12,7 @@ kanban/
 ├── backend/          # Go 1.25, Gin, GORM — the core API
 ├── ai/               # Python FastAPI + pgvector (WIP: RAG/LLM streaming)
 ├── nginx/            # Reverse proxy (entry point, port 1106)
-├── compose.yaml      # Production stack: nginx, web, api, ai, postgres, minio
+├── compose.yaml      # Production stack: nginx, web, api, ai, postgres, seaweedfs
 ├── compose.dev.yaml  # Dev overrides (hot reload, profiles)
 ├── scripts/dev.ts    # Interactive dev environment launcher
 └── docs/             # Public documentation (this directory)
@@ -25,7 +25,7 @@ graph TD
     Nginx -- /api/* --> API[Go Gin API :4000]
     Nginx -- /ai/* --> AI[FastAPI :5000]
     API --> PG[(PostgreSQL 16 + pgvector)]
-    API --> MinIO[(MinIO :9000)]
+    API --> SeaweedFS[(SeaweedFS S3 :9000)]
     API --> Worker[Image variant worker]
     AI --> PG
 ```
@@ -55,7 +55,7 @@ models / db (GORM models, AutoMigrate)
 - **viewmodels** (`internal/viewmodels/`) — hand-built JSON shapes per page (summary, board, overview, assets, focus). Payloads are deliberately split by consumption: the board is heavy, overview/summary are light.
 - **focusengine** (`internal/focusengine/`) — pure scoring logic for "Today's Focus" (deadline windows, priority, blocking subtasks, recency).
 - **worker** (`internal/worker/`) — background image-variant (WebP) generation loop; uploads only persist the original and enqueue a job, so the request path stays fast.
-- **storage** (`internal/storage/`) — MinIO adapter (S3 API); falls back to local disk when MinIO is unavailable.
+- **storage** (`internal/storage/`) — SeaweedFS adapter (S3 API); falls back to local disk when S3 is unavailable.
 - **config / db / util / middleware / response / nanoid / imageutil** — shared plumbing.
 
 ### 3.2 Key Cross-Cutting Decisions
@@ -93,7 +93,7 @@ This keeps the heavy `/board` endpoint out of every mutation round-trip.
 ## 5. Storage & Data
 
 - **PostgreSQL 16 + pgvector** (`kanban-postgres`) — canonical store; GORM AutoMigrate on boot (`models.AllModels()`).
-- **MinIO** (`kanban-minio`, :9000 API / :9001 console) — original uploads + generated WebP variants; served publicly through the API at `/storage/*`.
+- **SeaweedFS** (`taskure-seaweedfs`, :9000 S3 API / :8888 filer) — original uploads + generated WebP variants; served publicly through the API at `/storage/*`.
 - **No Redis** — the in-memory rate limiter and React Query cache cover current needs; Redis was removed from the stack.
 
 ## 6. Gateway (nginx)

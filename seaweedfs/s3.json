@@ -1,11 +1,11 @@
 {
   "identities": [
     {
-      "name": "kanbanadmin",
+      "name": "seaweedadmin",
       "credentials": [
         {
-          "accessKey": "minioadmin",
-          "secretKey": "minioadmin"
+          "accessKey": "seaweedadmin",
+          "secretKey": "seaweedadmin"
         }
       ],
       "actions": [

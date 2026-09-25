@@ -47,8 +47,8 @@ Rate limit hit → `429` with `{ "error": "Rate limit exceeded. Try again later.
 
 ### `GET /storage/*filepath`
 
-Serves files from MinIO through the API. Path shape: `/storage/<bucket>/<object-key>`.
-Used as the `MINIO_PUBLIC_URL` for all generated asset URLs.
+Serves files from SeaweedFS S3 through the API. Path shape: `/storage/<bucket>/<object-key>`.
+Used as the `S3_PUBLIC_URL` for all generated asset URLs.
 
 ---
 
