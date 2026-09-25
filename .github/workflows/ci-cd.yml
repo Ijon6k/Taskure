@@ -168,6 +168,30 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # --- Tagging Strategy for Nginx Gateway ---
+      - name: Extract Docker metadata (Gateway)
+        id: meta-gateway
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/taskure/gateway
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/dev' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/') }}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Build & Push Gateway Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./nginx
+          file: ./nginx/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-gateway.outputs.tags }}
+          labels: ${{ steps.meta-gateway.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   # ---------------------------------------------------------------------------
   # Job 4: Integration & Smoke Testing (Port 1106 Verification)
   # ---------------------------------------------------------------------------

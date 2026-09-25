@@ -29,12 +29,10 @@ You can run Taskure instantly using Docker Compose or Podman Compose without com
 # ============================================================
 services:
   nginx:
-    image: docker.io/library/nginx:1.26-alpine
+    image: ghcr.io/ijon6k/taskure/gateway:${IMAGE_TAG:-latest}
     container_name: taskure-nginx
     ports:
       - "${PORT_NGINX:-1106}:80"
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - web
       - api
@@ -127,13 +125,12 @@ services:
   seaweedfs:
     image: docker.io/chrislusf/seaweedfs:latest
     container_name: taskure-seaweedfs
-    command: "server -dir=/data -s3 -s3.port=9000 -s3.config=/etc/seaweedfs/s3.json"
+    command: "server -dir=/data -s3 -s3.port=9000"
     ports:
       - "${PORT_S3:-9000}:9000"
       - "${PORT_S3_FILER:-8888}:8888"
     volumes:
       - seaweedfs-data:/data
-      - ./seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
     networks:
       - taskure-network
     restart: unless-stopped
