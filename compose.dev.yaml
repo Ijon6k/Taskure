@@ -81,11 +81,11 @@ services:
       - services
       - db
 
-  minio:
-    container_name: kanban-minio-dev
+  seaweedfs:
+    container_name: kanban-seaweedfs-dev
     ports:
-      - "${PORT_MINIO:-9000}:9000"
-      - "${PORT_MINIO_CONSOLE:-9001}:9001"
+      - "${PORT_S3:-9000}:9000"
+      - "${PORT_S3_FILER:-8888}:8888"
     profiles:
       - full
       - services
