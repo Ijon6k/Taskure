@@ -172,8 +172,8 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kanban} -d ${POSTGRES_DB:-kanban}"]
       interval: 5s
       timeout: 5s
-      retries: 5
-      start_period: 5s
+      retries: 10
+      start_period: 10s
     deploy:
       resources:
         limits:
@@ -192,15 +192,15 @@ services:
       - kanban-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:9000/minio/health/live || exit 1"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9000/minio/health/live"]
       interval: 5s
-      timeout: 3s
-      retries: 5
-      start_period: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 512M
 
 volumes:
   postgres-data:

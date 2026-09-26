@@ -206,6 +206,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Prepare environment file
+        run: cp .env.example .env
+
       - name: Start Full Stack with Docker Compose
         run: |
           docker compose -f compose.yaml up -d --build
@@ -235,6 +238,14 @@ jobs:
             docker compose -f compose.yaml logs web caddy
             exit 1
           fi
+
+      - name: Dump container logs on failure
+        if: failure()
+        run: |
+          echo "=== CONTAINER STATUSES ==="
+          docker compose -f compose.yaml ps -a
+          echo "=== DUMPING ALL CONTAINER LOGS ==="
+          docker compose -f compose.yaml logs
 
       - name: Teardown
         if: always()
