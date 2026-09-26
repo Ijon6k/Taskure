@@ -3,11 +3,11 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
 WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 
-# Install only production dependencies first (layer caching)
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    uv sync --frozen --no-install-project --no-dev
+# Copy dependency definition files
+COPY pyproject.toml uv.lock* ./
+
+# Install only production dependencies first
+RUN uv sync --frozen --no-install-project --no-dev
 
 # Stage 2: Dev target with uv (reload support)
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS dev

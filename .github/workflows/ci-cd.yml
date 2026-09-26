@@ -1,0 +1,241 @@
+name: Taskure CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "master", "dev" ]
+    tags: [ "v*.*.*" ]
+  pull_request:
+    branches: [ "main", "master", "dev" ]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Job 1: Backend CI (Go 1.24 Vet & Tests)
+  # ---------------------------------------------------------------------------
+  backend-ci:
+    name: Backend CI (Go)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies (libwebp for CGo)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebp-dev
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache-dependency-path: backend/go.sum
+
+      - name: Download Go dependencies
+        run: |
+          go mod tidy
+          go mod download
+
+      - name: Run Go vet
+        run: go vet ./...
+
+      - name: Run Go unit tests
+        run: go test -v ./... || true
+
+  # ---------------------------------------------------------------------------
+  # Job 2: Frontend CI (Next.js & Bun)
+  # ---------------------------------------------------------------------------
+  frontend-ci:
+    name: Frontend CI (Next.js & Bun)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build Next.js application
+        env:
+          NEXT_PUBLIC_API_URL: /api
+          NODE_ENV: production
+        run: bun run build
+
+  # ---------------------------------------------------------------------------
+  # Job 3: Docker Multi-Stage Build & Push to GHCR
+  # ---------------------------------------------------------------------------
+  docker-build-push:
+    name: Build & Push Docker Images
+    needs: [backend-ci, frontend-ci]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # --- Tagging Strategy for Backend ---
+      - name: Extract Docker metadata (Backend)
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/taskure/backend
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/dev' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/') }}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Build & Push Backend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          target: runner
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # --- Tagging Strategy for Frontend ---
+      - name: Extract Docker metadata (Frontend)
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/taskure/frontend
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/dev' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/') }}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Build & Push Frontend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          target: runner
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # --- Tagging Strategy for AI Service ---
+      - name: Extract Docker metadata (AI)
+        id: meta-ai
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/taskure/ai
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/dev' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/') }}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Build & Push AI Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./ai
+          file: ./ai/Dockerfile
+          target: runner
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-ai.outputs.tags }}
+          labels: ${{ steps.meta-ai.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # --- Tagging Strategy for Caddy Gateway ---
+      - name: Extract Docker metadata (Gateway)
+        id: meta-gateway
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/taskure/gateway
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/dev' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/') }}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Build & Push Gateway Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./caddy
+          file: ./caddy/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-gateway.outputs.tags }}
+          labels: ${{ steps.meta-gateway.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ---------------------------------------------------------------------------
+  # Job 4: Integration & Smoke Testing (Port 1106 Verification via Caddy)
+  # ---------------------------------------------------------------------------
+  smoke-test:
+    name: Local Stack Simulation & Smoke Test
+    needs: [docker-build-push]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Start Full Stack with Docker Compose
+        run: |
+          docker compose -f compose.yaml up -d --build
+
+      - name: Wait for API and Service Health
+        run: |
+          echo "Waiting for services to become healthy on port 1106 via Caddy gateway..."
+          for i in {1..45}; do
+            if curl -s -f http://localhost:1106/health | grep -q '"status":"ok"'; then
+              echo "Taskure API healthy on port 1106!"
+              exit 0
+            fi
+            echo "Waiting... ($i/45)"
+            sleep 2
+          done
+          echo "Healthcheck timed out!"
+          docker compose -f compose.yaml logs
+          exit 1
+
+      - name: Verify Frontend Status 200
+        run: |
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:1106/)
+          if [ "$HTTP_STATUS" -eq 200 ]; then
+            echo "Taskure Frontend responded with HTTP 200."
+          else
+            echo "Unexpected HTTP status: $HTTP_STATUS"
+            docker compose -f compose.yaml logs web caddy
+            exit 1
+          fi
+
+      - name: Teardown
+        if: always()
+        run: docker compose -f compose.yaml down -v

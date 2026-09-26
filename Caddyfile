@@ -1,0 +1,49 @@
+# ============================================================
+# TASKURE — Caddy Reverse Proxy Configuration
+# ============================================================
+# For local dev / HTTP on port 1106 (or configured PORT_GATEWAY):
+:80 {
+	# Encode responses automatically (gzip & zstd)
+	encode zstd gzip
+
+	# Security Headers
+	header {
+		X-Frame-Options "SAMEORIGIN"
+		X-Content-Type-Options "nosniff"
+		X-XSS-Protection "1; mode=block"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	# Next.js static assets caching
+	@static path /_next/static/*
+	header @static Cache-Control "public, max-age=31536000, immutable"
+
+	# API Health Check Endpoint
+	handle /health {
+		reverse_proxy api:4000
+	}
+
+	# MinIO / Object Storage Proxy (served via API)
+	handle /storage/* {
+		reverse_proxy api:4000
+	}
+
+	# Python AI Service Swagger Docs
+	handle /ai/docs* {
+		reverse_proxy ai:5000
+	}
+
+	# Go REST API & Real-time AI Streaming (SSE / WebSockets)
+	handle /api/* {
+		reverse_proxy api:4000 {
+			# Immediate flushing for real-time SSE streaming
+			flush_interval -1
+		}
+	}
+
+	# Next.js Frontend Web Application (Catch-all)
+	handle {
+		reverse_proxy web:3000
+	}
+}

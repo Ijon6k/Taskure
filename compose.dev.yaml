@@ -5,14 +5,15 @@
 # ============================================================
 
 services:
-  nginx:
-    container_name: kanban-nginx-dev
+  caddy:
+    container_name: kanban-gateway-dev
     ports:
-      - "${PORT_NGINX:-1106}:80"
+      - "${PORT_GATEWAY:-${PORT_NGINX:-1106}}:80"
     depends_on: []
     profiles:
       - full
-      - nginx
+      - gateway
+      - caddy
 
   web:
     container_name: kanban-web-dev
