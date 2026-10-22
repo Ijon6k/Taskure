@@ -147,9 +147,18 @@ func (r *projectRepository) UpdateProject(project *models.Project, updates map[s
 	return r.db.Model(project).Updates(updates).Error
 }
 
-// DeleteProject removes a project (children cascade).
+// DeleteProject removes a project and cascades soft-delete to children.
 func (r *projectRepository) DeleteProject(project *models.Project) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("project_id = ?", project.ID).Delete(&models.Task{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("project_id = ?", project.ID).Delete(&models.Column{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("project_id = ?", project.ID).Delete(&models.NotebookPage{}).Error; err != nil {
+			return err
+		}
 		return tx.Delete(project).Error
 	})
 }

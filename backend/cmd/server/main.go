@@ -93,11 +93,12 @@ func main() {
 		gin.SetMode(gin.DebugMode)
 	}
 	router := gin.New()
+	_ = router.SetTrustedProxies([]string{"127.0.0.1", "172.16.0.0/12", "192.168.0.0/16", "10.0.0.0/8"})
 
 	router.Use(middleware.Recovery())
 	router.Use(middleware.Logger(logger))
 	router.Use(middleware.CORS(cfg.CORSOrigins))
-	router.Use(middleware.MaxBodySize(500 * 1024 * 1024))
+	router.Use(middleware.MaxBodySize(500 * 1024 * 1024)) // 500MB max payload limit (upload ceiling)
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
@@ -115,6 +116,9 @@ func main() {
 		Addr:              fmt.Sprintf("%s:%s", cfg.APIHost, cfg.APIPort),
 		Handler:           router,
 		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       60 * time.Second,
+		WriteTimeout:      300 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	}
 
 	go func() {

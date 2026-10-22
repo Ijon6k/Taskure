@@ -126,16 +126,21 @@ func (w *VariantWorker) Wait() {
 // run is the worker's main loop: polls the job queue and processes jobs until ctx is cancelled.
 func (w *VariantWorker) run(ctx context.Context, id int) {
 	defer w.wg.Done()
-	ticker := time.NewTicker(pollInterval)
-	defer ticker.Stop()
+	currentInterval := pollInterval
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-ticker.C:
-			if err := w.processNext(ctx); err != nil {
+		case <-time.After(currentInterval):
+			processed, err := w.processNextJob(ctx)
+			if err != nil {
 				w.logger.Error().Err(err).Msg("worker run error")
+			}
+			if processed {
+				currentInterval = pollInterval
+			} else if currentInterval < 5*time.Second {
+				currentInterval += 500 * time.Millisecond
 			}
 		}
 	}
@@ -143,12 +148,18 @@ func (w *VariantWorker) run(ctx context.Context, id int) {
 
 // processNext dequeues and processes a single variant job.
 func (w *VariantWorker) processNext(ctx context.Context) error {
+	_, err := w.processNextJob(ctx)
+	return err
+}
+
+// processNextJob dequeues and processes a single variant job, reporting whether work was done.
+func (w *VariantWorker) processNextJob(ctx context.Context) (bool, error) {
 	job, err := w.repo.ClaimNext()
 	if err != nil {
-		return fmt.Errorf("claim variant job: %w", err)
+		return false, fmt.Errorf("claim variant job: %w", err)
 	}
 	if job == nil {
-		return nil
+		return false, nil
 	}
 
 	if err := w.processJob(ctx, job); err != nil {
@@ -159,13 +170,13 @@ func (w *VariantWorker) processNext(ctx context.Context) error {
 			Int("attempts", attempts).
 			Msg("variant job failed")
 		if attempts >= w.maxAttempts {
-			return w.repo.MarkFailed(job.ID, attempts, err.Error())
+			return true, w.repo.MarkFailed(job.ID, attempts, err.Error())
 		}
-		return w.repo.Requeue(job.ID, attempts, err.Error())
+		return true, w.repo.Requeue(job.ID, attempts, err.Error())
 	}
 
 	w.logger.Info().Str("object_key", job.ObjectKey).Msg("variant job done")
-	return w.repo.MarkDone(job.ID)
+	return true, w.repo.MarkDone(job.ID)
 }
 
 // processJob generates the variant(s) for one object key and marks the job done.

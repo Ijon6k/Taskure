@@ -42,19 +42,24 @@ func (r *variantJobRepository) Create(job *models.ImageVariantJob) error {
 // other. Returns (nil, nil) when the queue is empty.
 func (r *variantJobRepository) ClaimNext() (*models.ImageVariantJob, error) {
 	var job models.ImageVariantJob
-	err := r.db.Clauses(clause.Locking{Strength: "UPDATE", Options: "SKIP LOCKED"}).
-		Where("status = ?", models.VariantJobPending).
-		Order("created_at asc").
-		Limit(1).
-		Find(&job).Error
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE", Options: "SKIP LOCKED"}).
+			Where("status = ?", models.VariantJobPending).
+			Order("created_at asc").
+			Limit(1).
+			Find(&job).Error; err != nil {
+			return err
+		}
+		if job.ID == "" {
+			return nil
+		}
+		return tx.Model(&job).Update("status", models.VariantJobProcessing).Error
+	})
 	if err != nil {
 		return nil, err
 	}
 	if job.ID == "" {
 		return nil, nil
-	}
-	if err := r.db.Model(&job).Update("status", models.VariantJobProcessing).Error; err != nil {
-		return nil, err
 	}
 	job.Status = models.VariantJobProcessing
 	return &job, nil

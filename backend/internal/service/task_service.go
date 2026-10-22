@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Ijon6k/Taskure/apps/api/internal/focusengine"
@@ -76,11 +78,12 @@ type TaskService interface {
 }
 
 type taskService struct {
-	taskRepo    repository.TaskRepository
-	projectRepo repository.ProjectRepository
-	columnRepo  repository.ColumnRepository
-	variantJobs repository.VariantJobRepository
-	storage     storage.StorageService
+	taskRepo      repository.TaskRepository
+	projectRepo   repository.ProjectRepository
+	columnRepo    repository.ColumnRepository
+	variantJobs   repository.VariantJobRepository
+	storage       storage.StorageService
+	attachmentsMu sync.Mutex
 }
 
 // NewTaskService creates the task service.
@@ -490,11 +493,23 @@ func (s *taskService) UploadAttachment(ctx context.Context, taskIDOrPublicID str
 		}
 		uploadResult = res
 	} else {
-		// Fallback URL if storage service is not initialized
+		localPath := filepath.Join("storage", "kanban-uploads", objectName)
+		if err := os.MkdirAll(filepath.Dir(localPath), 0755); err != nil {
+			return nil, fmt.Errorf("create local storage dir: %w", err)
+		}
+		f, err := os.Create(localPath)
+		if err != nil {
+			return nil, fmt.Errorf("create local file: %w", err)
+		}
+		written, err := io.Copy(f, reader)
+		_ = f.Close()
+		if err != nil {
+			return nil, fmt.Errorf("write local file: %w", err)
+		}
 		uploadResult = &storage.UploadResult{
 			ObjectKey: objectName,
 			PublicURL: fmt.Sprintf("/storage/kanban-uploads/%s", objectName),
-			Size:      fileSize,
+			Size:      written,
 		}
 	}
 
@@ -523,6 +538,15 @@ func (s *taskService) UploadAttachment(ctx context.Context, taskIDOrPublicID str
 		ObjectKey:  uploadResult.ObjectKey,
 	}
 
+	s.attachmentsMu.Lock()
+	defer s.attachmentsMu.Unlock()
+
+	// Re-fetch task under lock to ensure latest AttachmentsJSON
+	freshTask, err := s.taskRepo.FindTask(task.ID)
+	if err == nil && freshTask != nil {
+		task = freshTask
+	}
+
 	var currentAtts []AttachmentItem
 	if len(task.AttachmentsJSON) > 0 {
 		_ = json.Unmarshal(task.AttachmentsJSON, &currentAtts)
@@ -547,6 +571,9 @@ func (s *taskService) UploadAttachment(ctx context.Context, taskIDOrPublicID str
 
 // DeleteAttachment removes an attachment from the task and deletes its object from storage.
 func (s *taskService) DeleteAttachment(ctx context.Context, taskIDOrPublicID string, attachmentID string) (*models.Task, error) {
+	s.attachmentsMu.Lock()
+	defer s.attachmentsMu.Unlock()
+
 	task, err := s.taskRepo.FindTask(taskIDOrPublicID)
 	if err != nil {
 		return nil, err

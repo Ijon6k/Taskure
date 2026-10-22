@@ -1,5 +1,5 @@
 # Stage 1: Builder
-FROM golang:alpine AS builder
+FROM golang:1.24-alpine AS builder
 WORKDIR /app
 
 RUN apk add --no-cache gcc musl-dev libwebp-dev
@@ -39,13 +39,12 @@ RUN addgroup -S appgroup -g 10001 && \
     adduser -S appuser -G appgroup -u 10001
 
 WORKDIR /app
-COPY --from=builder /server /app/server
-RUN chown -R appuser:appgroup /app
+COPY --from=builder --chown=appuser:appgroup /server /app/server
 
 USER appuser
 EXPOSE 4000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD wget -qO- http://localhost:4000/health || exit 1
+    CMD wget --spider -q http://localhost:4000/health || exit 1
 
 CMD ["/app/server"]

@@ -47,6 +47,9 @@ func ValidateUploadHeader(header *multipart.FileHeader) error {
 		".exe": true, ".sh": true, ".bat": true, ".cmd": true,
 		".msi": true, ".php": true, ".py": true, ".elf": true,
 		".dll": true, ".so": true, ".dylib": true,
+		".html": true, ".htm": true, ".xhtml": true,
+		".js": true, ".mjs": true, ".vbs": true, ".ps1": true,
+		".jsp": true, ".asp": true, ".aspx": true,
 	}
 	if blockedExts[ext] {
 		return ErrExecutableNotAllowed

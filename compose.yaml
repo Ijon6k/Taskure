@@ -17,15 +17,19 @@ services:
     ports:
       - "${PORT_NGINX:-1106}:80"
     depends_on:
-      - web
-      - api
-      - ai
+      web:
+        condition: service_started
+      api:
+        condition: service_healthy
+      ai:
+        condition: service_healthy
     networks:
       - kanban-network
     restart: unless-stopped
     deploy:
       resources:
         limits:
+          cpus: '0.5'
           memory: 128M
 
   web:
@@ -48,6 +52,7 @@ services:
     deploy:
       resources:
         limits:
+          cpus: '1.0'
           memory: 512M
 
   api:
@@ -80,13 +85,14 @@ services:
       postgres:
         condition: service_healthy
       seaweedfs:
-        condition: service_started
+        condition: service_healthy
     networks:
       - kanban-network
     restart: unless-stopped
     deploy:
       resources:
         limits:
+          cpus: '1.0'
           memory: 512M
 
   ai:
@@ -115,6 +121,7 @@ services:
     deploy:
       resources:
         limits:
+          cpus: '1.0'
           memory: 512M
 
   postgres:
@@ -137,23 +144,31 @@ services:
     deploy:
       resources:
         limits:
+          cpus: '1.0'
           memory: 512M
 
   seaweedfs:
     image: docker.io/chrislusf/seaweedfs:latest
     container_name: kanban-seaweedfs
-    command: "server -dir=/data -s3 -s3.port=9000"
+    command: "server -dir=/data -s3 -s3.port=9000 -s3.config=/etc/seaweedfs/s3.json"
     ports:
-      - "${PORT_S3:-9000}:9000"
-      - "${PORT_S3_FILER:-8888}:8888"
+      - "127.0.0.1:${PORT_S3:-9000}:9000"
+      - "127.0.0.1:${PORT_S3_FILER:-8888}:8888"
     volumes:
       - seaweedfs-data:/data
+      - ./seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
     networks:
       - kanban-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8888/ || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     deploy:
       resources:
         limits:
+          cpus: '0.5'
           memory: 256M
 
 volumes:

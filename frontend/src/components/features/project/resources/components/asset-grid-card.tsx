@@ -121,9 +121,9 @@ export function AssetGridCard({
 
             {asset.url && (
               <a
-                href={asset.url.startsWith("http") ? asset.url : `https://${asset.url}`}
+                href={asset.url.startsWith("http") || asset.url.startsWith("/") ? asset.url : `https://${asset.url}`}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
                 className="p-1.5 bg-surface-l3 hover:bg-surface-hover text-theme-primary rounded-md transition-colors shadow-2xs border border-theme-subtle"
                 title="Open Link"

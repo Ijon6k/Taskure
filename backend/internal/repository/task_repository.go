@@ -89,9 +89,17 @@ func (r *taskRepository) UpdateTask(task *models.Task, updates map[string]interf
 	return r.db.Model(task).Updates(updates).Error
 }
 
-// DeleteTask removes a task.
+// DeleteTask removes a task and cascades soft-delete to checklist items and notes.
 func (r *taskRepository) DeleteTask(task *models.Task) error {
-	return r.db.Delete(task).Error
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("task_id = ?", task.ID).Delete(&models.ChecklistItem{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("task_id = ?", task.ID).Delete(&models.TaskNote{}).Error; err != nil {
+			return err
+		}
+		return tx.Delete(task).Error
+	})
 }
 
 // GetPendingTasks returns the oldest non-done tasks for a project (focus/upcoming feeds).

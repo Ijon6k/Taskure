@@ -61,6 +61,7 @@ export function useNotebookAutosave<T>({
           // keystroke keeps us "saving" until its own debounce fires.
           if (pendingRef.current?.draft === pending.draft) {
             setSaveStatus("saved");
+            pendingRef.current = null;
             onSaved?.(pending.id, pending.draft);
           }
         })
@@ -98,6 +99,7 @@ export function useNotebookAutosave<T>({
       const result = await save(pending.id, pending.draft);
       if (pendingRef.current?.draft === pending.draft) {
         setSaveStatus("saved");
+        pendingRef.current = null;
         onSaved?.(pending.id, pending.draft);
       }
       return result;

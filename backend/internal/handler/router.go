@@ -49,13 +49,17 @@ func NewContainer(
 func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 	r.GET("/storage/*filepath", c.StorageHandler.ServeStorageFile)
 
+	jsonBodyLimit := middleware.MaxBodySize(10 * 1024 * 1024)
+
 	workspaces := r.Group("/workspaces")
+	workspaces.Use(jsonBodyLimit)
 	{
 		workspaces.GET("/default", c.WorkspaceHandler.GetDefaultWorkspace)
 		workspaces.PATCH("/default", c.WorkspaceHandler.UpdateDefaultWorkspace)
 	}
 
 	projects := r.Group("/projects")
+	projects.Use(jsonBodyLimit)
 	{
 		projects.GET("", c.ProjectHandler.ListProjects)
 		projects.GET("/summary", c.ProjectHandler.ListProjectsSummary)
@@ -82,12 +86,14 @@ func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 	}
 
 	columns := r.Group("/columns")
+	columns.Use(jsonBodyLimit)
 	{
 		columns.PATCH("/:id", c.ColumnHandler.UpdateColumn)
 		columns.DELETE("/:id", c.ColumnHandler.DeleteColumn)
 	}
 
 	tasks := r.Group("/tasks")
+	tasks.Use(jsonBodyLimit)
 	{
 		tasks.GET("/:id", c.TaskHandler.GetTask)
 		tasks.PATCH("/:id/move", c.TaskHandler.MoveTask)
@@ -96,7 +102,7 @@ func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 		tasks.POST("/:id/checklist", c.ChecklistHandler.AddChecklistItem)
 	}
 
-	// Upload routes with rate limiting
+	// Upload routes with rate limiting and 500MB allowance
 	projectUpload := r.Group("/projects")
 	projectUpload.Use(middleware.UploadRateLimiter())
 	{
@@ -112,12 +118,14 @@ func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 	}
 
 	checklist := r.Group("/checklist")
+	checklist.Use(jsonBodyLimit)
 	{
 		checklist.PATCH("/:id", c.ChecklistHandler.UpdateChecklistItem)
 		checklist.DELETE("/:id", c.ChecklistHandler.DeleteChecklistItem)
 	}
 
 	notebook := r.Group("/notebook")
+	notebook.Use(jsonBodyLimit)
 	{
 		notebook.GET("/:id", c.NotebookHandler.GetPage)
 		notebook.PATCH("/:id", c.NotebookHandler.UpdatePage)
@@ -127,6 +135,7 @@ func (c *Container) RegisterRoutes(r *gin.RouterGroup) {
 	r.GET("/focus", c.FocusHandler.GetFocusTask)
 	r.GET("/focus/overview", c.FocusHandler.GetFocusOverview)
 	seed := r.Group("/seed")
+	seed.Use(jsonBodyLimit)
 	seed.Use(middleware.SeedRateLimiter())
 	{
 		seed.POST("", c.SeedHandler.SeedDemoData)

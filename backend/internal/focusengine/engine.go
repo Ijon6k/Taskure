@@ -38,12 +38,23 @@ func Evaluate(tasks []models.Task, projectMap map[string]models.Project, now tim
 
 	var items []FocusItem
 
-	totalProjectsCount := len(projectMap)
+	uniqueProjects := make(map[string]models.Project, len(projectMap))
+	for _, proj := range projectMap {
+		key := proj.ID
+		if key == "" {
+			key = proj.PublicID
+		}
+		if key != "" {
+			uniqueProjects[key] = proj
+		}
+	}
+
+	totalProjectsCount := len(uniqueProjects)
 	uniqueActiveProjects := make(map[string]models.Project)
 	archivedProjectsCount := 0
 	pausedProjectsCount := 0
 
-	for _, proj := range projectMap {
+	for _, proj := range uniqueProjects {
 		if proj.IsArchived || strings.EqualFold(proj.Status, "archived") || strings.EqualFold(proj.Status, "completed") {
 			if proj.IsArchived || strings.EqualFold(proj.Status, "archived") {
 				archivedProjectsCount++

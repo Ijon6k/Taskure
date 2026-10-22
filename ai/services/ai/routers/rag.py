@@ -1,42 +1,30 @@
 """RAG router — semantic search with pgvector"""
+import json
+import os
+import uuid
 from typing import Literal
 
-import openai
+import structlog
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
 
+from ..clients import get_db_session, get_openai_client
 from ..config import settings
 
+log = structlog.get_logger()
 router = APIRouter()
-
-_engine = None
-
-
-async def get_engine():
-    global _engine
-    if _engine is None:
-        _engine = create_async_engine(settings.database_url, pool_size=settings.postgres_pool_size)
-    return _engine
-
-
-async def get_session() -> AsyncSession:
-    engine = await get_engine()
-    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-    return async_session()
 
 
 class UpsertContextRequest(BaseModel):
-    content: str
+    content: str = Field(..., min_length=1, max_length=20000)
     project_id: str
     context_type: Literal["project", "label", "time_block", "routine"] = "project"
     metadata: dict | None = None
 
 
 class SearchContextRequest(BaseModel):
-    query: str = Field(..., max_length=4000)
+    query: str = Field(..., min_length=1, max_length=4000)
     project_id: str
     top_k: int = Field(default=5, ge=1, le=20)
     similarity_threshold: float = Field(default=0.7, ge=0.0, le=1.0)
@@ -53,96 +41,110 @@ class ContextRecord(BaseModel):
 @router.post("/context")
 async def upsert_context(req: UpsertContextRequest):
     """Store a context chunk with its embedding"""
-    api_key = settings.openai_api_key or os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise HTTPException(400, "OpenAI API key required for embeddings")
-
-    client = openai.OpenAI(api_key=api_key)
+    try:
+        client = get_openai_client()
+    except ValueError as e:
+        raise HTTPException(400, str(e))
 
     try:
-        response = client.embeddings.create(
+        response = await client.embeddings.create(
             model=settings.openai_embedding_model,
             input=req.content,
         )
-        embedding = response.data[0].embedding
+        raw_embedding = response.data[0].embedding
+        # Format as string vector literal for PostgreSQL pgvector
+        vector_str = f"[{','.join(str(x) for x in raw_embedding)}]"
     except Exception as e:
-        raise HTTPException(500, f"Embedding failed: {str(e)}")
+        log.error("rag.embedding_failed", error=str(e))
+        raise HTTPException(500, "Embedding generation failed")
 
-    async with await get_session() as session:
-        # Simple chunking — 1 chunk for now (MVP)
+    async with await get_db_session() as session:
         chunk_index = 0
         total_chunks = 1
+        new_id = str(uuid.uuid4())
+        new_public_id = f"ctx_{uuid.uuid4().hex[:12]}"
 
         query = text("""
-            INSERT INTO project_context
-                (content, chunk_index, total_chunks, context_type, project_id, metadata, embedding, created_at, updated_at)
+            INSERT INTO project_contexts
+                (id, public_id, content, chunk_index, total_chunks, context_type, project_id, metadata, embedding, created_at, updated_at)
             VALUES
-                (:content, :chunk_index, :total_chunks, :context_type, :project_id, :metadata, :embedding, NOW(), NOW())
+                (:id, :public_id, :content, :chunk_index, :total_chunks, :context_type, :project_id, :metadata::jsonb, :embedding::vector, NOW(), NOW())
             RETURNING id
         """)
 
-        result = await session.execute(query, {
-            "content": req.content,
-            "chunk_index": chunk_index,
-            "total_chunks": total_chunks,
-            "context_type": req.context_type,
-            "project_id": req.project_id,
-            "metadata": str(req.metadata or {}),
-            "embedding": embedding,
-        })
-        await session.commit()
-        row = await result.fetchone()
-
-        return {"id": row[0], "chunk_index": chunk_index, "total_chunks": total_chunks}
+        try:
+            result = await session.execute(query, {
+                "id": new_id,
+                "public_id": new_public_id,
+                "content": req.content,
+                "chunk_index": chunk_index,
+                "total_chunks": total_chunks,
+                "context_type": req.context_type,
+                "project_id": req.project_id,
+                "metadata": json.dumps(req.metadata or {}),
+                "embedding": vector_str,
+            })
+            await session.commit()
+            row = await result.fetchone()
+            if not row:
+                raise HTTPException(500, "Failed to insert context record")
+            return {"id": str(row[0]), "chunk_index": chunk_index, "total_chunks": total_chunks}
+        except Exception as e:
+            await session.rollback()
+            log.error("rag.db_insert_failed", error=str(e))
+            raise HTTPException(500, "Failed to persist project context")
 
 
 @router.post("/search")
 async def search_context(req: SearchContextRequest):
     """Semantic search over project context using cosine similarity"""
-    api_key = settings.openai_api_key or os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise HTTPException(400, "OpenAI API key required for embeddings")
-
-    client = openai.OpenAI(api_key=api_key)
-
-    # Generate query embedding
     try:
-        response = client.embeddings.create(
+        client = get_openai_client()
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+    try:
+        response = await client.embeddings.create(
             model=settings.openai_embedding_model,
             input=req.query,
         )
-        query_embedding = response.data[0].embedding
+        raw_embedding = response.data[0].embedding
+        vector_str = f"[{','.join(str(x) for x in raw_embedding)}]"
     except Exception as e:
-        raise HTTPException(500, f"Embedding failed: {str(e)}")
+        log.error("rag.query_embedding_failed", error=str(e))
+        raise HTTPException(500, "Embedding generation failed")
 
-    async with await get_session() as session:
-        # Use pgvector cosine distance for similarity search
+    async with await get_db_session() as session:
         query = text("""
             SELECT id, content, context_type, chunk_index,
                    1 - (embedding <=> :query_embedding::vector) AS similarity
-            FROM project_context
+            FROM project_contexts
             WHERE project_id = :project_id
             ORDER BY embedding <=> :query_embedding::vector
             LIMIT :top_k
         """)
 
-        result = await session.execute(query, {
-            "query_embedding": query_embedding,
-            "project_id": req.project_id,
-            "top_k": req.top_k,
-        })
-        rows = await result.fetchall()
+        try:
+            result = await session.execute(query, {
+                "query_embedding": vector_str,
+                "project_id": req.project_id,
+                "top_k": req.top_k,
+            })
+            rows = await result.fetchall()
+        except Exception as e:
+            log.error("rag.search_query_failed", error=str(e))
+            raise HTTPException(500, "Database search failed")
 
         results = []
         for row in rows:
-            similarity = row[4] if len(row) > 4 else 0.0
+            similarity = float(row[4]) if len(row) > 4 and row[4] is not None else 0.0
             if similarity >= req.similarity_threshold:
                 results.append(ContextRecord(
                     id=str(row[0]),
                     content=row[1],
                     context_type=row[2],
                     chunk_index=row[3],
-                    similarity=float(similarity) if similarity else None,
+                    similarity=round(similarity, 4),
                 ))
 
         return {"results": results, "total": len(results)}

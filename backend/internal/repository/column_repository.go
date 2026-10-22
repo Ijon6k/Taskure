@@ -48,7 +48,12 @@ func (r *columnRepository) UpdateColumn(col *models.Column, updates map[string]i
 	return r.db.Model(col).Updates(updates).Error
 }
 
-// DeleteColumn removes a column (tasks cascade).
+// DeleteColumn removes a column and cascades soft-delete to its tasks.
 func (r *columnRepository) DeleteColumn(id string) error {
-	return r.db.Delete(&models.Column{}, "id = ?", id).Error
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("column_id = ?", id).Delete(&models.Task{}).Error; err != nil {
+			return err
+		}
+		return tx.Delete(&models.Column{}, "id = ?", id).Error
+	})
 }

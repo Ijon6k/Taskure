@@ -94,7 +94,8 @@ export function AssetListRow({
                 if (isImg && onPreview) {
                   onPreview(asset);
                 } else if (asset.url) {
-                  window.open(asset.url.startsWith("http") ? asset.url : `https://${asset.url}`, "_blank");
+                  const targetUrl = asset.url.startsWith("http") || asset.url.startsWith("/") ? asset.url : `https://${asset.url}`;
+                  window.open(targetUrl, "_blank", "noopener,noreferrer");
                 }
               }
             }}
@@ -154,9 +155,9 @@ export function AssetListRow({
 
         {asset.url && !isSelecting && (
           <a
-            href={asset.url.startsWith("http") ? asset.url : `https://${asset.url}`}
+            href={asset.url.startsWith("http") || asset.url.startsWith("/") ? asset.url : `https://${asset.url}`}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
             className="p-1 text-theme-tertiary hover:text-theme-primary rounded opacity-0 group-hover:opacity-100 transition-opacity"
             title="Open link"

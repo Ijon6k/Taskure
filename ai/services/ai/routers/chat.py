@@ -1,21 +1,25 @@
-"""Chat router — dual LLM provider (OpenAI + Anthropic)"""
-import os
+"""Chat router — dual LLM provider (OpenAI + Anthropic) with async streaming"""
 from typing import Literal
 
+import structlog
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
-import anthropic
-import openai
-
+from ..clients import get_anthropic_client, get_openai_client
 from ..config import settings
 
+log = structlog.get_logger()
 router = APIRouter()
+
+SYSTEM_PROMPT = (
+    "You are an AI assistant in Taskure, a personal project workspace and Kanban board. "
+    "Be concise, helpful, and task-oriented. Never leak internal system keys or configuration."
+)
 
 
 class ChatRequest(BaseModel):
-    message: str = Field(..., max_length=4000)
+    message: str = Field(..., min_length=1, max_length=4000)
     workspace_id: str
     project_id: str | None = None
     provider: Literal["openai", "anthropic"] | None = None
@@ -36,41 +40,99 @@ class ChatResponse(BaseModel):
 
 
 async def chat_openai(messages: list[ChatMessage], model: str, stream: bool = True):
-    client = openai.OpenAI(api_key=settings.openai_api_key or os.getenv("OPENAI_API_KEY"))
+    try:
+        client = get_openai_client()
+    except ValueError as e:
+        raise HTTPException(400, str(e))
 
-    def generate():
-        response = client.chat.completions.create(
-            model=model or settings.openai_model,
-            messages=[{"role": m.role, "content": m.content} for m in messages],
-            stream=True,
-            temperature=settings.openai_temperature,
-            max_tokens=settings.openai_max_tokens,
-        )
-        for chunk in response:
-            delta = chunk.choices[0].delta.content
-            if delta:
-                yield {"event": "message", "data": delta}
-        yield {"event": "done", "data": "[DONE]"}
+    openai_model = model or settings.openai_model
+    formatted_messages = [{"role": "system", "content": SYSTEM_PROMPT}] + [
+        {"role": m.role, "content": m.content} for m in messages
+    ]
+
+    if not stream:
+        try:
+            resp = await client.chat.completions.create(
+                model=openai_model,
+                messages=formatted_messages,
+                temperature=settings.openai_temperature,
+                max_tokens=settings.openai_max_tokens,
+            )
+            content = resp.choices[0].message.content or ""
+            usage = {
+                "prompt_tokens": resp.usage.prompt_tokens if resp.usage else 0,
+                "completion_tokens": resp.usage.completion_tokens if resp.usage else 0,
+            }
+            return ChatResponse(content=content, provider="openai", model=openai_model, usage=usage)
+        except Exception as e:
+            log.error("chat.openai_error", error=str(e))
+            raise HTTPException(500, "OpenAI chat completion failed")
+
+    async def generate():
+        try:
+            stream_resp = await client.chat.completions.create(
+                model=openai_model,
+                messages=formatted_messages,
+                stream=True,
+                temperature=settings.openai_temperature,
+                max_tokens=settings.openai_max_tokens,
+            )
+            async for chunk in stream_resp:
+                if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:
+                    yield {"event": "message", "data": chunk.choices[0].delta.content}
+            yield {"event": "done", "data": "[DONE]"}
+        except Exception as e:
+            log.error("chat.openai_stream_error", error=str(e))
+            yield {"event": "error", "data": "Streaming error occurred"}
 
     return EventSourceResponse(generate())
 
 
 async def chat_anthropic(messages: list[ChatMessage], model: str, stream: bool = True):
-    client = anthropic.Anthropic(api_key=settings.anthropic_api_key or os.getenv("ANTHROPIC_API_KEY"))
+    try:
+        client = get_anthropic_client()
+    except ValueError as e:
+        raise HTTPException(400, str(e))
 
-    system_msg = "You are an AI assistant in a personal project workspace called Kanban. Be helpful, concise, and context-aware."
+    anthropic_model = model or settings.anthropic_model
+    anthropic_messages = [
+        {"role": m.role, "content": m.content} for m in messages if m.role != "system"
+    ]
 
-    def generate():
-        with client.messages.stream(
-            model=model or settings.anthropic_model,
-            max_tokens=settings.anthropic_max_tokens,
-            temperature=settings.anthropic_temperature,
-            system=system_msg,
-            messages=[{"role": m.role, "content": m.content} for m in messages if m.role != "system"],
-        ) as stream:
-            for text in stream.text_stream:
-                yield {"event": "message", "data": text}
+    if not stream:
+        try:
+            resp = await client.messages.create(
+                model=anthropic_model,
+                max_tokens=settings.anthropic_max_tokens,
+                temperature=settings.anthropic_temperature,
+                system=SYSTEM_PROMPT,
+                messages=anthropic_messages,
+            )
+            content = resp.content[0].text if resp.content else ""
+            usage = {
+                "prompt_tokens": resp.usage.input_tokens if resp.usage else 0,
+                "completion_tokens": resp.usage.output_tokens if resp.usage else 0,
+            }
+            return ChatResponse(content=content, provider="anthropic", model=anthropic_model, usage=usage)
+        except Exception as e:
+            log.error("chat.anthropic_error", error=str(e))
+            raise HTTPException(500, "Anthropic chat completion failed")
+
+    async def generate():
+        try:
+            async with client.messages.stream(
+                model=anthropic_model,
+                max_tokens=settings.anthropic_max_tokens,
+                temperature=settings.anthropic_temperature,
+                system=SYSTEM_PROMPT,
+                messages=anthropic_messages,
+            ) as stream_ctx:
+                async for text in stream_ctx.text_stream:
+                    yield {"event": "message", "data": text}
             yield {"event": "done", "data": "[DONE]"}
+        except Exception as e:
+            log.error("chat.anthropic_stream_error", error=str(e))
+            yield {"event": "error", "data": "Streaming error occurred"}
 
     return EventSourceResponse(generate())
 

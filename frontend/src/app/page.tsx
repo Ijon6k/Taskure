@@ -46,7 +46,7 @@ export default function HomePage() {
   );
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-surface-l0 text-theme-primary font-sans select-none overflow-hidden">
+    <div className="flex flex-col md:flex-row h-screen bg-surface-l0 text-theme-primary font-sans overflow-hidden">
       <MobileHeader title="Home" onOpenCreateProject={openCreateProject} />
       <Sidebar onOpenCreateProject={openCreateProject} />
 

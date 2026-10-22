@@ -12,7 +12,7 @@ export default function DashboardLayout({
   const openCreateProject = useUIStore((s) => s.openCreateProject);
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-surface-l0 text-theme-primary font-sans select-none overflow-hidden">
+    <div className="flex flex-col md:flex-row h-screen bg-surface-l0 text-theme-primary font-sans overflow-hidden">
       <MobileHeader title="Taskure" onOpenCreateProject={openCreateProject} />
       <Sidebar onOpenCreateProject={openCreateProject} />
       <div className="flex-1 flex flex-col h-screen overflow-hidden">

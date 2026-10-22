@@ -62,7 +62,7 @@ func NotFound(c *gin.Context, msg string) {
 // InternalServerError sends a 500 Internal Server Error response.
 func InternalServerError(c *gin.Context, err error) {
 	msg := "An internal server error occurred"
-	if err != nil {
+	if gin.IsDebugging() && err != nil {
 		msg = err.Error()
 	}
 	Error(c, http.StatusInternalServerError, msg)

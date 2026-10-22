@@ -162,7 +162,7 @@ type Task struct {
 	Priority        string         `gorm:"size:20;default:'medium';index" json:"priority"`
 	Status          string         `gorm:"size:20;default:'todo';index" json:"status"`
 	Position        int            `gorm:"not null;default:0" json:"position"`
-	DueDate         *time.Time     `json:"due_date,omitempty"`
+	DueDate         *time.Time     `gorm:"index" json:"due_date,omitempty"`
 	StartDate       *time.Time     `json:"start_date,omitempty"`
 	EstimatedHours  *float64       `json:"estimated_hours,omitempty"`
 	ActualHours     *float64       `json:"actual_hours,omitempty"`

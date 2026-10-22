@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
 
 	"github.com/Ijon6k/Taskure/apps/api/internal/models"
@@ -56,8 +58,20 @@ func (h *TaskHandler) GetTask(c *gin.Context) {
 // UpdateTask handles PATCH /tasks/:id — partial update (title, description, tags, due date, ...).
 func (h *TaskHandler) UpdateTask(c *gin.Context) {
 	idParam := c.Param("id")
+	bodyBytes, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		response.BadRequest(c, err)
+		return
+	}
+
+	var rawMap map[string]interface{}
+	if err := json.Unmarshal(bodyBytes, &rawMap); err != nil {
+		response.BadRequest(c, err)
+		return
+	}
+
 	var input models.UpdateTaskInput
-	if err := c.ShouldBindJSON(&input); err != nil {
+	if err := json.Unmarshal(bodyBytes, &input); err != nil {
 		response.BadRequest(c, err)
 		return
 	}
@@ -75,8 +89,12 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
 	if input.Status != nil {
 		updates["status"] = *input.Status
 	}
-	if input.DueDate != nil {
-		updates["due_date"] = *input.DueDate
+	if _, ok := rawMap["due_date"]; ok {
+		if input.DueDate != nil {
+			updates["due_date"] = *input.DueDate
+		} else {
+			updates["due_date"] = nil
+		}
 	}
 	if input.Tags != nil {
 		updates["tags"] = input.Tags

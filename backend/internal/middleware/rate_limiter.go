@@ -20,28 +20,13 @@ type clientLimiter struct {
 	resetAt time.Time
 }
 
-// NewRateLimiter creates a token-bucket rate limiter with the given rate and burst.
+// NewRateLimiter creates a rate limiter with the given rate and window duration.
 func NewRateLimiter(rate int, window time.Duration) *RateLimiter {
-	rl := &RateLimiter{
+	return &RateLimiter{
 		limiters: make(map[string]*clientLimiter),
 		rate:     rate,
 		window:   window,
 	}
-	// Cleanup goroutine
-	go func() {
-		for {
-			time.Sleep(window)
-			rl.mu.Lock()
-			now := time.Now()
-			for k, v := range rl.limiters {
-				if now.After(v.resetAt) {
-					delete(rl.limiters, k)
-				}
-			}
-			rl.mu.Unlock()
-		}
-	}()
-	return rl
 }
 
 // Middleware returns the Gin middleware enforcing the rate limit per IP.
@@ -49,8 +34,18 @@ func (rl *RateLimiter) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		key := c.ClientIP()
 		rl.mu.Lock()
-		limiter, exists := rl.limiters[key]
 		now := time.Now()
+
+		// Lazy cleanup of expired entries when cache grows, preventing memory & goroutine leaks
+		if len(rl.limiters) > 256 {
+			for k, v := range rl.limiters {
+				if now.After(v.resetAt) {
+					delete(rl.limiters, k)
+				}
+			}
+		}
+
+		limiter, exists := rl.limiters[key]
 		if !exists || now.After(limiter.resetAt) {
 			rl.limiters[key] = &clientLimiter{count: 1, resetAt: now.Add(rl.window)}
 			rl.mu.Unlock()
@@ -70,12 +65,17 @@ func (rl *RateLimiter) Middleware() gin.HandlerFunc {
 	}
 }
 
+var (
+	uploadLimiter = NewRateLimiter(60, time.Minute)
+	seedLimiter   = NewRateLimiter(10, time.Minute)
+)
+
 // UploadRateLimiter is a stricter limiter for file upload endpoints.
 func UploadRateLimiter() gin.HandlerFunc {
-	return NewRateLimiter(60, time.Minute).Middleware()
+	return uploadLimiter.Middleware()
 }
 
 // SeedRateLimiter is a stricter limiter for the demo-seed endpoint.
 func SeedRateLimiter() gin.HandlerFunc {
-	return NewRateLimiter(10, time.Minute).Middleware()
+	return seedLimiter.Middleware()
 }

@@ -8,6 +8,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from .clients import close_resources
 from .routers import chat, embedding, health, rag
 
 load_dotenv()
@@ -16,6 +17,7 @@ log = structlog.get_logger()
 
 AI_HOST = os.getenv("AI_HOST", "0.0.0.0")
 AI_PORT = int(os.getenv("AI_PORT", "5000"))
+CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",") if o.strip()]
 
 
 @asynccontextmanager
@@ -23,6 +25,7 @@ async def lifespan(app: FastAPI):
     log.info("ai_service.starting", host=AI_HOST, port=AI_PORT)
     yield
     log.info("ai_service.shutting_down")
+    await close_resources()
 
 
 app = FastAPI(
@@ -36,9 +39,9 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=CORS_ORIGINS if CORS_ORIGINS != ["*"] else ["*"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 

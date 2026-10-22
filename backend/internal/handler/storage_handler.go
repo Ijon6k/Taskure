@@ -194,6 +194,7 @@ func (h *StorageHandler) serveOriginal(c *gin.Context, relPath string, variantRe
 	defer reader.Close()
 
 	ext := filepath.Ext(relPath)
+	c.Header("X-Content-Type-Options", "nosniff")
 	switch strings.ToLower(ext) {
 	case ".png":
 		c.Header("Content-Type", "image/png")
@@ -211,6 +212,7 @@ func (h *StorageHandler) serveOriginal(c *gin.Context, relPath string, variantRe
 		c.Header("Content-Type", "application/pdf")
 	default:
 		c.Header("Content-Type", "application/octet-stream")
+		c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%q", filepath.Base(relPath)))
 	}
 
 	// A variant request answered with the original must not be cached long-term,

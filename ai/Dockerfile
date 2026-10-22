@@ -28,11 +28,10 @@ WORKDIR /app
 RUN addgroup --system --gid 10001 appgroup && \
     adduser --system --uid 10001 appuser
 
-COPY --from=builder /app/.venv /app/.venv
-COPY . .
+COPY --from=builder --chown=appuser:appgroup /app/.venv /app/.venv
+COPY --chown=appuser:appgroup . .
 
 ENV PATH="/app/.venv/bin:$PATH" PYTHONPATH=/app
-RUN chown -R appuser:appgroup /app
 
 USER appuser
 EXPOSE 5000
@@ -40,4 +39,4 @@ EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"
 
-CMD ["uvicorn", "services.ai.main:app", "--host", "0.0.0.0", "--port", "5000", "--workers", "4"]
+CMD ["uvicorn", "services.ai.main:app", "--host", "0.0.0.0", "--port", "5000", "--workers", "2"]

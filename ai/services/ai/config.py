@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     postgres_user: str = "kanban"
     postgres_password: str = "changeme"
     postgres_db: str = "kanban"
-    postgres_pool_size: int = 10
+    postgres_pool_size: int = 5
 
     @property
     def database_url(self) -> str:

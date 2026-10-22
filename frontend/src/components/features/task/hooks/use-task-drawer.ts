@@ -163,7 +163,7 @@ export function useTaskDrawer({ taskId, onClose }: UseTaskDrawerOptions) {
         title: editTitle.trim(),
         description: editDescription.trim(),
         priority: editPriority,
-        due_date: editDueDate ? new Date(editDueDate + "T00:00:00").toISOString() : null,
+        due_date: editDueDate ? new Date(`${editDueDate}T00:00:00Z`).toISOString() : null,
       });
       setTask(updated);
       setTaskAttachments((updated.attachments as AttachmentItem[]) ?? taskAttachments);
@@ -200,7 +200,7 @@ export function useTaskDrawer({ taskId, onClose }: UseTaskDrawerOptions) {
     if (!isEditing) {
       try {
         const updated = await api.updateTask(task.id, {
-          due_date: iso ? new Date(iso + "T00:00:00").toISOString() : null,
+          due_date: iso ? new Date(`${iso}T00:00:00Z`).toISOString() : null,
         });
         setTask(updated);
         setTaskAttachments((updated.attachments as AttachmentItem[]) ?? taskAttachments);

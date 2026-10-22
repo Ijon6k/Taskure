@@ -35,14 +35,15 @@ services:
       postgres:
         condition: service_healthy
       seaweedfs:
-        condition: service_started
+        condition: service_healthy
     networks:
       - kanban-network
     restart: unless-stopped
     deploy:
       resources:
         limits:
-          memory: 256M
+          cpus: '1.0'
+          memory: 512M
 
   ai:
     image: ghcr.io/ijon6k/taskure/ai:${IMAGE_TAG:-latest}
@@ -70,13 +71,14 @@ services:
     deploy:
       resources:
         limits:
+          cpus: '1.0'
           memory: 512M
 
   postgres:
     image: docker.io/pgvector/pgvector:pg16
     container_name: kanban-postgres
     ports:
-      - "${PORT_POSTGRES:-5432}:5432"
+      - "127.0.0.1:${PORT_POSTGRES:-5432}:5432"
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-kanban}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
@@ -94,23 +96,31 @@ services:
     deploy:
       resources:
         limits:
+          cpus: '1.0'
           memory: 512M
 
   seaweedfs:
     image: docker.io/chrislusf/seaweedfs:latest
     container_name: kanban-seaweedfs
-    command: "server -dir=/data -s3 -s3.port=9000"
+    command: "server -dir=/data -s3 -s3.port=9000 -s3.config=/etc/seaweedfs/s3.json"
     ports:
-      - "${PORT_S3:-9000}:9000"
-      - "${PORT_S3_FILER:-8888}:8888"
+      - "127.0.0.1:${PORT_S3:-9000}:9000"
+      - "127.0.0.1:${PORT_S3_FILER:-8888}:8888"
     volumes:
       - seaweedfs-data:/data
+      - ./seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
     networks:
       - kanban-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8888/ || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     deploy:
       resources:
         limits:
+          cpus: '0.5'
           memory: 256M
 
 volumes:

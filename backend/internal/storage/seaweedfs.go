@@ -57,22 +57,6 @@ func (s *seaweedFSStorageService) EnsureBucket(ctx context.Context) error {
 		s.logger.Info().Str("bucket", s.bucket).Msg("created seaweedfs bucket")
 	}
 
-	policy := fmt.Sprintf(`{
-		"Version": "2012-10-17",
-		"Statement": [
-			{
-				"Effect": "Allow",
-				"Principal": {"AWS": ["*"]},
-				"Action": ["s3:GetObject"],
-				"Resource": ["arn:aws:s3:::%s/*"]
-			}
-		]
-	}`, s.bucket)
-
-	if err := s.client.SetBucketPolicy(ctx, s.bucket, policy); err != nil {
-		s.logger.Warn().Err(err).Str("bucket", s.bucket).Msg("failed to set public bucket policy (bucket might already have custom policy)")
-	}
-
 	return nil
 }
 

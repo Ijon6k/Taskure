@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Code, Database, BookOpen, Trash2, CheckCircle2, FileText } from "lucide-react";
 import { ProjectContextData } from "@/lib/api";
 import { toast } from "sonner";
@@ -21,57 +21,89 @@ export function AiContextManager({
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const initialDocs: ProjectContextData[] = contexts.length > 0
-    ? contexts
-    : [
-        {
-          id: "ctx-1",
-          title: "v2 REST API & OAuth 2.1 Specification",
-          content: "Comprehensive OpenAPI 3.1 specification for v2 endpoints including PKCE authorization, rate limiting (100 req/min), and cursor-based pagination.",
-          context_type: "api_spec",
-          project_id: projectId,
-          created_at: new Date().toISOString(),
-        },
-        {
-          id: "ctx-2",
-          title: "PostgreSQL & Database Schema Architecture",
-          content: "Database schema tables for Workspaces, Projects, Columns, Tasks, ChecklistItems, Labels, and Context embeddings.",
-          context_type: "database_schema",
-          project_id: projectId,
-          created_at: new Date().toISOString(),
-        },
-      ];
+  const storageKey = `kanban_ai_context_${projectId}`;
 
-  const [docList, setDocList] = useState<ProjectContextData[]>(initialDocs);
+  const [docList, setDocList] = useState<ProjectContextData[]>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          // ignore parsing error
+        }
+      }
+    }
+    return contexts.length > 0 ? contexts : [];
+  });
 
-  const handleCreateDoc = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        try {
+          setDocList(JSON.parse(saved));
+          return;
+        } catch {
+          // ignore parsing error
+        }
+      }
+    }
+    setDocList(contexts.length > 0 ? contexts : []);
+  }, [projectId, storageKey]);
+
+  const saveToLocal = (docs: ProjectContextData[]) => {
+    setDocList(docs);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(storageKey, JSON.stringify(docs));
+    }
+  };
+
+  const handleCreateDoc = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!docTitle.trim() || !docContent.trim()) return;
 
     setIsSaving(true);
-    setTimeout(() => {
-      const newDoc: ProjectContextData = {
-        id: "ctx-" + Date.now(),
-        title: docTitle.trim(),
-        content: docContent.trim(),
-        context_type: docType,
-        project_id: projectId,
-        created_at: new Date().toISOString(),
-      };
+    const newDoc: ProjectContextData = {
+      id: "ctx-" + Date.now(),
+      title: docTitle.trim(),
+      content: docContent.trim(),
+      context_type: docType,
+      project_id: projectId,
+      created_at: new Date().toISOString(),
+    };
 
-      setDocList([newDoc, ...docList]);
-      setDocTitle("");
-      setDocContent("");
-      setIsAdding(false);
-      setIsSaving(false);
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-      toast.success("Document added!");
-    }, 400);
+    try {
+      await fetch("/api/ai/rag/context", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: `${docTitle.trim()}: ${docContent.trim()}`,
+          project_id: projectId,
+          context_type: "project",
+          metadata: { title: docTitle.trim(), doc_type: docType },
+        }),
+      }).catch(() => {
+        // AI service optional
+      });
+    } catch {
+      // offline fallback
+    }
+
+    const updated = [newDoc, ...docList];
+    saveToLocal(updated);
+    setDocTitle("");
+    setDocContent("");
+    setIsAdding(false);
+    setIsSaving(false);
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 3000);
+    toast.success("Document added to AI context!");
   };
 
   const handleDeleteDoc = (id: string) => {
-    setDocList(docList.filter((d) => d.id !== id));
+    const updated = docList.filter((d) => d.id !== id);
+    saveToLocal(updated);
     toast.success("Document removed");
   };
 

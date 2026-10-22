@@ -25,7 +25,7 @@ const MaxDecodePixels = 24 * 1000 * 1000
 // generation. The worker buffers the full object before decoding, so skipping
 // oversized uploads keeps memory well under the container limit. Files above
 // this threshold are still uploaded and served at original size.
-const MaxVariantSourceBytes = 128 * 1024 * 1024
+const MaxVariantSourceBytes = 32 * 1024 * 1024
 
 // PreviewQuality is the WebP encode quality used for all generated variants.
 const PreviewQuality = 80
