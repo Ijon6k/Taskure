@@ -1,4 +1,3 @@
-"""Health check & hello router"""
 from datetime import datetime, timezone
 
 from fastapi import APIRouter

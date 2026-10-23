@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
@@ -55,6 +55,19 @@ export default function ProjectBoardPage() {
   const closeExportJson = useUIStore((s) => s.closeExportJson);
   const selectedTaskId = useUIStore((s) => s.selectedTaskId);
   const setSelectedTaskId = useUIStore((s) => s.setSelectedTaskId);
+  const stagedBoardPlan = useUIStore((s) => s.stagedBoardPlan);
+  const setStagedBoardPlan = useUIStore((s) => s.setStagedBoardPlan);
+
+  // When AI proposes a staged board plan from chat, automatically open BoardImportPreview
+  useEffect(() => {
+    if (stagedBoardPlan && project) {
+      setImportPreview({
+        parsed: stagedBoardPlan,
+        diff: buildReplaceDiff(project, stagedBoardPlan),
+      });
+      setStagedBoardPlan(null);
+    }
+  }, [stagedBoardPlan, project, setStagedBoardPlan]);
 
   const handleTaskClick = useCallback((task: TaskData) => {
     setSelectedTaskId(task.id);

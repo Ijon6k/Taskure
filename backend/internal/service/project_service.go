@@ -5,14 +5,17 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"strings"
 	"sync"
 
+	"github.com/Ijon6k/Taskure/apps/api/internal/domain"
 	"github.com/Ijon6k/Taskure/apps/api/internal/models"
 	"github.com/Ijon6k/Taskure/apps/api/internal/repository"
 	"github.com/Ijon6k/Taskure/apps/api/internal/storage"
 	"github.com/Ijon6k/Taskure/apps/api/internal/viewmodels"
 	"gorm.io/datatypes"
+	"gorm.io/gorm"
 )
 
 // ErrResourceNotFound is returned when a project resource ID does not exist.
@@ -73,6 +76,7 @@ type ProjectService interface {
 }
 
 type projectService struct {
+	db            *gorm.DB
 	projectRepo   repository.ProjectRepository
 	workspaceRepo repository.WorkspaceRepository
 	columnRepo    repository.ColumnRepository
@@ -88,6 +92,7 @@ type projectService struct {
 
 // NewProjectService creates the project service.
 func NewProjectService(
+	db *gorm.DB,
 	projectRepo repository.ProjectRepository,
 	workspaceRepo repository.WorkspaceRepository,
 	columnRepo repository.ColumnRepository,
@@ -96,6 +101,7 @@ func NewProjectService(
 	storage storage.StorageService,
 ) ProjectService {
 	return &projectService{
+		db:            db,
 		projectRepo:   projectRepo,
 		workspaceRepo: workspaceRepo,
 		columnRepo:    columnRepo,
@@ -168,21 +174,30 @@ func (s *projectService) CreateProject(input CreateProjectInput) (*models.Projec
 		OwnerID:      ws.OwnerID,
 	}
 
-	if err := s.projectRepo.CreateProject(&project); err != nil {
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		if err := s.projectRepo.CreateProject(&project); err != nil {
+			return err
+		}
+
+		// Create default columns unless template is explicitly set to "blank"
+		if input.Template != "blank" {
+			defaultColumns := []models.Column{
+				{Name: "Todo", Behavior: models.ColumnBehaviorActive, Position: 0, ProjectID: project.ID, Color: "#6B7280"},
+				{Name: "In Progress", Behavior: models.ColumnBehaviorActive, Position: 1, ProjectID: project.ID, Color: "#3B82F6"},
+				{Name: "Done", Behavior: models.ColumnBehaviorCompleted, Position: 2, ProjectID: project.ID, Color: "#22C55E"},
+			}
+
+			for _, col := range defaultColumns {
+				if err := s.columnRepo.CreateColumn(&col); err != nil {
+					return err
+				}
+			}
+		}
+
+		return domain.EmitEvent(s.db, tx, "project", project.ID, "project.created", map[string]string{"name": project.Name})
+	})
+	if err != nil {
 		return nil, err
-	}
-
-	// Create default columns unless template is explicitly set to "blank"
-	if input.Template != "blank" {
-		defaultColumns := []models.Column{
-			{Name: "Todo", Behavior: models.ColumnBehaviorActive, Position: 0, ProjectID: project.ID, Color: "#6B7280"},
-			{Name: "In Progress", Behavior: models.ColumnBehaviorActive, Position: 1, ProjectID: project.ID, Color: "#3B82F6"},
-			{Name: "Done", Behavior: models.ColumnBehaviorCompleted, Position: 2, ProjectID: project.ID, Color: "#22C55E"},
-		}
-
-		for _, col := range defaultColumns {
-			_ = s.columnRepo.CreateColumn(&col)
-		}
 	}
 
 	return s.projectRepo.FindProject(project.PublicID)
@@ -306,6 +321,19 @@ func (s *projectService) UpdateProject(idOrPublicID string, input *UpdateProject
 	if err := s.projectRepo.UpdateProject(project, updates); err != nil {
 		return nil, err
 	}
+
+	name := project.Name
+	if n, ok := updates["name"].(string); ok {
+		name = n
+	}
+	status := project.Status
+	if s, ok := updates["status"].(string); ok {
+		status = s
+	}
+	if err := domain.EmitEvent(s.db, nil, "project", project.ID, "project.updated", map[string]string{"name": name, "status": status, "project_id": project.ID}); err != nil {
+		log.Printf("WARNING: failed to emit project.updated event: %v", err)
+	}
+
 	return s.projectRepo.FindProject(project.ID)
 }
 
@@ -325,9 +353,16 @@ func (s *projectService) DeleteProject(idOrPublicID string) error {
 		}
 	}
 
-	if err := s.projectRepo.DeleteProject(project); err != nil {
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		if err := s.projectRepo.DeleteProject(project); err != nil {
+			return err
+		}
+		return domain.EmitEvent(s.db, tx, "project", project.ID, "project.deleted", map[string]string{"name": project.Name})
+	})
+	if err != nil {
 		return err
 	}
+
 	// Best-effort cleanup of orphaned objects and pending variant jobs after
 	// the DB delete succeeds.
 	_ = s.variantJobs.DeleteByObjectKeys(keys)

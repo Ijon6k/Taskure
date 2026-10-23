@@ -1,58 +1,48 @@
-"""Embedding router — generate text embeddings asynchronously"""
-from typing import Literal
-
-import numpy as np
-import structlog
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from ..clients import get_openai_client
 from ..config import settings
+from ..providers.base import ProviderConfig
+from ..providers.openai import OpenAIProvider
 
-log = structlog.get_logger()
 router = APIRouter()
 
 
 class EmbedRequest(BaseModel):
-    text: str = Field(..., min_length=1, max_length=8000)
-    model: Literal["openai", "anthropic"] | None = None
-    embedding_model: str | None = None
+    text: str = Field(..., max_length=8000)
+    model: str | None = None
+    api_key: str | None = None
+    endpoint: str | None = None
 
 
 class EmbedResponse(BaseModel):
     embedding: list[float]
     model: str
-    tokens_used: int | None = None
 
 
-def cosine_similarity(a: list[float], b: list[float]) -> float:
-    a_np = np.array(a, dtype=np.float32)
-    b_np = np.array(b, dtype=np.float32)
-    norm_a = np.linalg.norm(a_np)
-    norm_b = np.linalg.norm(b_np)
-    denominator = max(float(norm_a * norm_b), 1e-9)
-    return float(np.dot(a_np, b_np) / denominator)
+def _build_provider(req: EmbedRequest) -> OpenAIProvider:
+    api_key = req.api_key or settings.openai_api_key
+    if not api_key:
+        raise HTTPException(400, "OpenAI API key required for embeddings")
+
+    config = ProviderConfig(
+        api_key=api_key,
+        endpoint=req.endpoint or settings.openai_endpoint or None,
+        model=req.model or settings.openai_embedding_model,
+    )
+    return OpenAIProvider(config)
 
 
 @router.post("/generate", response_model=EmbedResponse)
 async def generate_embedding(req: EmbedRequest):
     try:
-        client = get_openai_client()
-    except ValueError as e:
-        raise HTTPException(400, str(e))
-
-    model_name = req.embedding_model or settings.openai_embedding_model
-
-    try:
-        response = await client.embeddings.create(
-            model=model_name,
-            input=req.text,
-        )
+        provider = _build_provider(req)
+        embedding = await provider.embed(req.text, model=req.model or settings.openai_embedding_model)
         return EmbedResponse(
-            embedding=response.data[0].embedding,
-            model=response.model,
-            tokens_used=response.usage.total_tokens if hasattr(response.usage, "total_tokens") else None,
+            embedding=embedding,
+            model=req.model or settings.openai_embedding_model,
         )
-    except Exception as e:
-        log.error("embedding.generation_failed", error=str(e))
-        raise HTTPException(500, "Embedding generation failed")
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(500, "Embedding generation failed") from exc

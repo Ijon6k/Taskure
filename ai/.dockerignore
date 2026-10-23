@@ -6,3 +6,10 @@ __pycache__
 .git
 .gitignore
 Dockerfile*
+docker-compose*
+.env
+.env.*
+*.md
+docs/
+tests/
+.python-version

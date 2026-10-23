@@ -1,8 +1,8 @@
 # Stage 1: Builder
-FROM golang:1.24-alpine AS builder
+FROM docker.io/golang:alpine AS builder
 WORKDIR /app
 
-RUN apk add --no-cache gcc musl-dev libwebp-dev
+RUN sed -i 's/https/http/' /etc/apk/repositories && apk add --no-cache gcc musl-dev libwebp-dev
 
 COPY go.mod go.sum ./
 ENV GOTOOLCHAIN=auto
@@ -14,10 +14,10 @@ COPY . .
 RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-s -w" -o /server ./cmd/server
 
 # Stage 2: Development Target with Air Hot Reload
-FROM golang:alpine AS dev
+FROM docker.io/golang:alpine AS dev
 WORKDIR /app
 
-RUN apk add --no-cache gcc musl-dev libwebp-dev
+RUN sed -i 's/https/http/' /etc/apk/repositories && apk add --no-cache gcc musl-dev libwebp-dev
 
 # Install Air for hot-reload
 RUN go install github.com/air-verse/air@v1.61.7
@@ -33,7 +33,7 @@ CMD ["air", "-c", ".air.toml"]
 
 # Stage 3: Minimal Production Runtime
 FROM alpine:3.21 AS runner
-RUN apk add --no-cache ca-certificates tzdata libwebp
+RUN sed -i 's/https/http/' /etc/apk/repositories && apk add --no-cache ca-certificates tzdata libwebp
 
 RUN addgroup -S appgroup -g 10001 && \
     adduser -S appuser -G appgroup -u 10001

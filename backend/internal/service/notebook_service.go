@@ -1,15 +1,20 @@
 package service
 
 import (
+	"log"
+
+	"github.com/Ijon6k/Taskure/apps/api/internal/domain"
 	"github.com/Ijon6k/Taskure/apps/api/internal/models"
 	"github.com/Ijon6k/Taskure/apps/api/internal/repository"
+	"gorm.io/gorm"
 )
 
 // DefaultNotebookTitle is used when a page is created without a title.
 const DefaultNotebookTitle = "Untitled"
 
 type CreateNotebookPageInput struct {
-	Title string `json:"title"`
+	Title   string `json:"title"`
+	Content string `json:"content"`
 }
 
 type UpdateNotebookPageInput struct {
@@ -28,16 +33,19 @@ type NotebookService interface {
 }
 
 type notebookService struct {
+	db          *gorm.DB
 	pageRepo    repository.NotebookRepository
 	projectRepo repository.ProjectRepository
 }
 
 // NewNotebookService creates the notebook page service.
 func NewNotebookService(
+	db *gorm.DB,
 	pageRepo repository.NotebookRepository,
 	projectRepo repository.ProjectRepository,
 ) NotebookService {
 	return &notebookService{
+		db:          db,
 		pageRepo:    pageRepo,
 		projectRepo: projectRepo,
 	}
@@ -62,6 +70,7 @@ func (s *notebookService) CreatePage(projectIDOrPublicID string, input CreateNot
 
 	page := models.NotebookPage{
 		Title:     title,
+		Content:   input.Content,
 		Position:  int(count),
 		ProjectID: project.ID,
 	}
@@ -69,6 +78,11 @@ func (s *notebookService) CreatePage(projectIDOrPublicID string, input CreateNot
 	if err := s.pageRepo.Create(&page); err != nil {
 		return nil, err
 	}
+
+	if err := domain.EmitEvent(s.db, nil, "notebook", page.ID, "notebook.updated", map[string]string{"notebook_id": page.ID, "page_title": page.Title, "project_id": project.ID}); err != nil {
+		log.Printf("WARNING: failed to emit notebook.updated event: %v", err)
+	}
+
 	return &page, nil
 }
 
@@ -114,10 +128,32 @@ func (s *notebookService) UpdatePage(id string, input UpdateNotebookPageInput) (
 	if err := s.pageRepo.Update(page, updates); err != nil {
 		return nil, err
 	}
+
+	title := page.Title
+	if t, ok := updates["title"].(string); ok {
+		title = t
+	}
+	if err := domain.EmitEvent(s.db, nil, "notebook", page.ID, "notebook.section_changed", map[string]string{"page_id": page.ID, "page_title": title, "project_id": page.ProjectID}); err != nil {
+		log.Printf("WARNING: failed to emit notebook.section_changed event: %v", err)
+	}
+
 	return page, nil
 }
 
 // DeletePage removes a page.
 func (s *notebookService) DeletePage(id string) error {
-	return s.pageRepo.Delete(id)
+	page, err := s.pageRepo.FindByID(id)
+	if err != nil {
+		return err
+	}
+
+	if err := s.pageRepo.Delete(id); err != nil {
+		return err
+	}
+
+	if err := domain.EmitEvent(s.db, nil, "notebook", page.ID, "notebook.updated", map[string]string{"page_id": page.ID, "page_title": page.Title, "project_id": page.ProjectID}); err != nil {
+		log.Printf("WARNING: failed to emit notebook.updated event: %v", err)
+	}
+
+	return nil
 }

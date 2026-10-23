@@ -1,28 +1,24 @@
 # Stage 1: Install dependencies using Bun
-FROM oven/bun:1.2-alpine AS deps
+FROM docker.io/oven/bun:1.2-alpine AS deps
 WORKDIR /app
 COPY package.json bun.lock* ./
 RUN bun install --frozen-lockfile
 
 # Stage 2: Development Stage with Hot Reload (Bun Dev)
-FROM oven/bun:1.2-alpine AS dev
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+FROM deps AS dev
 COPY . .
 ENV NODE_ENV=development PORT=3000 HOSTNAME="0.0.0.0" PATH="/app/node_modules/.bin:$PATH"
 EXPOSE 3000
 CMD ["bun", "run", "dev"]
 
 # Stage 3: Build Next.js standalone application using Bun
-FROM oven/bun:1.2-alpine AS builder
-WORKDIR /app
+FROM deps AS builder
 ENV NEXT_TELEMETRY_DISABLED=1 NODE_ENV=production
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN bun run build
 
 # Stage 4: Lightweight Production Runner using Bun Runtime
-FROM oven/bun:1.2-alpine AS runner
+FROM docker.io/oven/bun:1.2-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME="0.0.0.0"
 

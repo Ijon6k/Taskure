@@ -23,7 +23,7 @@ export function Toggle({
   id,
 }: ToggleProps) {
   const { w, h, knob } = sizeConfig[size];
-  const trackClasses = `rounded-full transition-colors duration-200 relative shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-1 focus-visible:ring-offset-surface-l3 ${
+  const trackClasses = `rounded-full transition-colors duration-200 relative shrink-0 focus:outline-none focus-visible:outline-none ${
     disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
   } ${checked ? "bg-brand-accent" : "bg-surface-l3 border border-theme-subtle"}`;
 

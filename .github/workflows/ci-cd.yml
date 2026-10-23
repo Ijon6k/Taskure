@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   # ---------------------------------------------------------------------------
-  # Job 1: Backend CI (Go 1.24 Vet & Tests)
+  # Job 1: Backend CI (Go 1.25 Vet & Tests)
   # ---------------------------------------------------------------------------
   backend-ci:
     name: Backend CI (Go)
@@ -69,6 +69,9 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build Next.js application
+        env:
+          NEXT_PUBLIC_API_URL: /api
+          NODE_ENV: production
         run: bun run build
 
   # ---------------------------------------------------------------------------
@@ -203,6 +206,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Prepare environment file
+        run: cp .env.example .env
+
       - name: Start Full Stack with Docker Compose
         run: |
           docker compose -f compose.yaml up -d --build
@@ -210,12 +216,12 @@ jobs:
       - name: Wait for API and Service Health
         run: |
           echo "Waiting for services to become healthy on port 1106..."
-          for i in {1..30}; do
+          for i in {1..45}; do
             if curl -s -f http://localhost:1106/health | grep -q '"status":"ok"'; then
               echo "Taskure API healthy on port 1106!"
               exit 0
             fi
-            echo "Waiting... ($i/30)"
+            echo "Waiting... ($i/45)"
             sleep 2
           done
           echo "Healthcheck timed out!"
@@ -232,6 +238,14 @@ jobs:
             docker compose -f compose.yaml logs web nginx
             exit 1
           fi
+
+      - name: Dump container logs on failure
+        if: failure()
+        run: |
+          echo "=== CONTAINER STATUSES ==="
+          docker compose -f compose.yaml ps -a
+          echo "=== DUMPING ALL CONTAINER LOGS ==="
+          docker compose -f compose.yaml logs
 
       - name: Teardown
         if: always()

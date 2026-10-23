@@ -28,13 +28,16 @@ type Config struct {
 	MinIOPublicURL string
 	MinIOUseSSL    bool
 
-	OpenAIKey    string
-	AnthropicKey string
+	OpenAIKey     string
+	AnthropicKey  string
+	EncryptionKey string
 
 	// VariantWorkers is the number of concurrent background image-variant
 	// workers. Each holds the decoded bitmap of one image, so keep this small
 	// relative to the container memory limit.
 	VariantWorkers int
+
+	AIServiceURL string
 }
 
 // Load reads configuration from env vars, falling back to defaults.
@@ -60,10 +63,12 @@ func Load() Config {
 		MinIOPublicURL: getenvFirst([]string{"S3_PUBLIC_URL", "MINIO_PUBLIC_URL"}, "/storage/kanban-uploads"),
 		MinIOUseSSL:    getenvFirst([]string{"S3_USE_SSL", "MINIO_USE_SSL"}, "false") == "true",
 
-		OpenAIKey:    getenv("OPENAI_API_KEY", ""),
-		AnthropicKey: getenv("ANTHROPIC_API_KEY", ""),
+		OpenAIKey:     getenv("OPENAI_API_KEY", ""),
+		AnthropicKey:  getenv("ANTHROPIC_API_KEY", ""),
+		EncryptionKey: getenv("ENCRYPTION_KEY", ""),
 
 		VariantWorkers: 2,
+		AIServiceURL:   getenv("AI_SERVICE_URL", "http://ai:5000"),
 	}
 	if v := os.Getenv("VARIANT_WORKERS"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil && n > 0 {

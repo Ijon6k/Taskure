@@ -3,6 +3,7 @@
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileHeader } from "@/components/layout/mobile-header";
 import { useUIStore } from "@/store/use-ui-store";
+import { AIChatBubble } from "@/components/features/ai-console/ai-chat-bubble";
 
 export default function DashboardLayout({
   children,
@@ -18,6 +19,7 @@ export default function DashboardLayout({
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {children}
       </div>
+      <AIChatBubble />
     </div>
   );
 }

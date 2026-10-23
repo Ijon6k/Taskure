@@ -3,3 +3,5 @@ export * from "./columns.service";
 export * from "./tasks.service";
 export * from "./workspace.service";
 export * from "./notebook.service";
+export * from "./providers.service";
+export * from "./conversations.service";

@@ -2,9 +2,9 @@
 # TASKURE — Production Docker & Podman Compose Stack (Self-Hosted)
 # Run from project root:
 #   Docker Compose: docker compose up -d
-#   Podman Compose: podman-compose up -d
-# Stop:  docker compose down  /  podman-compose down
-# Reset: docker compose down -v  /  podman-compose down -v
+#   Podman Compose: podman compose up -d
+# Stop:  docker compose down  /  podman compose down
+# Reset: docker compose down -v  /  podman compose down -v
 # ============================================================
 
 services:
@@ -66,6 +66,7 @@ services:
       - S3_BUCKET=${S3_BUCKET:-kanban-uploads}
       - S3_PUBLIC_URL=/storage/kanban-uploads
       - JWT_SECRET=${JWT_SECRET:-changeme}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-dev-encryption-key-32-bytes!!}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - GOMEMLIMIT=384MiB
@@ -89,7 +90,12 @@ services:
     container_name: kanban-ai
     expose:
       - "5000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
+      - PYTHONUNBUFFERED=1
+      - AI_HOST=0.0.0.0
+      - AI_PORT=5000
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
       - POSTGRES_USER=${POSTGRES_USER:-kanban}
@@ -97,6 +103,30 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:-kanban}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
+      - OPENAI_EMBEDDING_MODEL=${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
+      - ANTHROPIC_MODEL=${ANTHROPIC_MODEL:-claude-sonnet-4-20250514}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-}
+      - FAST_MAX_TOKENS=${FAST_MAX_TOKENS:-500}
+      - THINKING_MAX_TOKENS=${THINKING_MAX_TOKENS:-4000}
+      - PLANNING_MAX_TOKENS=${PLANNING_MAX_TOKENS:-8000}
+      - AGENT_MAX_TOKENS=${AGENT_MAX_TOKENS:-16000}
+      - RAG_CHUNK_SIZE=${RAG_CHUNK_SIZE:-1024}
+      - RAG_CHUNK_OVERLAP=${RAG_CHUNK_OVERLAP:-128}
+      - RAG_TOP_K=${RAG_TOP_K:-5}
+      - RAG_SIMILARITY_THRESHOLD=${RAG_SIMILARITY_THRESHOLD:-0.7}
+      - REFLECTION_QUALITY_THRESHOLD=${REFLECTION_QUALITY_THRESHOLD:-80}
+      - REFLECTION_TIMEOUT_SECONDS=${REFLECTION_TIMEOUT_SECONDS:-120}
+      - HITL_APPROVAL_TIMEOUT_SECONDS=${HITL_APPROVAL_TIMEOUT_SECONDS:-300}
+      - AI_WORKER_POLL_INTERVAL=${AI_WORKER_POLL_INTERVAL:-5}
+      - AI_MEMORY_EVOLUTION_THRESHOLD=${AI_MEMORY_EVOLUTION_THRESHOLD:-15}
+      - AI_PLAN_CACHE_TTL_HOURS=${AI_PLAN_CACHE_TTL_HOURS:-24}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
     depends_on:
       postgres:
         condition: service_healthy
@@ -125,7 +155,8 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kanban} -d ${POSTGRES_DB:-kanban}"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 10s
     deploy:
       resources:
         limits:

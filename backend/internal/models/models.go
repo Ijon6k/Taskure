@@ -272,7 +272,7 @@ type ProjectContext struct {
 	ContextType string         `gorm:"not null;size:30" json:"context_type"`
 	ProjectID   string         `gorm:"type:uuid;not null;index" json:"project_id"`
 	Metadata    datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"metadata"`
-	Embedding   datatypes.JSON `gorm:"type:jsonb" json:"-"`
+	Embedding   datatypes.JSON `gorm:"type:vector(1536)" json:"-"`
 }
 
 // BeforeCreate generates the UUID primary key before insert.
@@ -412,6 +412,174 @@ type ProjectTagStat struct {
 	LastUsedAt time.Time `gorm:"not null;index" json:"last_used_at"`
 }
 
+// --- OutboxEvent ---
+
+// OutboxEvent stores domain events emitted within DB transactions for async processing.
+type OutboxEvent struct {
+	InternalBase
+	AggregateType string         `gorm:"not null;size:50;index" json:"aggregate_type"`
+	AggregateID   string         `gorm:"type:uuid;not null;index" json:"aggregate_id"`
+	EventType     string         `gorm:"not null;size:100;index" json:"event_type"`
+	Payload       datatypes.JSON `gorm:"type:jsonb;not null" json:"payload"`
+	Processed     bool           `gorm:"default:false;index" json:"processed"`
+	RetryCount    int            `gorm:"default:0" json:"retry_count"`
+	LastError     string         `gorm:"size:500" json:"last_error,omitempty"`
+}
+
+// --- ProviderConfig ---
+
+type ProviderConfig struct {
+	InternalBase
+	WorkspaceID     *string        `gorm:"type:uuid;index" json:"workspace_id,omitempty"`
+	ProjectID       *string        `gorm:"type:uuid;index" json:"project_id,omitempty"`
+	Provider        string         `gorm:"not null;size:50" json:"provider"`
+	APIKeyEncrypted string         `gorm:"not null;type:text" json:"-"`
+	Endpoint        string         `gorm:"size:500" json:"endpoint,omitempty"`
+	Model           string         `gorm:"not null;size:100" json:"model"`
+	Config          datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"config"`
+	IsDefault       bool           `gorm:"default:false;index" json:"is_default"`
+}
+
+// --- Conversation ---
+
+type Conversation struct {
+	InternalBase
+	ProjectID string `gorm:"type:uuid;not null;index" json:"project_id"`
+	Title     string `gorm:"size:255" json:"title"`
+	Mode      string `gorm:"size:20;not null;default:'thinking'" json:"mode"`
+}
+
+// --- ConversationMessage ---
+
+type ConversationMessage struct {
+	InternalBase
+	ConversationID string         `gorm:"type:uuid;not null;index" json:"conversation_id"`
+	Role           string         `gorm:"size:20;not null" json:"role"`
+	Content        string         `gorm:"type:text" json:"content,omitempty"`
+	ToolCalls      datatypes.JSON `gorm:"type:jsonb" json:"tool_calls,omitempty"`
+	Metadata       datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"metadata"`
+	TokenCount     int            `gorm:"default:0" json:"token_count,omitempty"`
+}
+
+// --- ProjectMemory ---
+
+type ProjectMemory struct {
+	InternalBase
+	ProjectID    string         `gorm:"type:uuid;uniqueIndex;not null" json:"project_id"`
+	Summary      string         `gorm:"type:text" json:"summary,omitempty"`
+	Goals        datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"goals"`
+	Decisions    datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"decisions"`
+	Blockers     datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"blockers"`
+	PinnedFields datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"pinned_fields"`
+	Version      int            `gorm:"default:1" json:"version"`
+}
+
+// --- MemoryHistory ---
+
+type MemoryHistory struct {
+	InternalBase
+	ProjectID    string         `gorm:"type:uuid;not null;index" json:"project_id"`
+	Snapshot     datatypes.JSON `gorm:"type:jsonb;not null" json:"snapshot"`
+	TriggerEvent string         `gorm:"size:100" json:"trigger_event,omitempty"`
+}
+
+// --- JournalEntry ---
+
+type JournalEntry struct {
+	InternalBase
+	ProjectID  string         `gorm:"type:uuid;not null;index" json:"project_id"`
+	EventType  string         `gorm:"size:50;not null" json:"event_type"`
+	Summary    string         `gorm:"type:text;not null" json:"summary"`
+	Metadata   datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"metadata"`
+	OccurredAt time.Time      `gorm:"not null" json:"occurred_at"`
+}
+
+// --- JournalSynthesis ---
+
+type JournalSynthesis struct {
+	InternalBase
+	ProjectID     string         `gorm:"type:uuid;not null;index" json:"project_id"`
+	PeriodStart   time.Time      `gorm:"not null" json:"period_start"`
+	PeriodEnd     time.Time      `gorm:"not null" json:"period_end"`
+	SynthesisText string         `gorm:"type:text;not null" json:"synthesis_text"`
+	KeyMilestones datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"key_milestones"`
+}
+
+// --- WorkflowExecution ---
+
+type WorkflowExecution struct {
+	InternalBase
+	ProjectID      string         `gorm:"type:uuid;not null;index" json:"project_id"`
+	ConversationID *string        `gorm:"type:uuid;index" json:"conversation_id,omitempty"`
+	Mode           string         `gorm:"size:20;not null" json:"mode"`
+	State          string         `gorm:"size:20;not null;default:'running'" json:"state"`
+	CurrentStep    int            `gorm:"default:0" json:"current_step"`
+	TotalSteps     int            `json:"total_steps,omitempty"`
+	RequestSummary string         `gorm:"type:text" json:"request_summary,omitempty"`
+	Result         datatypes.JSON `gorm:"type:jsonb" json:"result,omitempty"`
+	ErrorMessage   string         `gorm:"type:text" json:"error_message,omitempty"`
+	StartedAt      *time.Time     `json:"started_at,omitempty"`
+	CompletedAt    *time.Time     `json:"completed_at,omitempty"`
+}
+
+// --- ExecutionTelemetry ---
+
+type ExecutionTelemetry struct {
+	InternalBase
+	WorkflowID string         `gorm:"type:uuid;not null;index" json:"workflow_id"`
+	StepIndex  int            `gorm:"default:0" json:"step_index"`
+	EventType  string         `gorm:"size:50;not null" json:"event_type"`
+	LatencyMs  int            `gorm:"default:0" json:"latency_ms,omitempty"`
+	TokensUsed int            `gorm:"default:0" json:"tokens_used,omitempty"`
+	CostUsd    float64        `gorm:"type:decimal(10,6);default:0" json:"cost_usd,omitempty"`
+	Metadata   datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"metadata"`
+}
+
+// --- PromptRegistry ---
+
+type PromptRegistry struct {
+	InternalBase
+	Name        string         `gorm:"size:100;uniqueIndex;not null" json:"name"`
+	Version     int            `gorm:"not null;default:1" json:"version"`
+	Template    string         `gorm:"type:text;not null" json:"template"`
+	Variables   datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"variables"`
+	Description string         `gorm:"type:text" json:"description,omitempty"`
+}
+
+// --- PlanCache ---
+
+type PlanCache struct {
+	InternalBase
+	CacheKey         string         `gorm:"size:64;uniqueIndex;not null" json:"cache_key"`
+	ProjectID        string         `gorm:"type:uuid;not null;index" json:"project_id"`
+	RequestHash      string         `gorm:"size:64;not null" json:"request_hash"`
+	ProjectStateHash string         `gorm:"size:64;not null" json:"project_state_hash"`
+	Result           datatypes.JSON `gorm:"type:jsonb;not null" json:"result"`
+	Version          int            `gorm:"default:1" json:"version"`
+	ExpiresAt        time.Time      `json:"expires_at"`
+}
+
+// --- NotebookSummary ---
+
+type NotebookSummary struct {
+	InternalBase
+	NotebookID  string `gorm:"type:uuid;not null;index" json:"notebook_id"`
+	SummaryText string `gorm:"type:text;not null" json:"summary_text"`
+	Version     int    `gorm:"default:1" json:"version"`
+}
+
+// --- AuditLog ---
+
+type AuditLog struct {
+	InternalBase
+	ActorType  string         `gorm:"size:20;not null" json:"actor_type"`
+	ActorID    string         `gorm:"size:255;not null" json:"actor_id"`
+	Action     string         `gorm:"size:100;not null;index" json:"action"`
+	TargetType string         `gorm:"size:50" json:"target_type,omitempty"`
+	TargetID   string         `gorm:"size:255" json:"target_id,omitempty"`
+	Details    datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"details"`
+}
+
 // AllModels returns every model registered with GORM AutoMigrate.
 func AllModels() []any {
 	return []any{
@@ -425,11 +593,24 @@ func AllModels() []any {
 		&TaskNote{},
 		&Attachment{},
 		&Capture{},
-		&ProjectContext{},
 		&NotebookPage{},
 		&Discussion{},
 		&Activity{},
 		&ImageVariantJob{},
 		&ProjectTagStat{},
+		&OutboxEvent{},
+		&ProviderConfig{},
+		&Conversation{},
+		&ConversationMessage{},
+		&ProjectMemory{},
+		&MemoryHistory{},
+		&JournalEntry{},
+		&JournalSynthesis{},
+		&WorkflowExecution{},
+		&ExecutionTelemetry{},
+		&PromptRegistry{},
+		&PlanCache{},
+		&NotebookSummary{},
+		&AuditLog{},
 	}
 }
