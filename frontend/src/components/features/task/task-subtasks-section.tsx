@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { CheckSquare, Plus, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { ChecklistItemData } from "@/lib/api";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface TaskSubtasksSectionProps {
   checklistItems: ChecklistItemData[];
@@ -59,14 +60,12 @@ export function TaskSubtasksSection({
             className="flex items-center justify-between py-1.5 px-2 hover:bg-theme-hover rounded-md group transition-colors text-[14px]"
           >
             <label className="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={item.is_completed}
-                onChange={() => onToggleItem(item)}
-                className="w-4 h-4 rounded border-theme-subtle text-[#68D391] focus:ring-0 accent-[#68D391] cursor-pointer"
+                onCheckedChange={() => onToggleItem(item)}
               />
               <span
-                className={`truncate ${
+                className={`truncate text-[13px] ${
                   item.is_completed
                     ? "line-through text-theme-tertiary"
                     : "text-theme-primary"

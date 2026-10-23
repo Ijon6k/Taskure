@@ -7,6 +7,7 @@ import { useProjects, projectsService, ProjectData, ProjectSummaryData } from "@
 import { ProjectCard } from "@/components/features/project/project-card";
 import { SearchInput } from "@/components/ui/search-input";
 import { FilterPills } from "@/components/ui/filter-pills";
+import { Button } from "@/components/ui/button";
 import { CreateProjectModal } from "@/components/features/project/create-project-modal";
 import { EditProjectModal } from "@/components/features/project/edit-project-modal";
 import { ImportJsonModal } from "@/components/features/project/import-json-modal";
@@ -77,8 +78,8 @@ export default function ProjectsPage() {
       // Board endpoint: the export needs full task rows.
       const fullProject = await projectsService.getProjectBoard(project.id);
       openExportJson(fullProject);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to load project data.");
+    } catch (err: unknown) {
+      toast.error((err as Error).message || "Failed to load project data.");
     } finally {
       setExportingProjectId(null);
     }
@@ -98,21 +99,23 @@ export default function ProjectsPage() {
               Projects
             </h1>
             <div className="flex items-center gap-2">
-              <button
+              <Button
+                variant="secondary"
+                size="icon"
                 onClick={openImportJson}
-                className="h-10 sm:h-9 w-10 sm:w-9 bg-surface-l3 hover:bg-surface-l4 text-theme-secondary hover:text-theme-primary border border-theme-subtle rounded-md flex items-center justify-center transition-colors cursor-pointer"
                 title="Import JSON — create a new project"
                 aria-label="Import JSON"
               >
                 <Upload className="w-4 h-4" />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
                 onClick={openCreateProject}
-                className="h-10 sm:h-9 px-3.5 bg-brand-accent hover:opacity-90 active:scale-95 text-on-accent text-xs sm:text-sm font-semibold rounded-md flex items-center gap-2 transition-all"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-3.5 h-3.5" />
                 <span>New project</span>
-              </button>
+              </Button>
             </div>
           </div>
 

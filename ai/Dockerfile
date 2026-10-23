@@ -3,7 +3,8 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
 WORKDIR /app
 
 ENV UV_COMPILE_BYTECODE=1 \
-    UV_LINK_MODE=copy
+    UV_LINK_MODE=copy \
+    UV_PROJECT_ENVIRONMENT=/opt/venv
 
 # Copy dependency definition files
 COPY pyproject.toml uv.lock* ./
@@ -15,9 +16,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Stage 2: Development Target with Uvicorn Reload
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS dev
 WORKDIR /app
-COPY --from=builder /app/.venv /app/.venv
+COPY --from=builder /opt/venv /opt/venv
 COPY . .
-ENV PATH="/app/.venv/bin:$PATH" PYTHONPATH=/app UV_CACHE_DIR=/tmp/.uv-cache
+ENV PATH="/opt/venv/bin:$PATH" PYTHONPATH=/app UV_CACHE_DIR=/tmp/.uv-cache
 EXPOSE 5000
 CMD ["uvicorn", "services.ai.main:app", "--host", "0.0.0.0", "--port", "5000", "--reload"]
 
@@ -28,10 +29,10 @@ WORKDIR /app
 RUN addgroup --system --gid 10001 appgroup && \
     adduser --system --uid 10001 appuser
 
-COPY --from=builder --chown=appuser:appgroup /app/.venv /app/.venv
+COPY --from=builder --chown=appuser:appgroup /opt/venv /opt/venv
 COPY --chown=appuser:appgroup . .
 
-ENV PATH="/app/.venv/bin:$PATH" PYTHONPATH=/app
+ENV PATH="/opt/venv/bin:$PATH" PYTHONPATH=/app
 
 USER appuser
 EXPOSE 5000

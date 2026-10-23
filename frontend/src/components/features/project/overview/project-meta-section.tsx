@@ -39,7 +39,6 @@ export function ProjectMetaSection({
   setStatus,
   targetDate,
   setTargetDate,
-  tagsInput,
   setTagsInput,
   parsedTagsList,
 }: ProjectMetaSectionProps) {

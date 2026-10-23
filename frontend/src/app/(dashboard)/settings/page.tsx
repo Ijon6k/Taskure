@@ -79,8 +79,8 @@ export default function SettingsPage() {
       await deleteAllWorkspaceData();
       await queryClient.invalidateQueries();
       toast.success("All workspace data deleted!");
-    } catch (err: any) {
-      toast.error("Failed to delete workspace: " + err.message);
+    } catch (err: unknown) {
+      toast.error("Failed to delete workspace: " + (err as Error).message);
     }
   };
 
@@ -88,8 +88,8 @@ export default function SettingsPage() {
     try {
       await exportFullWorkspaceJSON();
       toast.success("Workspace backup downloaded!");
-    } catch (err: any) {
-      toast.error("Export failed: " + err.message);
+    } catch (err: unknown) {
+      toast.error("Export failed: " + (err as Error).message);
     }
   };
 
@@ -252,7 +252,7 @@ export default function SettingsPage() {
                       title={acc.name}
                       aria-label={`Select accent color ${acc.name}`}
                     >
-                      {isSelected && <Check className="w-4 h-4 text-slate-950 stroke-[3]" />}
+                      {isSelected && <Check className="w-4 h-4 text-white stroke-[3] drop-shadow-xs" />}
                     </button>
                   );
                 })}
@@ -283,9 +283,9 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={() => setDefaultProjectView("board")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold rounded-md transition-all cursor-pointer ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium rounded-md transition-all cursor-pointer ${
                       defaultProjectView === "board"
-                        ? "bg-brand-accent text-slate-950 shadow-xs"
+                        ? "bg-brand-accent text-white shadow-xs"
                         : "text-theme-secondary hover:text-theme-primary"
                     }`}
                   >
@@ -296,9 +296,9 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={() => setDefaultProjectView("overview")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold rounded-md transition-all cursor-pointer ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium rounded-md transition-all cursor-pointer ${
                       defaultProjectView === "overview"
-                        ? "bg-brand-accent text-slate-950 shadow-xs"
+                        ? "bg-brand-accent text-white shadow-xs"
                         : "text-theme-secondary hover:text-theme-primary"
                     }`}
                   >
@@ -346,7 +346,7 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   onClick={handleQuickExportWorkspace}
-                  className="px-4 py-2 bg-brand-accent hover:bg-brand-accent-hover text-slate-950 font-semibold text-[13px] rounded-md flex items-center gap-2 transition-all cursor-pointer"
+                  className="px-4 py-2 bg-brand-accent hover:bg-brand-accent-hover text-white font-medium text-[13px] rounded-md flex items-center gap-2 transition-all cursor-pointer"
                 >
                   <Download className="w-4 h-4" />
                   <span>Export Full Workspace (JSON)</span>

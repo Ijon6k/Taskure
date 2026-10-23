@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Link2, Upload, Plus, Trash2, ExternalLink, FileText, Image as ImageIcon, Eye, X } from "lucide-react";
+import { Link2, Upload, Plus, Trash2, ExternalLink, FileText, Eye, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { getPreviewUrl } from "@/lib/image-url";
 import { ThumbnailImage } from "@/components/ui/thumbnail-image";
 import { ImageLightboxModal } from "@/components/ui/overlays/image-lightbox-modal";
+import { cn } from "@/lib/utils";
 
 export interface AttachmentItem {
   id: string;
@@ -189,7 +190,7 @@ export function TaskAttachmentsSection({
             <button
               type="submit"
               disabled={!linkInput.trim()}
-              className="px-3 py-1 bg-brand-accent hover:opacity-90 text-black font-medium text-[12px] rounded-md disabled:opacity-40 transition-opacity"
+              className="px-2.5 py-1 bg-brand-accent hover:bg-brand-accent-hover text-white font-medium text-[11px] rounded-[4px] disabled:opacity-40 transition-colors cursor-pointer"
             >
               Add Link
             </button>
@@ -199,19 +200,23 @@ export function TaskAttachmentsSection({
 
       {/* Input 2: Drop Zone File Upload */}
       <div
-        onClick={() => fileInputRef.current?.click()}
-        className="p-3.5 bg-theme-elevated hover:bg-theme-hover border border-dashed border-theme-default hover:border-brand-accent rounded-md cursor-pointer transition-colors text-center group space-y-1.5"
+        onClick={() => !isUploading && fileInputRef.current?.click()}
+        className={cn(
+          "p-3 bg-surface-l2 hover:bg-surface-l3 border border-dashed border-theme-subtle hover:border-brand-accent/50 rounded-[4px] transition-colors text-center group space-y-1",
+          isUploading ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+        )}
       >
         <input
           type="file"
           ref={fileInputRef}
           onChange={handleFileSelected}
           multiple
+          disabled={isUploading}
           className="hidden"
         />
         <div className="flex items-center justify-center gap-2 text-theme-secondary group-hover:text-brand-accent transition-colors">
-          <Upload className="w-4 h-4" />
-          <span className="text-[13px] font-medium">Click to upload files, drop, or paste (Ctrl+V)</span>
+          {isUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-accent" /> : <Upload className="w-3.5 h-3.5" />}
+          <span className="text-[12px] font-medium">{isUploading ? "Uploading files..." : "Click to upload files, drop, or paste (Ctrl+V)"}</span>
         </div>
         <p className="text-[11px] text-theme-tertiary">
           Supports clipboard image paste (Ctrl+V), PNG, JPG, WebP, PDFs, docs up to 500MB

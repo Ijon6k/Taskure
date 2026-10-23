@@ -17,15 +17,15 @@ export function SearchInput({
 }: SearchInputProps) {
   return (
     <div
-      className={`flex items-center gap-2.5 ${className}`}
+      className={`flex items-center gap-2 ${className}`}
     >
-      <MagnifyingGlass className="w-4 h-4 text-theme-tertiary shrink-0" />
+      <MagnifyingGlass className="w-3.5 h-3.5 text-theme-tertiary shrink-0" />
       <input
         type="text"
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-transparent text-sm text-theme-primary placeholder-theme-tertiary outline-none py-1.5"
+        className="w-full bg-transparent text-[12px] md:text-[13px] text-theme-primary placeholder-theme-tertiary outline-none py-1"
       />
     </div>
   );

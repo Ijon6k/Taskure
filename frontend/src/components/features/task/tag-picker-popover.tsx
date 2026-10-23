@@ -2,11 +2,10 @@
 
 import { useState, useMemo } from "react";
 import * as Popover from "@radix-ui/react-popover";
-import { Plus, Search, Check, Tag as TagIcon, Settings as SettingsIcon, Layers } from "lucide-react";
+import { Plus, Search, Check, Settings as SettingsIcon, Layers } from "lucide-react";
 import Link from "next/link";
 import {
   CustomTag,
-  TagCategory,
   getTagStyle,
   getGlobalCategories,
   getGlobalTags,
@@ -14,6 +13,7 @@ import {
   saveGlobalTag,
 } from "@/lib/tags";
 import { ColorSwatchPicker } from "@/components/ui/color-swatch-picker";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface TagPickerPopoverProps {
   labels: string[];
@@ -220,7 +220,7 @@ export function TagPickerPopover({
               className="w-full p-2 bg-surface-l3 hover:bg-surface-l4 border border-theme-subtle rounded-md text-[12px] text-brand-accent font-medium flex items-center gap-1.5 transition-colors cursor-pointer text-left"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Create "{searchQuery.trim()}" tag</span>
+              <span>Create &quot;{searchQuery.trim()}&quot; tag</span>
             </button>
           )}
 
@@ -228,7 +228,7 @@ export function TagPickerPopover({
           {isCreatingNew && (
             <form onSubmit={handleCreateNewTag} className="p-2.5 bg-surface-l3 border border-theme-subtle rounded-md space-y-2.5 animate-in fade-in duration-100">
               <div className="text-[11px] font-medium text-theme-secondary">
-                Color for "{searchQuery.trim()}"
+                Color for &quot;{searchQuery.trim()}&quot;
               </div>
               <ColorSwatchPicker
                 selectedColor={newColor}
@@ -236,18 +236,16 @@ export function TagPickerPopover({
               />
 
               <label className="flex items-center gap-2 pt-1 text-[11px] text-theme-secondary cursor-pointer select-none">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={saveToWorkspace}
-                  onChange={(e) => setSaveToWorkspace(e.target.checked)}
-                  className="rounded border-theme-default bg-surface-l4 text-brand-accent focus:ring-0 cursor-pointer"
+                  onCheckedChange={(checked) => setSaveToWorkspace(Boolean(checked))}
                 />
                 <span>Save to Workspace Tag Library</span>
               </label>
 
               <button
                 type="submit"
-                className="w-full py-1.5 bg-brand-accent hover:bg-brand-accent-hover text-black font-medium rounded-md text-[12px] transition-colors"
+                className="w-full py-1.5 bg-brand-accent hover:bg-brand-accent-hover text-white font-medium rounded-md text-[12px] transition-colors cursor-pointer"
               >
                 Add Tag
               </button>

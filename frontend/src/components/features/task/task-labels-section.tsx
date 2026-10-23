@@ -3,7 +3,6 @@
 import { TagChip } from "@/components/ui/tag-chip";
 import { TagPickerPopover } from "./tag-picker-popover";
 import { useTaskLabels } from "@/hooks/use-task-labels";
-import { getTagStyle } from "@/lib/tags";
 
 interface TaskLabelsSectionProps {
   labels?: string[];

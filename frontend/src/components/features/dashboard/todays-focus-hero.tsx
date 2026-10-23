@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, CheckSquare, Square, Loader2 } from "lucide-react";
+import { ArrowRight, CheckSquare, Square, Loader2 } from "lucide-react";
 import { FocusItem, api } from "@/lib/api";
 import { PriorityBadge } from "@/components/ui/priority-badge";
 import { DueDateText } from "@/components/ui/due-date-text";
@@ -30,7 +30,6 @@ export function TodaysFocusHero({
   const setSelectedTaskId = useUIStore((s) => s.setSelectedTaskId);
   const queryClient = useQueryClient();
 
-  const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
   const [togglingSubtaskId, setTogglingSubtaskId] = useState<string | null>(null);
 
   // ── Loading Skeleton ─────────────────────────────────────────────────────────
@@ -61,24 +60,6 @@ export function TodaysFocusHero({
   const projectColor = project?.color || "#7F9CF5";
   const checklist = ("checklist" in task && task.checklist ? task.checklist : ("checklist_items" in task ? task.checklist_items : [])) || [];
   const checklistSummary = "checklist_summary" in task ? task.checklist_summary : undefined;
-
-  // Handler: Complete task directly from Hero Card
-  const handleMarkComplete = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (completingTaskId) return;
-
-    setCompletingTaskId(task.id);
-    try {
-      await api.updateTask(task.id, { status: "done" });
-      toast.success(`Completed "${task.title}"!`);
-      invalidateFocusQueries(queryClient);
-    } catch (err) {
-      toast.error("Failed to complete task: " + (err as Error).message);
-    } finally {
-      setCompletingTaskId(null);
-    }
-  };
 
   // Handler: Toggle checklist item directly from Hero Card
   const handleToggleSubtask = async (subtaskId: string, currentCompleted: boolean, e: React.MouseEvent) => {
@@ -190,7 +171,7 @@ export function TodaysFocusHero({
         <div className="pt-1 flex items-center gap-3">
           <Link
             href={getProjectNavUrl(task.project_id)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-brand-accent hover:bg-brand-accent-hover text-slate-950 text-xs font-semibold rounded-md transition-colors shadow-xs"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-brand-accent hover:bg-brand-accent-hover text-white text-[12px] font-medium rounded-md transition-colors shadow-xs"
           >
             <span>Continue in {projectName}</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -223,7 +204,7 @@ function FallbackCard({
           <button
             type="button"
             onClick={onOpenCreateProject}
-            className="px-3.5 py-2 bg-brand-accent hover:bg-brand-accent-hover text-slate-950 font-semibold text-xs rounded-md transition-colors cursor-pointer shadow-xs"
+            className="px-3.5 py-1.5 bg-brand-accent hover:bg-brand-accent-hover text-white font-medium text-[12px] rounded-md transition-colors cursor-pointer shadow-xs"
           >
             New project
           </button>
@@ -237,7 +218,7 @@ function FallbackCard({
       cta = (
         <Link
           href="/projects"
-          className="px-3.5 py-2 bg-surface-l3 hover:bg-surface-hover text-theme-primary font-medium text-xs rounded-md transition-colors cursor-pointer"
+          className="px-3.5 py-1.5 bg-surface-l3 hover:bg-surface-hover text-theme-primary font-medium text-[12px] rounded-md transition-colors cursor-pointer"
         >
           View projects
         </Link>
@@ -250,7 +231,7 @@ function FallbackCard({
       cta = (
         <Link
           href="/projects"
-          className="px-3.5 py-2 bg-brand-accent hover:bg-brand-accent-hover text-slate-950 font-semibold text-xs rounded-md transition-colors cursor-pointer shadow-xs"
+          className="px-3.5 py-1.5 bg-brand-accent hover:bg-brand-accent-hover text-white font-medium text-[12px] rounded-md transition-colors cursor-pointer shadow-xs"
         >
           Go to projects
         </Link>

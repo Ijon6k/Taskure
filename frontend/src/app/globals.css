@@ -47,36 +47,36 @@
     /* Text on Accent */
     --text-on-accent: #ffffff;
 
-    /* Radius Tokens (Calm Workspace System) */
-    --radius-sm: 6px;
-    --radius-md: 8px;
-    --radius-lg: 10px;
-    --radius-xl: 12px;
+    /* Radius Tokens (Linear Density System) */
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 10px;
     --radius-full: 9999px;
 
-    /* Typography Scale */
-    --font-size-page-heading: 44px;
-    --font-size-hero-title: 34px;
-    --font-size-section-heading: 18px;
-    --font-size-task-title: 15px;
-    --font-size-body: 15px;
-    --font-size-metadata: 13px;
+    /* Typography Scale (Linear Density) */
+    --font-size-page-heading: 32px;
+    --font-size-hero-title: 24px;
+    --font-size-section-heading: 16px;
+    --font-size-task-title: 13px;
+    --font-size-body: 13px;
+    --font-size-metadata: 11px;
 
     /* Overlay Backdrop Token */
-    --overlay-bg: rgba(0, 0, 0, 0.5);
+    --overlay-bg: rgba(0, 0, 0, 0.6);
 
-    /* GRAPHITE THEME DEFAULTS (Recommended Neutral Charcoal Gray — Zero Blue Shift) */
-    --surface-l0: #121316;
-    /* Level 0: Application Canvas */
-    --surface-l1: #17181c;
-    /* Level 1: Sidebar, Toolbar, Header */
-    --surface-l2: #1d1e23;
+    /* LINEAR DARK SURFACE LADDER (Standard Dark) */
+    --surface-l0: #08090a;
+    /* Level 0: Linear Application Canvas */
+    --surface-l1: #0f1011;
+    /* Level 1: Sidebar, Header, Navigation Chrome */
+    --surface-l2: #141516;
     /* Level 2: Kanban Columns & Sub-containers */
-    --surface-l3: #24252b;
+    --surface-l3: #18191a;
     /* Level 3: Cards & Interactive Surfaces */
-    --surface-l4: #2c2d34;
-    /* Level 4: Dropdown, Popover & Drawers */
-    --surface-l5: #34363e;
+    --surface-l4: #1b1c1e;
+    /* Level 4: Dropdowns, Popovers & Menus */
+    --surface-l5: #222326;
     /* Level 5: Modal Dialogs & Command Palette */
 
     --surface-hover: rgba(255, 255, 255, 0.04);
@@ -87,24 +87,24 @@
     --bg-elevated: var(--surface-l3);
     --bg-hover: var(--surface-hover);
 
-    --border-subtle: rgba(255, 255, 255, 0.05);
-    --border-default: rgba(255, 255, 255, 0.09);
-    --border-strong: rgba(255, 255, 255, 0.15);
+    --border-subtle: #1c1d22;
+    --border-default: #23252a;
+    --border-strong: #2e3036;
 
     --text-primary: #f4f4f6;
-    --text-secondary: #a1a1aa;
-    --text-tertiary: #71717a;
-    --text-disabled: #52525b;
+    --text-secondary: #8a8f98;
+    --text-tertiary: #62666d;
+    --text-disabled: #46484e;
 
-    --brand-accent: #7F9CF5;
-    --brand-accent-hover: #6366f1;
-    --brand-accent-subtle: rgba(127, 156, 245, 0.12);
-    --brand-accent-glow: rgba(127, 156, 245, 0.20);
+    --brand-accent: #5e6ad2;
+    --brand-accent-hover: #6875e5;
+    --brand-accent-subtle: rgba(94, 106, 210, 0.15);
+    --brand-accent-glow: rgba(94, 106, 210, 0.25);
     --brand-accent-text: #ffffff;
 
-    --input-bg: #17181c;
-    --input-bg-focus: #1d1e23;
-    --input-bg-disabled: rgba(23, 24, 28, 0.5);
+    --input-bg: #0f1011;
+    --input-bg-focus: #141516;
+    --input-bg-disabled: rgba(15, 16, 17, 0.5);
     --input-border: var(--border-default);
     --input-border-focus: var(--brand-accent);
     --input-text: var(--text-primary);
@@ -129,92 +129,15 @@
     --expressive-glow: 0 0 16px -4px rgba(var(--accent-rgb, 127, 156, 245), 0.25);
   }
 
-  /* GRAPHITE THEME SELECTOR (Neutral Charcoal Gray) */
+  /* GRAPHITE THEME SELECTOR */
   [data-theme="graphite"],
   [data-theme="dim"] {
-    --surface-l0: #141519;
-    --surface-l1: #1a1b20;
-    --surface-l2: #212228;
-    --surface-l3: #2c2e36;
-    --surface-l4: #363842;
-    --surface-l5: #40424e;
-
-    --surface-hover: rgba(255, 255, 255, 0.05);
-    --surface-active: rgba(255, 255, 255, 0.09);
-
-    --bg-main: var(--surface-l0);
-    --bg-surface: var(--surface-l1);
-    --bg-elevated: var(--surface-l3);
-    --bg-hover: var(--surface-hover);
-
-    --border-subtle: rgba(255, 255, 255, 0.06);
-    --border-default: rgba(255, 255, 255, 0.10);
-    --border-strong: rgba(255, 255, 255, 0.16);
-
-    --text-primary: #f4f4f6;
-    --text-secondary: #a1a1aa;
-    --text-tertiary: #71717a;
-    --text-disabled: #52525b;
-
-    --input-bg: #1a1b20;
-    --input-bg-focus: #212228;
-    --input-bg-disabled: rgba(26, 27, 32, 0.5);
-    --input-border: var(--border-default);
-    --input-border-focus: var(--brand-accent);
-    --input-text: var(--text-primary);
-    --input-placeholder: var(--text-tertiary);
-  }
-
-  /* NEUTRAL GRAY THEME (Soft Monochrome Dark) */
-  [data-theme="neutral"] {
-    --surface-l0: #191a1d;
-    --surface-l1: #1f2024;
-    --surface-l2: #26272c;
-    --surface-l3: #303138;
-    --surface-l4: #393b44;
-    --surface-l5: #424450;
-
-    --surface-hover: rgba(255, 255, 255, 0.05);
-    --surface-active: rgba(255, 255, 255, 0.09);
-
-    --bg-main: var(--surface-l0);
-    --bg-surface: var(--surface-l1);
-    --bg-elevated: var(--surface-l3);
-    --bg-hover: var(--surface-hover);
-
-    --border-subtle: rgba(255, 255, 255, 0.06);
-    --border-default: rgba(255, 255, 255, 0.10);
-    --border-strong: rgba(255, 255, 255, 0.16);
-
-    --text-primary: #f4f4f6;
-    --text-secondary: #a1a1aa;
-    --text-tertiary: #71717a;
-    --text-disabled: #52525b;
-
-    --input-bg: #1f2024;
-    --input-bg-focus: #26272c;
-    --input-bg-disabled: rgba(31, 32, 36, 0.5);
-    --input-border: var(--border-default);
-    --input-border-focus: var(--brand-accent);
-    --input-text: var(--text-primary);
-    --input-placeholder: var(--text-tertiary);
-  }
-
-  /* OLED BLACK THEME (Pure Pitch Black) */
-  [data-theme="dark"],
-  [data-theme="oled"] {
-    --surface-l0: #000000;
-    /* Level 0: Pure Pitch Black */
-    --surface-l1: #09090b;
-    /* Level 1: Sidebar & Toolbar */
-    --surface-l2: #141417;
-    /* Level 2: Kanban Column */
-    --surface-l3: #202024;
-    /* Level 3: Cards (Brighter for contrast) */
-    --surface-l4: #2b2b30;
-    /* Level 4: Dropdown & Drawers */
-    --surface-l5: #3f3f46;
-    /* Level 5: Modal Dialogs */
+    --surface-l0: #08090a;
+    --surface-l1: #0f1011;
+    --surface-l2: #141516;
+    --surface-l3: #18191a;
+    --surface-l4: #1b1c1e;
+    --surface-l5: #222326;
 
     --surface-hover: rgba(255, 255, 255, 0.04);
     --surface-active: rgba(255, 255, 255, 0.08);
@@ -224,29 +147,104 @@
     --bg-elevated: var(--surface-l3);
     --bg-hover: var(--surface-hover);
 
-    --border-subtle: rgba(255, 255, 255, 0.05);
-    --border-default: rgba(255, 255, 255, 0.09);
-    --border-strong: rgba(255, 255, 255, 0.14);
+    --border-subtle: #1c1d22;
+    --border-default: #23252a;
+    --border-strong: #2e3036;
 
     --text-primary: #f4f4f6;
-    /* Crisp Pitch White */
-    --text-secondary: #a1a1aa;
-    /* Zinc 400 — Clear Silver */
-    --text-tertiary: #71717a;
-    /* Zinc 500 — Legible Muted */
-    --text-disabled: #52525b;
-    /* Zinc 600 — Disabled State */
+    --text-secondary: #8a8f98;
+    --text-tertiary: #62666d;
+    --text-disabled: #46484e;
 
-    --brand-accent: #818cf8;
-    --brand-accent-hover: #6366f1;
-    --brand-accent-subtle: rgba(129, 140, 248, 0.15);
-    --brand-accent-glow: rgba(129, 140, 248, 0.25);
-    --brand-accent-text: #000000;
-    --text-on-accent: #000000;
+    --brand-accent: #5e6ad2;
+    --brand-accent-hover: #6875e5;
+    --brand-accent-subtle: rgba(94, 106, 210, 0.15);
 
-    --input-bg: #0a0a0c;
-    --input-bg-focus: #121318;
-    --input-bg-disabled: rgba(10, 10, 12, 0.5);
+    --input-bg: #0f1011;
+    --input-bg-focus: #141516;
+    --input-bg-disabled: rgba(15, 16, 17, 0.5);
+    --input-border: var(--border-default);
+    --input-border-focus: var(--brand-accent);
+    --input-text: var(--text-primary);
+    --input-placeholder: var(--text-tertiary);
+  }
+
+  /* NEUTRAL GRAY THEME */
+  [data-theme="neutral"] {
+    --surface-l0: #0a0b0d;
+    --surface-l1: #111215;
+    --surface-l2: #16181b;
+    --surface-l3: #1b1d22;
+    --surface-l4: #212329;
+    --surface-l5: #282a32;
+
+    --surface-hover: rgba(255, 255, 255, 0.04);
+    --surface-active: rgba(255, 255, 255, 0.08);
+
+    --bg-main: var(--surface-l0);
+    --bg-surface: var(--surface-l1);
+    --bg-elevated: var(--surface-l3);
+    --bg-hover: var(--surface-hover);
+
+    --border-subtle: #1c1f24;
+    --border-default: #252830;
+    --border-strong: #30343f;
+
+    --text-primary: #f4f4f6;
+    --text-secondary: #8a8f98;
+    --text-tertiary: #62666d;
+    --text-disabled: #46484e;
+
+    --brand-accent: #5e6ad2;
+    --brand-accent-hover: #6875e5;
+    --brand-accent-subtle: rgba(94, 106, 210, 0.15);
+
+    --input-bg: #111215;
+    --input-bg-focus: #16181b;
+    --input-bg-disabled: rgba(17, 18, 21, 0.5);
+    --input-border: var(--border-default);
+    --input-border-focus: var(--brand-accent);
+    --input-text: var(--text-primary);
+    --input-placeholder: var(--text-tertiary);
+  }
+
+  /* OLED BLACK / DARK THEME */
+  [data-theme="dark"],
+  [data-theme="oled"] {
+    --surface-l0: #000000;
+    --surface-l1: #08090a;
+    --surface-l2: #101113;
+    --surface-l3: #161719;
+    --surface-l4: #1c1d20;
+    --surface-l5: #23252a;
+
+    --surface-hover: rgba(255, 255, 255, 0.04);
+    --surface-active: rgba(255, 255, 255, 0.08);
+
+    --bg-main: var(--surface-l0);
+    --bg-surface: var(--surface-l1);
+    --bg-elevated: var(--surface-l3);
+    --bg-hover: var(--surface-hover);
+
+    --border-subtle: #18191d;
+    --border-default: #23252a;
+    --border-strong: #2e3036;
+
+    --text-primary: #f4f4f6;
+    --text-secondary: #8a8f98;
+    --text-tertiary: #62666d;
+    --text-disabled: #46484e;
+
+    --brand-accent: #5e6ad2;
+    --brand-accent-hover: #6875e5;
+    --brand-accent-subtle: rgba(94, 106, 210, 0.15);
+    --brand-accent-glow: rgba(94, 106, 210, 0.25);
+    --brand-accent-text: #ffffff;
+    --text-on-accent: #ffffff;
+
+    --input-bg: #08090a;
+    --input-bg-focus: #101113;
+    --input-bg-disabled: rgba(8, 9, 10, 0.5);
     --input-border: var(--border-default);
     --input-border-focus: var(--brand-accent);
     --input-text: var(--text-primary);
@@ -580,21 +578,21 @@
   border-radius: var(--radius-full);
 }
 
-/* Elevation Shadow Utilities — Default (works for dim & dark themes) */
+/* Elevation Shadow Utilities — Linear Style (Crisp hairline border + subtle rim highlight, zero thick blur) */
 .shadow-elevation-l3 {
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 .shadow-elevation-hover {
-  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.30);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .shadow-elevation-l4 {
-  box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--border-default);
 }
 
 .shadow-elevation-l5 {
-  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.50);
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.65), 0 0 0 1px var(--border-strong);
 }
 
 /* Light mode specific — Natural elevation through soft ambient shadows, no harsh outlines */

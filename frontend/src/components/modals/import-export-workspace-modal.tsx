@@ -25,8 +25,8 @@ export function ImportExportWorkspaceModal({ isOpen, onClose }: ImportExportWork
       await exportFullWorkspaceJSON();
       toast.success("Workspace backup downloaded!");
       onClose();
-    } catch (err: any) {
-      toast.error("Export failed: " + err.message);
+    } catch (err: unknown) {
+      toast.error("Export failed: " + (err as Error).message);
     }
   };
 
@@ -57,8 +57,8 @@ export function ImportExportWorkspaceModal({ isOpen, onClose }: ImportExportWork
       await queryClient.invalidateQueries();
       toast.success(`Restored ${result.projectCount} projects and ${result.taskCount} tasks!`);
       onClose();
-    } catch (err: any) {
-      setErrorMsg(err.message || "Invalid workspace JSON payload.");
+    } catch (err: unknown) {
+      setErrorMsg((err as Error).message || "Invalid workspace JSON payload.");
     } finally {
       setIsImporting(false);
     }

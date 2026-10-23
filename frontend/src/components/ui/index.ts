@@ -1,5 +1,6 @@
 // Inputs
 export * from "./inputs/button";
+export * from "./inputs/checkbox";
 export * from "./inputs/icon-button";
 export * from "./inputs/form-input";
 export * from "./inputs/search-input";

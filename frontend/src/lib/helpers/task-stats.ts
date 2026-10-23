@@ -73,7 +73,7 @@ export function computeTaskStats(columns: ColumnData[] = []): TaskStats {
     const items = task.checklist_items || (task as TaskData & { subtasks?: ChecklistItemData[] }).subtasks;
     if (Array.isArray(items)) {
       totalSubtasks += items.length;
-      completedSubtasks += items.filter((st: ChecklistItemData | any) => st.is_completed).length;
+      completedSubtasks += items.filter((st: ChecklistItemData) => st.is_completed).length;
     }
   }
 

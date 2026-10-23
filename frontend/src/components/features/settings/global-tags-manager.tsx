@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Tag as TagIcon, FileCode, Layers, Check } from "lucide-react";
+import { Plus, Trash2, Tag as TagIcon, FileCode, Layers } from "lucide-react";
 import { ColorSwatchPicker } from "@/components/ui/color-swatch-picker";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import {

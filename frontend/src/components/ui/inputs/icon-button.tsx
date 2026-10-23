@@ -1,10 +1,9 @@
 "use client";
 
 import React, { ButtonHTMLAttributes } from "react";
-import { LucideIcon } from "lucide-react";
 
 export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<{ className?: string }>;
   variant?: "ghost" | "secondary" | "danger";
   size?: "sm" | "md";
   title?: string;
@@ -20,7 +19,7 @@ export function IconButton({
   ...props
 }: IconButtonProps) {
   const baseClasses =
-    "inline-flex items-center justify-center rounded-md cursor-pointer transition-all duration-150 active:scale-[0.96] disabled:opacity-40 disabled:cursor-not-allowed";
+    "inline-flex items-center justify-center rounded-[5px] cursor-pointer transition-all duration-150 active:scale-[0.96] disabled:opacity-40 disabled:cursor-not-allowed";
 
   const sizeClasses = {
     sm: "w-7 h-7 p-1",

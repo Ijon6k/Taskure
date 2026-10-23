@@ -3,7 +3,7 @@
 import { memo, useMemo, useCallback } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Paperclip } from "lucide-react";
+import { Paperclip, CheckSquare } from "lucide-react";
 import { TaskData, ChecklistItemData } from "@/lib/api";
 import { calculateProgress } from "@/lib/helpers";
 import { extractTaskTags } from "@/lib/tags";
@@ -32,31 +32,45 @@ export const KanbanCardView = memo(function KanbanCardView({ task }: KanbanCardV
     };
   }, [task]);
 
+  const shortId = useMemo(() => {
+    if (!task.id) return "";
+    const clean = task.id.replace(/-/g, "");
+    return `TSK-${clean.slice(0, 4).toUpperCase()}`;
+  }, [task.id]);
+
   return (
-    <div className="w-full p-4 bg-surface-l3 rounded-md shadow-elevation-l3 hover:shadow-elevation-hover hover:bg-surface-hover transition-all duration-150 space-y-3 select-none group">
-      {/* Top Header: Priority Badge (Left) vs Text-Only Tag (Right) */}
-      <div className="flex items-center justify-between gap-2 min-h-[22px]">
+    <div className="w-full p-2.5 md:p-3 bg-surface-l3 rounded-[6px] border border-theme-subtle hover:border-theme-default hover:bg-[#1c1d20] shadow-elevation-l3 transition-all duration-120 space-y-2 select-none group cursor-pointer">
+      {/* Top Header: Linear Task Key (Left) vs Priority Signal Badge (Right) */}
+      <div className="flex items-center justify-between gap-2 min-h-[18px]">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="text-[11px] font-mono text-theme-tertiary tracking-wider group-hover:text-theme-secondary transition-colors shrink-0">
+            {shortId}
+          </span>
+          <TaskCardTagText tags={tags} />
+        </div>
         <PriorityBadge priority={task.priority} />
-        <TaskCardTagText tags={tags} />
       </div>
 
-      {/* Task Title (Visually Dominant) */}
-      <h4 className="text-[15px] font-normal text-theme-primary transition-colors leading-snug line-clamp-2">
+      {/* Task Title (Compact 13px Linear style) */}
+      <h4 className="text-[13px] font-medium text-theme-primary transition-colors leading-snug line-clamp-2">
         {task.title}
       </h4>
 
-      {/* Subtasks Progress Bar */}
+      {/* Subtasks Progress Bar (thin hairline) */}
       {checklistItems.length > 0 && (
         <ProgressBar percent={checklistPercent} />
       )}
 
       {/* Card Footer Details */}
       {(checklistItems.length > 0 || attachmentCount > 0 || task.due_date) && (
-        <div className="flex items-center justify-between text-[12px] font-mono text-theme-tertiary pt-0.5">
-          <div className="flex items-center gap-2.5">
+        <div className="flex items-center justify-between text-[11px] font-mono text-theme-tertiary pt-0.5">
+          <div className="flex items-center gap-2">
             {checklistItems.length > 0 && (
-              <span>
-                {completedChecklist}/{checklistItems.length} subtasks
+              <span className="inline-flex items-center gap-1">
+                <CheckSquare className="w-3 h-3 stroke-[1.5]" />
+                <span>
+                  {completedChecklist}/{checklistItems.length}
+                </span>
               </span>
             )}
 
@@ -65,7 +79,7 @@ export const KanbanCardView = memo(function KanbanCardView({ task }: KanbanCardV
                 className="flex items-center gap-1 text-[11px] text-theme-tertiary/90 hover:text-theme-secondary transition-colors"
                 title={`${attachmentCount} attachment${attachmentCount > 1 ? "s" : ""}`}
               >
-                <Paperclip className="w-3.5 h-3.5 stroke-[1.5]" />
+                <Paperclip className="w-3 h-3 stroke-[1.5]" />
                 <span>{attachmentCount}</span>
               </div>
             )}
@@ -103,7 +117,7 @@ export function SortableKanbanCard({ task, onTaskClick }: SortableKanbanCardProp
       {...listeners}
       onClick={handleClick}
       data-task-id={task.id}
-      className="cursor-grab active:cursor-grabbing transition-all duration-150 active:scale-[0.99]"
+      className="cursor-grab active:cursor-grabbing transition-all duration-120 active:scale-[0.99]"
     >
       <KanbanCardView task={task} />
     </div>

@@ -4,6 +4,13 @@ import { useState } from "react";
 import { FileCode, Plus, Sparkles, BookOpen, Database, Code, Trash2, CheckCircle2 } from "lucide-react";
 import { ProjectContextData } from "@/lib/api";
 import { PageContainer } from "@/components/ui/page-container";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 interface ProjectContextTabProps {
   projectId: string;
@@ -141,16 +148,17 @@ export function ProjectContextTab({
                 />
               </div>
               <div>
-                <select
-                  value={docType}
-                  onChange={(e) => setDocType(e.target.value)}
-                  className="document-input text-sm cursor-pointer"
-                >
-                  <option value="api_spec">API Specification</option>
-                  <option value="database_schema">Database Schema</option>
-                  <option value="architecture">Architecture Note</option>
-                  <option value="requirement">Requirements</option>
-                </select>
+                <Select value={docType} onValueChange={(val) => setDocType(val)}>
+                  <SelectTrigger className="h-9 bg-surface-l3 border-theme-subtle text-sm">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="api_spec">API Specification</SelectItem>
+                    <SelectItem value="database_schema">Database Schema</SelectItem>
+                    <SelectItem value="architecture">Architecture Note</SelectItem>
+                    <SelectItem value="requirement">Requirements</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

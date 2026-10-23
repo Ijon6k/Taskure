@@ -90,8 +90,8 @@ export default function ProjectBoardPage() {
       );
       setImportPreview(null);
       await refetch();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to apply import.");
+    } catch (err: unknown) {
+      toast.error((err as Error).message || "Failed to apply import.");
     } finally {
       setIsApplying(false);
     }

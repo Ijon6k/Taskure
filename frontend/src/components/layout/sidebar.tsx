@@ -77,8 +77,8 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
     <div className="flex flex-col h-full bg-surface-l1 text-theme-primary select-none">
       {/* Sidebar Header */}
       <div
-        className={`h-[56px] border-b border-theme-subtle flex items-center shrink-0 ${
-          !isMobileView && isSidebarCollapsed ? "justify-center" : "justify-between px-4"
+        className={`h-[44px] border-b border-theme-subtle flex items-center shrink-0 ${
+          !isMobileView && isSidebarCollapsed ? "justify-center" : "justify-between px-3.5"
         }`}
       >
         {!isMobileView && isSidebarCollapsed ? (
@@ -87,35 +87,33 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
             onClick={toggleSidebar}
             onMouseEnter={() => setIsLogoHovered(true)}
             onMouseLeave={() => setIsLogoHovered(false)}
-            className="w-[32px] h-[32px] rounded-md flex items-center justify-center hover:bg-theme-hover transition-colors"
+            className="w-[28px] h-[28px] rounded-[5px] flex items-center justify-center hover:bg-theme-hover transition-colors cursor-pointer"
             aria-label="Expand sidebar"
             title="Expand sidebar"
           >
             {isLogoHovered ? (
-              <SidebarSimple className="w-[18px] h-[18px] text-theme-primary" />
+              <SidebarSimple className="w-[16px] h-[16px] text-theme-primary" />
             ) : (
               <Image
                 src={logoSrc}
                 alt="Taskure"
-                width={32}
-                height={32}
-                // Transparent icon — scale up for visibility.
-                className="w-[32px] h-[32px] scale-[1.6] object-contain"
+                width={24}
+                height={24}
+                className="w-[24px] h-[24px] object-contain"
               />
             )}
           </button>
         ) : (
           <>
-            <Link href="/" onClick={() => isMobileView && closeMobileMenu()} className="flex items-center gap-2.5 min-w-0">
+            <Link href="/" onClick={() => isMobileView && closeMobileMenu()} className="flex items-center gap-2 min-w-0">
               <Image
                 src={logoSrc}
                 alt="Taskure"
-                width={32}
-                height={32}
-                // Transparent icon — scale up for visibility.
-                className="w-[32px] h-[32px] scale-[1.6] object-contain shrink-0"
+                width={22}
+                height={22}
+                className="w-[22px] h-[22px] object-contain shrink-0"
               />
-              <span className="text-[15px] font-medium tracking-tight text-theme-primary whitespace-nowrap">
+              <span className="text-[13px] font-semibold tracking-tight text-theme-primary whitespace-nowrap">
                 Taskure
               </span>
             </Link>
@@ -124,20 +122,20 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
               <button
                 type="button"
                 onClick={closeMobileMenu}
-                className="w-[32px] h-[32px] rounded-md flex items-center justify-center text-theme-secondary hover:text-theme-primary hover:bg-theme-hover transition-colors shrink-0"
+                className="w-[28px] h-[28px] rounded-[5px] flex items-center justify-center text-theme-secondary hover:text-theme-primary hover:bg-theme-hover transition-colors shrink-0 cursor-pointer"
                 aria-label="Close Mobile Navigation"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             ) : (
               <button
                 type="button"
                 onClick={toggleSidebar}
-                className="w-[28px] h-[28px] rounded-md flex items-center justify-center text-theme-secondary hover:text-theme-primary hover:bg-theme-hover transition-colors shrink-0"
+                className="w-[24px] h-[24px] rounded-[5px] flex items-center justify-center text-theme-tertiary hover:text-theme-primary hover:bg-theme-hover transition-colors shrink-0 cursor-pointer"
                 aria-label="Collapse sidebar"
                 title="Collapse sidebar"
               >
-                <SidebarSimple className="w-[17px] h-[17px]" />
+                <SidebarSimple className="w-[15px] h-[15px]" />
               </button>
             )}
           </>
@@ -159,16 +157,16 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
               onClick={() => isMobileView && closeMobileMenu()}
               title={!isMobileView && isSidebarCollapsed ? item.label : undefined}
               aria-label={!isMobileView && isSidebarCollapsed ? item.label : undefined}
-              className={`h-[40px] rounded-md flex items-center text-[14px] font-medium transition-colors ${
-                !isMobileView && isSidebarCollapsed ? "w-[40px] justify-center" : "w-full px-3 gap-3"
+              className={`h-[30px] rounded-[5px] flex items-center text-[13px] font-medium transition-colors ${
+                !isMobileView && isSidebarCollapsed ? "w-[30px] justify-center mx-auto" : "w-full px-2.5 gap-2.5"
               } ${
                 isActive
-                  ? "bg-theme-elevated text-theme-primary font-semibold"
+                  ? "bg-surface-l2 text-theme-primary font-medium border border-theme-subtle"
                   : "text-theme-secondary hover:text-theme-primary hover:bg-theme-hover"
               }`}
             >
               <Icon
-                className={`w-[18px] h-[18px] shrink-0 ${
+                className={`w-[15px] h-[15px] shrink-0 ${
                   isActive ? "text-brand-accent" : "text-theme-secondary"
                 }`}
               />
@@ -178,11 +176,11 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
         })}
 
         {(isMobileView || !isSidebarCollapsed) && projects.length > 0 && (
-          <div className="pt-5 px-3">
-            <div className="text-[12px] font-mono text-theme-secondary uppercase tracking-widest mb-2.5">
+          <div className="pt-4 px-2">
+            <div className="text-[10px] font-mono text-theme-tertiary uppercase tracking-wider mb-1.5 px-1">
               Projects ({projects.length})
             </div>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {projects.slice(0, 8).map((project) => {
                 const isProjectActive = pathname.includes(`/projects/${project.id}`);
 
@@ -191,15 +189,15 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
                     key={project.id}
                     href={getProjectNavUrl(project.id)}
                     onClick={() => isMobileView && closeMobileMenu()}
-                    className={`flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] truncate transition-colors ${
+                    className={`flex items-center gap-2 px-2 py-1.5 rounded-[5px] text-[12px] truncate transition-colors ${
                       isProjectActive
-                        ? "bg-theme-elevated text-theme-primary font-medium"
+                        ? "bg-surface-l2 text-theme-primary font-medium border border-theme-subtle"
                         : "text-theme-secondary hover:text-theme-primary hover:bg-theme-hover"
                     }`}
                   >
                     <span
-                      className="w-2 h-2 rounded-full shrink-0"
-                      style={{ backgroundColor: project.color || "#7F9CF5" }}
+                      className="w-1.5 h-1.5 rounded-full shrink-0"
+                      style={{ backgroundColor: project.color || "#5e6ad2" }}
                     />
                     <span className="truncate">{project.name}</span>
                   </Link>
@@ -258,8 +256,8 @@ export function Sidebar({ onOpenCreateProject }: SidebarProps) {
     <>
       {/* Desktop Sidebar (hidden on mobile md:flex) */}
       <aside
-        className={`hidden md:flex h-screen border-r border-theme-default flex-col shrink-0 z-20 overflow-hidden transition-[width] duration-200 ease-out ${
-          isSidebarCollapsed ? "w-[56px]" : "w-[224px]"
+        className={`hidden md:flex h-screen border-r border-theme-subtle flex-col shrink-0 z-20 overflow-hidden transition-[width] duration-150 ease-out ${
+          isSidebarCollapsed ? "w-[52px]" : "w-[240px]"
         }`}
       >
         {sidebarContent(false)}

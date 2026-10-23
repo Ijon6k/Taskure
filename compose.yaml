@@ -10,9 +10,6 @@
 services:
   nginx:
     image: ghcr.io/ijon6k/taskure/gateway:${IMAGE_TAG:-latest}
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
     container_name: kanban-nginx
     ports:
       - "${PORT_NGINX:-1106}:80"
@@ -20,9 +17,9 @@ services:
       web:
         condition: service_started
       api:
-        condition: service_healthy
+        condition: service_started
       ai:
-        condition: service_healthy
+        condition: service_started
     networks:
       - kanban-network
     restart: unless-stopped
@@ -34,10 +31,6 @@ services:
 
   web:
     image: ghcr.io/ijon6k/taskure/frontend:${IMAGE_TAG:-latest}
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      target: runner
     container_name: kanban-web
     expose:
       - "3000"
@@ -53,14 +46,10 @@ services:
       resources:
         limits:
           cpus: '1.0'
-          memory: 512M
+          memory: 1G
 
   api:
     image: ghcr.io/ijon6k/taskure/backend:${IMAGE_TAG:-latest}
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      target: runner
     container_name: kanban-api
     expose:
       - "4000"
@@ -97,10 +86,6 @@ services:
 
   ai:
     image: ghcr.io/ijon6k/taskure/ai:${IMAGE_TAG:-latest}
-    build:
-      context: ./ai
-      dockerfile: Dockerfile
-      target: runner
     container_name: kanban-ai
     expose:
       - "5000"
@@ -151,9 +136,9 @@ services:
     image: docker.io/chrislusf/seaweedfs:latest
     container_name: kanban-seaweedfs
     command: "server -dir=/data -s3 -s3.port=9000 -s3.config=/etc/seaweedfs/s3.json"
-    ports:
-      - "127.0.0.1:${PORT_S3:-9000}:9000"
-      - "127.0.0.1:${PORT_S3_FILER:-8888}:8888"
+    expose:
+      - "9000"
+      - "8888"
     volumes:
       - seaweedfs-data:/data
       - ./seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro

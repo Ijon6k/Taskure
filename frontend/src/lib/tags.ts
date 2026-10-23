@@ -57,11 +57,11 @@ export function resolveColorHex(inputColor?: string): string {
 }
 
 // Unified Task Tag & Label Extractor
-export function extractTaskTags(task: { tags?: string[]; labels?: any[] } | null | undefined): string[] {
+export function extractTaskTags(task: { tags?: string[]; labels?: Array<string | { name?: string }> } | null | undefined): string[] {
   if (!task) return [];
   const fromTags = task.tags || [];
-  const fromLabels = (task.labels || []).map((lbl: any) =>
-    typeof lbl === "string" ? lbl : lbl.name
+  const fromLabels = (task.labels || []).map((lbl) =>
+    typeof lbl === "string" ? lbl : lbl?.name || ""
   );
   return Array.from(new Set([...fromTags, ...fromLabels])).filter(Boolean);
 }
@@ -103,7 +103,7 @@ const GLOBAL_TAGS_KEY = "kanban_global_tags";
 const PROJECT_TAGS_PREFIX = "kanban_project_tags_";
 
 // Helper to Safely Access LocalStorage with In-Memory Cache
-const storageCache = new Map<string, any>();
+const storageCache = new Map<string, unknown>();
 
 /** Safe localStorage wrapper used by the tag/category persistence layer. */
 function getStorage<T>(key: string, defaultValue: T): T {

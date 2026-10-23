@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { SidebarSimple, Kanban } from "@phosphor-icons/react";
+import { SidebarSimple, Kanban, Plus } from "@phosphor-icons/react";
 import { useUIStore } from "@/store/use-ui-store";
 import { useTheme } from "@/components/providers/theme-provider";
 
@@ -11,7 +11,7 @@ interface MobileHeaderProps {
   onOpenCreateProject?: () => void;
 }
 
-export function MobileHeader({ title = "Taskure", onOpenCreateProject }: MobileHeaderProps) {
+export function MobileHeader({ onOpenCreateProject }: MobileHeaderProps) {
   const toggleMobileMenu = useUIStore((s) => s.toggleMobileMenu);
   const { theme } = useTheme();
   const logoSrc = theme === "light" ? "/logotaskureblack.webp" : "/logotaskurewhite.webp";
@@ -44,12 +44,23 @@ export function MobileHeader({ title = "Taskure", onOpenCreateProject }: MobileH
       <div className="flex items-center gap-1 shrink-0 text-xs font-medium text-theme-tertiary">
         <Link
           href="/projects"
-          className="px-2.5 py-1 rounded-md text-theme-secondary hover:text-theme-primary hover:bg-surface-hover transition-colors flex items-center gap-1.5"
+          className="px-2.5 py-1 rounded-[4px] text-theme-secondary hover:text-theme-primary hover:bg-surface-l3 transition-colors flex items-center gap-1.5"
           title="Browse All Projects"
         >
           <Kanban className="w-3.5 h-3.5" />
           <span>Projects</span>
         </Link>
+        {onOpenCreateProject && (
+          <button
+            type="button"
+            onClick={onOpenCreateProject}
+            className="w-7 h-7 rounded-[4px] flex items-center justify-center text-theme-secondary hover:text-theme-primary hover:bg-surface-l3 transition-colors cursor-pointer"
+            title="Create Project"
+            aria-label="Create Project"
+          >
+            <Plus className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
     </header>
   );

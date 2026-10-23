@@ -7,6 +7,7 @@ import { computeTaskStats } from "@/lib/helpers";
 import { ColumnDistributionBar } from "@/components/ui/column-distribution-bar";
 import { PriorityBadge } from "@/components/ui/priority-badge";
 import { DueDateText } from "@/components/ui/due-date-text";
+import { Button } from "@/components/ui/button";
 import { sortBy } from "es-toolkit";
 import { toast } from "sonner";
 import { useUIStore } from "@/store/use-ui-store";
@@ -88,7 +89,7 @@ export function ProjectOverviewTab({
     return set;
   }, [project?.columns]);
 
-  const { sortedActiveTasks, focusTask, upcomingTasks, completedTasks } = useMemo(() => {
+  const { focusTask, upcomingTasks, completedTasks } = useMemo(() => {
     const isCompletedTask = (t: TaskData) =>
       completedColumnIds.has(t.column_id) || t.status === "done" || Boolean((t as TaskData & { is_completed?: boolean }).is_completed);
 
@@ -97,7 +98,6 @@ export function ProjectOverviewTab({
     const sorted = sortBy(activeTasks, [(t) => priorityOrder[t.priority || "medium"] || 3]);
 
     return {
-      sortedActiveTasks: sorted,
       focusTask: sorted[0] || null,
       upcomingTasks: sortBy(
         activeTasks.filter((t) => Boolean(t.due_date)),
@@ -210,33 +210,33 @@ export function ProjectOverviewTab({
 
           {isEditingInline ? (
             <div className="flex items-center gap-2">
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setIsEditingInline(false)}
-                className="px-2.5 py-1 text-[12px] text-theme-secondary hover:text-theme-primary flex items-center gap-1 transition-colors cursor-pointer font-medium"
               >
                 <X className="w-3.5 h-3.5" />
                 <span>Cancel</span>
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={handleSaveInline}
                 disabled={saving}
-                className="px-3 py-1 bg-brand-accent hover:bg-brand-accent-hover text-on-accent font-medium rounded-md text-[12px] hover:opacity-90 flex items-center gap-1 transition-opacity cursor-pointer disabled:opacity-50"
               >
-                <Check className="w-3.5 h-3.5 font-bold" />
+                <Check className="w-3.5 h-3.5" />
                 <span>{saving ? "Saving..." : "Save Changes"}</span>
-              </button>
+              </Button>
             </div>
           ) : (
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={handleStartEdit}
-              className="px-2.5 py-1 text-[12px] text-theme-secondary hover:text-theme-primary flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
             >
               <Edit3 className="w-3.5 h-3.5 text-brand-accent" />
               <span>Edit</span>
-            </button>
+            </Button>
           )}
         </div>
 

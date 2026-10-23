@@ -141,7 +141,7 @@ export const ProjectCard = memo(function ProjectCard({
   return (
     <Link
       href={getProjectNavUrl(project.id)}
-      className={`group/card flex flex-col justify-between h-[175px] p-5 bg-surface-l2 rounded-md hover:bg-surface-hover/80 transition-all duration-150 relative ${className}`}
+      className={`group/card flex flex-col justify-between h-[160px] p-4 bg-surface-l2 rounded-[6px] border border-theme-subtle hover:border-theme-default hover:bg-surface-l3 transition-all duration-150 relative ${className}`}
     >
       <div>
         {/* Header: Color Dot + Title + Theme Accent Pinned Toggle + 3-dots Menu */}

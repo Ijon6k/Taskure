@@ -42,6 +42,9 @@ export function ExportJsonModal({ isOpen, project, onClose }: ExportJsonModalPro
   const totalTasks =
     project?.columns?.reduce((sum, column) => sum + (column.tasks?.length ?? 0), 0) ?? 0;
 
+  const lineCount = jsonString.split("\n").length;
+  const byteSize = jsonString ? (new Blob([jsonString]).size / 1024).toFixed(1) : "0";
+
   if (!isOpen || !project) return null;
 
   const handleCopy = () => {
@@ -65,12 +68,6 @@ export function ExportJsonModal({ isOpen, project, onClose }: ExportJsonModalPro
     URL.revokeObjectURL(url);
     toast.success(`Downloaded ${scope === "project" ? "full project" : "board only"} JSON.`);
   };
-
-  const lineCount = useMemo(() => jsonString.split("\n").length, [jsonString]);
-  const byteSize = useMemo(
-    () => (jsonString ? (new Blob([jsonString]).size / 1024).toFixed(1) : "0"),
-    [jsonString]
-  );
 
   return (
     <ModalContainer isOpen={isOpen} onClose={onClose} maxWidth="max-w-[540px]">

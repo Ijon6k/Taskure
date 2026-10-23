@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Filter, Check, RotateCcw, Tag as TagIcon } from "lucide-react";
+import { Filter, Check, RotateCcw } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { BoardFilterState, DEFAULT_BOARD_FILTERS, countActiveFilters } from "@/lib/filter-tasks";
+import { BoardFilterState, countActiveFilters } from "@/lib/filter-tasks";
 import { getTagStyle } from "@/lib/tags";
 
 import { cn } from "@/lib/utils";

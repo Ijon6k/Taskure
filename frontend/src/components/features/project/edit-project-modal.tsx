@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Pin, Trash2, Check } from "lucide-react";
+import { X, Pin } from "lucide-react";
 import { useUpdateProject, useDeleteProject } from "@/lib/api";
 import { EditableProject } from "@/store/use-ui-store";
 import { useRouter } from "next/navigation";
@@ -280,7 +280,7 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
               <button
                 type="submit"
                 disabled={updateProjectMutation.isPending || !name.trim()}
-                className="px-4 py-2 bg-brand-accent hover:bg-brand-accent-hover text-slate-950 text-[13px] font-semibold rounded-md transition-all shadow-xs active:scale-[0.98] disabled:opacity-40 cursor-pointer"
+                className="px-4 py-2 bg-brand-accent hover:bg-brand-accent-hover text-white text-[13px] font-medium rounded-md transition-all shadow-xs active:scale-[0.98] disabled:opacity-40 cursor-pointer"
               >
                 {updateProjectMutation.isPending ? "Saving..." : "Save changes"}
               </button>

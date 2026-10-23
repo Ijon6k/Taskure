@@ -1,7 +1,13 @@
 "use client";
 
-import React, { forwardRef, InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttributes } from "react";
-import { ChevronDown } from "lucide-react";
+import React, { forwardRef, InputHTMLAttributes, TextareaHTMLAttributes } from "react";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "./select";
 
 export interface FormInputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -56,41 +62,54 @@ export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>(
 );
 FormTextarea.displayName = "FormTextarea";
 
-export interface FormSelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
-  label?: string;
+export interface FormSelectProps {
+  label?: string | undefined;
   error?: string | undefined;
-  options?: Array<{ label: string; value: string }>;
-  children?: React.ReactNode;
+  value?: string | undefined;
+  defaultValue?: string | undefined;
+  onValueChange?: ((value: string) => void) | undefined;
+  placeholder?: string | undefined;
+  options: Array<{ label: string; value: string }>;
+  className?: string | undefined;
+  disabled?: boolean | undefined;
 }
 
-export const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(
-  ({ label, error, options, children, className = "", ...props }, ref) => {
-    return (
-      <div className="space-y-1.5 w-full">
-        {label && (
-          <label className="text-[12px] font-mono font-medium text-theme-tertiary uppercase tracking-wider block">
-            {label}
-          </label>
-        )}
-        <div className="relative flex items-center">
-          <select
-            ref={ref}
-            className={`w-full appearance-none bg-surface-l3 border border-theme-subtle rounded-md pl-3.5 pr-9 py-2 text-[14px] font-medium text-theme-primary outline-none focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent transition-all cursor-pointer ${className}`}
-            {...props}
-          >
-            {options
-              ? options.map((opt) => (
-                  <option key={opt.value} value={opt.value} className="bg-surface-l4 text-theme-primary">
-                    {opt.label}
-                  </option>
-                ))
-              : children}
-          </select>
-          <ChevronDown className="w-4 h-4 text-theme-tertiary absolute right-3 pointer-events-none" />
-        </div>
-        {error && <p className="text-[13px] text-red-400 font-medium">{error}</p>}
-      </div>
-    );
-  }
-);
-FormSelect.displayName = "FormSelect";
+export function FormSelect({
+  label,
+  error,
+  value,
+  defaultValue,
+  onValueChange,
+  placeholder,
+  options,
+  className = "",
+  disabled,
+}: FormSelectProps) {
+  return (
+    <div className="space-y-1.5 w-full">
+      {label && (
+        <label className="text-[11px] font-mono font-medium text-theme-tertiary uppercase tracking-wider block">
+          {label}
+        </label>
+      )}
+      <Select
+        {...(value !== undefined ? { value } : {})}
+        {...(defaultValue !== undefined ? { defaultValue } : {})}
+        {...(onValueChange !== undefined ? { onValueChange } : {})}
+        {...(disabled !== undefined ? { disabled } : {})}
+      >
+        <SelectTrigger className={`w-full ${className}`}>
+          {placeholder ? <SelectValue placeholder={placeholder} /> : <SelectValue />}
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {error && <p className="text-[12px] text-red-400 font-medium">{error}</p>}
+    </div>
+  );
+}

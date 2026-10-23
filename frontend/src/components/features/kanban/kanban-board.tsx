@@ -256,7 +256,7 @@ export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, o
         {/* Main Board Scroll Container */}
         <div
           ref={containerRef}
-          className="w-full h-full flex-1 flex gap-4 md:gap-5 overflow-x-auto px-3.5 md:px-6 pt-3 md:pt-4 pb-3.5 md:pb-6 items-stretch select-none relative snap-x snap-mandatory md:snap-none"
+          className="w-full h-full flex-1 flex gap-3 overflow-x-auto px-3 md:px-5 pt-2.5 md:pt-3 pb-3 items-stretch select-none relative snap-x snap-mandatory md:snap-none"
         >
           {columns.length === 0 && !isAddingColumn ? (
             <EmptyBoardChoiceState
@@ -270,7 +270,7 @@ export function KanbanBoard({ projectId, columns: initialColumns, onTaskClick, o
                 <div
                   key={col.id}
                   id={`kanban-column-${col.id}`}
-                  className="snap-center shrink-0 w-[calc(100vw-2.5rem)] md:w-[384px] md:min-w-[384px] h-full max-h-full flex flex-col"
+                  className="snap-center shrink-0 w-[calc(100vw-2.5rem)] md:w-[350px] md:min-w-[350px] h-full max-h-full flex flex-col"
                 >
                   <KanbanColumn
                     column={col}

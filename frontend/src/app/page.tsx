@@ -5,7 +5,6 @@ import Link from "next/link";
 import { FolderPlus, FolderKanban } from "lucide-react";
 import { useProjects, useFocusTask } from "@/lib/api";
 import { getTimeGreeting, getFormattedDate } from "@/lib/helpers";
-import { deriveWorkspaceState } from "@/lib/helpers/workspace-state";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileHeader } from "@/components/layout/mobile-header";
 import { TodaysFocusHero } from "@/components/features/dashboard/todays-focus-hero";
@@ -15,6 +14,7 @@ import { ProjectCard } from "@/components/features/project/project-card";
 import { CreateProjectModal } from "@/components/features/project/create-project-modal";
 import { EditProjectModal } from "@/components/features/project/edit-project-modal";
 import { useUIStore } from "@/store/use-ui-store";
+import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
   const { data: projects = [], isLoading: isProjectsLoading } = useProjects();
@@ -68,21 +68,25 @@ export default function HomePage() {
               </div>
 
               {/* Action buttons */}
-              <div className="flex items-center gap-3 shrink-0">
-                <button
+              <div className="flex items-center gap-2.5 shrink-0">
+                <Button
+                  variant="primary"
+                  size="md"
                   onClick={openCreateProject}
-                  className="px-4 py-2.5 text-[14px] font-medium text-on-accent bg-brand-accent hover:bg-brand-accent-hover rounded-md transition-colors flex items-center gap-2 shadow-xs cursor-pointer"
                 >
-                  <FolderPlus className="w-4 h-4 shrink-0" />
+                  <FolderPlus className="w-3.5 h-3.5 shrink-0" />
                   <span>New project</span>
-                </button>
-                <Link
-                  href="/projects"
-                  className="px-4 py-2.5 text-[14px] font-medium text-theme-secondary bg-surface-l2 hover:bg-surface-l3 rounded-md transition-colors flex items-center gap-2 cursor-pointer"
+                </Button>
+                <Button
+                  asChild
+                  variant="secondary"
+                  size="md"
                 >
-                  <FolderKanban className="w-4 h-4 shrink-0" />
-                  <span>All projects ({projects.length})</span>
-                </Link>
+                  <Link href="/projects">
+                    <FolderKanban className="w-3.5 h-3.5 shrink-0" />
+                    <span>All projects ({projects.length})</span>
+                  </Link>
+                </Button>
               </div>
             </div>
           </div>

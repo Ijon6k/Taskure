@@ -46,7 +46,7 @@ export function ColorSwatchPicker({
               title={`Color ${hex}`}
               aria-label={`Select color ${hex}`}
             >
-              {isSelected && <Check className="w-3.5 h-3.5 text-slate-950 stroke-[3]" />}
+              {isSelected && <Check className="w-3.5 h-3.5 text-white stroke-[3] drop-shadow-xs" />}
             </button>
           );
         })}

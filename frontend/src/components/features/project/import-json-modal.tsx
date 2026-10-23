@@ -150,8 +150,8 @@ export function ImportJsonModal({ isOpen, onClose, mode, project, onReady, onSuc
       }
       setParsed(result);
       setStep("preview");
-    } catch (err: any) {
-      const msg = err.message || "Invalid JSON.";
+    } catch (err: unknown) {
+      const msg = (err as Error).message || "Invalid JSON.";
       setError(msg);
       toast.error(msg);
     }
@@ -168,8 +168,8 @@ export function ImportJsonModal({ isOpen, onClose, mode, project, onReady, onSuc
       setJsonText("");
       onSuccess?.(result.project);
       onClose();
-    } catch (err: any) {
-      const msg = err.message || "Failed to create project.";
+    } catch (err: unknown) {
+      const msg = (err as Error).message || "Failed to create project.";
       setError(msg);
       toast.error(msg);
     } finally {

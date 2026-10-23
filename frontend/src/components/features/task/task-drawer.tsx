@@ -38,7 +38,6 @@ export function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
     editDueDate,
     taskTags,
     taskAttachments,
-    setTaskAttachments,
     handleAttachmentsChange,
     handleUploadAttachment,
     handleDeleteAttachment,
@@ -69,17 +68,17 @@ export function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
 
         <div className="absolute inset-x-0 bottom-0 md:inset-y-0 md:right-0 md:left-auto max-w-full flex md:pl-10">
           {/* Drawer / Bottom Sheet Container */}
-          <div className="w-full md:w-[540px] max-h-[88vh] md:max-h-full bg-surface-l4 border-t md:border-t-0 md:border-l border-theme-subtle text-theme-primary shadow-elevation-l4 flex flex-col h-full rounded-t-2xl md:rounded-tl-[12px] md:rounded-bl-[12px] md:rounded-r-none animate-in slide-in-from-bottom md:slide-in-from-right duration-200">
+          <div className="w-full md:w-[540px] max-h-[88vh] md:max-h-full bg-surface-l2 border-t md:border-t-0 md:border-l border-theme-subtle text-theme-primary shadow-elevation-l5 flex flex-col h-full rounded-t-xl md:rounded-l-lg md:rounded-r-none animate-in slide-in-from-bottom md:slide-in-from-right duration-200">
 
             {/* Mobile Drag Indicator Bar */}
             <div className="md:hidden pt-2 pb-1 flex justify-center shrink-0">
-              <div className="w-12 h-1.5 bg-theme-secondary/40 rounded-full" />
+              <div className="w-10 h-1 bg-theme-secondary/30 rounded-full" />
             </div>
 
             {/* ── Header ── */}
-            <div className="px-4 md:px-6 py-3 md:py-4 border-b border-theme-subtle flex items-center justify-between bg-surface-l4 shrink-0">
-              <span className="text-[13px] font-medium text-theme-secondary uppercase tracking-wider">
-                Task Details
+            <div className="px-4 md:px-6 py-2.5 md:py-3 border-b border-theme-subtle flex items-center justify-between bg-surface-l2 shrink-0">
+              <span className="text-[11px] font-mono text-theme-tertiary tracking-wider font-semibold">
+                {task ? `TSK-${task.id.replace(/-/g, "").slice(0, 4).toUpperCase()}` : "TASK"}
               </span>
               <div className="flex items-center gap-2">
                 {isEditing ? (

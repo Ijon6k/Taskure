@@ -6,24 +6,24 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-accent disabled:pointer-events-none disabled:opacity-40 select-none cursor-pointer active:scale-[0.98] duration-100",
+  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-[5px] text-[12px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-accent/40 disabled:pointer-events-none disabled:opacity-40 select-none cursor-pointer active:scale-[0.98] duration-100",
   {
     variants: {
       variant: {
-        default: "bg-brand-accent text-black hover:bg-brand-accent-hover font-semibold shadow-xs",
-        primary: "bg-brand-accent text-black hover:bg-brand-accent-hover font-semibold shadow-xs",
-        secondary: "bg-surface-l3 hover:bg-surface-l4 border border-theme-subtle text-theme-primary",
-        outline: "bg-transparent border border-theme-default hover:bg-surface-hover text-theme-primary",
+        default: "bg-brand-accent text-white hover:bg-brand-accent-hover font-medium border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]",
+        primary: "bg-brand-accent text-white hover:bg-brand-accent-hover font-medium border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]",
+        secondary: "bg-surface-l2 hover:bg-surface-l3 border border-theme-subtle text-theme-primary shadow-xs",
+        outline: "bg-transparent border border-theme-subtle hover:bg-surface-hover text-theme-secondary hover:text-theme-primary",
         ghost: "bg-transparent hover:bg-surface-hover text-theme-secondary hover:text-theme-primary",
-        danger: "bg-semantic-danger text-white hover:opacity-90 shadow-xs",
+        danger: "bg-semantic-danger/15 border border-semantic-danger/20 text-red-400 hover:bg-semantic-danger/25 shadow-xs",
         link: "text-brand-accent underline-offset-4 hover:underline p-0 h-auto",
       },
       size: {
-        default: "h-9 px-3.5 py-2",
-        md: "h-9 px-3.5 py-2",
-        sm: "h-7 px-2.5 py-1 text-[12px]",
-        lg: "h-10 px-5 py-2.5 text-[14px]",
-        icon: "h-9 w-9 p-0 flex items-center justify-center",
+        default: "h-7 px-2.5 py-1 text-[12px]",
+        sm: "h-6 px-2 py-0.5 text-[11px]",
+        md: "h-8 px-3 py-1.5 text-[13px]",
+        lg: "h-9 px-3.5 py-2 text-[13px]",
+        icon: "h-7 w-7 p-0 flex items-center justify-center",
       },
     },
     defaultVariants: {

@@ -26,38 +26,38 @@ export function BoardHeader({
   const { data: projects = [] } = useProjects();
 
   return (
-    <header className="px-3 md:px-6 pt-3 shrink-0 border-b border-theme-subtle bg-surface-l1 select-none">
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-2.5">
+    <header className="px-3 md:px-5 pt-2.5 shrink-0 border-b border-theme-subtle bg-surface-l1 select-none">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-2">
         {/* Left Section: Breadcrumb with Interactive Project Switcher Dropdown + Inline Tabs */}
-        <div className="flex flex-wrap items-center gap-3 md:gap-5 min-w-0">
+        <div className="flex flex-wrap items-center gap-3 md:gap-4 min-w-0">
           {/* Breadcrumb & Project Dropdown */}
-          <div className="flex items-center gap-1.5 text-sm font-medium">
+          <div className="flex items-center gap-1.5 text-[13px] font-medium">
             <Link href="/projects" className="text-theme-secondary hover:text-theme-primary transition-colors">
               Projects
             </Link>
-            <CaretRight className="w-3.5 h-3.5 text-theme-tertiary shrink-0" />
+            <CaretRight className="w-3 h-3 text-theme-tertiary shrink-0" />
 
             {/* Interactive Project Dropdown */}
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-theme-primary font-semibold hover:bg-surface-hover transition-colors cursor-pointer outline-none group"
+                  className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[5px] text-theme-primary font-medium hover:bg-surface-hover transition-colors cursor-pointer outline-none group"
                 >
                   <span className="truncate max-w-[160px] md:max-w-[220px]">
                     {project?.name || "Loading..."}
                   </span>
-                  <CaretUpDown className="w-3.5 h-3.5 text-theme-tertiary group-hover:text-theme-primary transition-transform duration-200" />
+                  <CaretUpDown className="w-3.5 h-3.5 text-theme-tertiary group-hover:text-theme-primary transition-transform duration-150" />
                 </button>
               </DropdownMenu.Trigger>
 
               <DropdownMenu.Portal>
                 <DropdownMenu.Content
-                  className="z-50 w-64 max-h-72 overflow-y-auto rounded-md bg-theme-elevated border border-theme-subtle p-1.5 shadow-xl animate-in fade-in duration-100"
+                  className="z-50 w-64 max-h-72 overflow-y-auto rounded-md bg-surface-l4 border border-theme-strong p-1 shadow-elevation-l4 animate-in fade-in duration-100"
                   sideOffset={4}
                   align="start"
                 >
-                  <div className="px-2 py-1 text-[11px] font-mono text-theme-tertiary uppercase tracking-wider">
+                  <div className="px-2 py-1 text-[10px] font-mono text-theme-tertiary uppercase tracking-wider">
                     Switch Project
                   </div>
                   {projects.map((p) => {
@@ -66,16 +66,16 @@ export function BoardHeader({
                       <DropdownMenu.Item
                         key={p.id}
                         onSelect={() => router.push(getProjectNavUrl(p.id))}
-                        className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md text-xs font-medium outline-none cursor-pointer transition-colors ${
+                        className={`flex items-center justify-between gap-2 px-2 py-1.5 rounded-[4px] text-[12px] font-medium outline-none cursor-pointer transition-colors ${
                           isSelected
-                            ? "bg-surface-hover text-theme-primary font-semibold"
+                            ? "bg-surface-hover text-theme-primary font-medium"
                             : "text-theme-secondary hover:text-theme-primary hover:bg-surface-hover"
                         }`}
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <span
-                            className="w-2 h-2 rounded-full shrink-0"
-                            style={{ backgroundColor: p.color || "#7F9CF5" }}
+                            className="w-1.5 h-1.5 rounded-full shrink-0"
+                            style={{ backgroundColor: p.color || "#5e6ad2" }}
                           />
                           <span className="truncate">{p.name}</span>
                         </div>
@@ -89,15 +89,15 @@ export function BoardHeader({
           </div>
 
           {/* Vertical Divider */}
-          <div className="hidden sm:block h-4 w-px bg-theme-subtle shrink-0" />
+          <div className="hidden sm:block h-3.5 w-px bg-theme-subtle shrink-0" />
 
           {/* Inline Navigation Sub-Route Tabs */}
-          <nav className="flex items-center gap-1 text-xs md:text-sm font-medium">
+          <nav className="flex items-center gap-1 text-[12px] font-medium">
             <button
               onClick={() => onTabChange("overview")}
-              className={`px-2.5 py-1 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer ${
+              className={`h-7 px-2.5 rounded-[5px] flex items-center gap-1.5 transition-colors cursor-pointer ${
                 activeTab === "overview"
-                  ? "bg-theme-elevated text-theme-primary font-semibold shadow-xs"
+                  ? "bg-surface-l2 text-theme-primary font-medium border border-theme-subtle shadow-xs"
                   : "text-theme-secondary hover:text-theme-primary hover:bg-surface-hover"
               }`}
             >
@@ -107,9 +107,9 @@ export function BoardHeader({
 
             <button
               onClick={() => onTabChange("board")}
-              className={`px-2.5 py-1 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer ${
+              className={`h-7 px-2.5 rounded-[5px] flex items-center gap-1.5 transition-colors cursor-pointer ${
                 activeTab === "board"
-                  ? "bg-theme-elevated text-theme-primary font-semibold shadow-xs"
+                  ? "bg-surface-l2 text-theme-primary font-medium border border-theme-subtle shadow-xs"
                   : "text-theme-secondary hover:text-theme-primary hover:bg-surface-hover"
               }`}
             >
@@ -119,9 +119,9 @@ export function BoardHeader({
 
             <button
               onClick={() => onTabChange("resources")}
-              className={`px-2.5 py-1 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer ${
+              className={`h-7 px-2.5 rounded-[5px] flex items-center gap-1.5 transition-colors cursor-pointer ${
                 activeTab === "resources"
-                  ? "bg-theme-elevated text-theme-primary font-semibold shadow-xs"
+                  ? "bg-surface-l2 text-theme-primary font-medium border border-theme-subtle shadow-xs"
                   : "text-theme-secondary hover:text-theme-primary hover:bg-surface-hover"
               }`}
             >
