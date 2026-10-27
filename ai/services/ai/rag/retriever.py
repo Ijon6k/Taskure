@@ -39,13 +39,22 @@ class Retriever:
         top_k: int = 5,
         similarity_threshold: float = 0.7,
     ) -> list[RetrievalResult]:
-        query_embedding = await self._provider.embed(query)
-        payload = await self._api.rag_search(
-            query_embedding=query_embedding,
-            project_id=project_id,
-            top_k=top_k,
-            similarity_threshold=similarity_threshold,
-        )
+        try:
+            query_embedding = await self._provider.embed(query)
+        except (NotImplementedError, Exception):
+            # If embedding fails (e.g. Anthropic without embedding model or network issue),
+            # gracefully return empty result without crashing context loader.
+            return []
+
+        try:
+            payload = await self._api.rag_search(
+                query_embedding=query_embedding,
+                project_id=project_id,
+                top_k=top_k,
+                similarity_threshold=similarity_threshold,
+            )
+        except Exception:
+            return []
 
         results: list[RetrievalResult] = []
         for r in payload.get("results", []):

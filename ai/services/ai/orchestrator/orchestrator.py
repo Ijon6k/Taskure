@@ -2,7 +2,10 @@ import asyncio
 import json
 from typing import Any, AsyncIterator
 
+from ..config import settings
 from ..providers import BaseProvider, ProviderConfig, build_provider
+from ..providers.anthropic import AnthropicProvider
+from ..providers.openai import OpenAIProvider
 from ..rag.retriever import Retriever
 from ..services.api_client import GoAPIClient
 from ..services.context_optimizer import ContextOptimizer, ContextSource
@@ -90,6 +93,10 @@ _AGENT_SYSTEM = (
     "project_get_board) to get real column IDs. Never invent UUIDs.\n"
     "3. When clearing the board is requested, use project_clear_board for atomic execution.\n"
     "4. Always summarize the executed changes clearly in Markdown after tool runs.\n\n"
+    "NOTEBOOK & DOCUMENTATION DIRECTIVES:\n"
+    "- When asked to write documentation, specs, architecture plans, guides, meeting notes, or retrospectives, use notebook_create or notebook_update.\n"
+    "- Format notebook content with comprehensive GitHub-flavored Markdown: headings (H1, H2, H3), bullet points, tables, code blocks with language tags, and checklists.\n"
+    "- Check existing pages with notebook_search first if modifying or referencing notes.\n\n"
     "WORLD-CLASS KANBAN PLANNING DIRECTIVES:\n"
     "- When asked to create, plan, or restructure a Kanban board, PREFER the kanban_generate_plan tool.\n"
     "- Use the high-efficiency Line-Based Compact DSL (plan_dsl) with COL:, TASK:, and SUB: lines.\n"
@@ -110,7 +117,9 @@ _AGENT_SYSTEM = (
     "  * low: Nice-to-haves, non-blocking docs, visual polish.\n"
     "- Write imperative, actionable, and concrete task titles (e.g. 'Implement JWT Refresh Rotation', not 'Auth').\n"
     "- Provide clear, concise descriptions covering technical scope and acceptance criteria for each task.\n"
-    "- Aim for a comprehensive, production-ready board with 12 to 24 well-scoped tasks in a single kanban_generate_plan call."
+    "- Aim for a comprehensive, production-ready board with 12 to 24 well-scoped tasks in a single kanban_generate_plan call.\n\n"
+    "AGENTIC LOOPING & SELF-CORRECTION:\n"
+    "- If a tool call fails or returns an error (e.g. invalid ID or missing parameter), inspect the error result and immediately self-correct in the next step by searching or adjusting arguments."
 )
 
 
@@ -171,6 +180,17 @@ class Orchestrator:
         except Exception as exc:
             yield self._sse("error", {"message": f"Provider error: {_safe_error_message(exc)}"})
             return
+
+        if self._retriever is None:
+            embed_provider = provider
+            if not hasattr(embed_provider, "embed") or isinstance(embed_provider, AnthropicProvider):
+                if settings.openai_api_key:
+                    embed_provider = OpenAIProvider(ProviderConfig(
+                        api_key=settings.openai_api_key,
+                        endpoint=settings.openai_endpoint or None,
+                        model=settings.openai_embedding_model,
+                    ))
+            self._retriever = Retriever(provider=embed_provider, api_client=self._get_api())
 
         optimizer = ContextOptimizer(
             model=provider.config.model, max_tokens=int(mconfig["token_budget"])
@@ -418,31 +438,42 @@ class Orchestrator:
                     "arguments": tc.arguments,
                     "round": _round + 1,
                 })
+
+            async def _execute_tc(tc):
                 try:
                     outcome = await api.execute_tool(tc.name, tc.arguments, project_id)
-                    status = "success"
+                    return tc, outcome, "success"
                 except Exception as exc:
-                    outcome = {"error": str(exc)}
-                    status = "error"
+                    return tc, {"error": str(exc)}, "error"
+
+            exec_results = await asyncio.gather(*[_execute_tc(tc) for tc in result.tool_calls])
+
+            for tc, outcome, status in exec_results:
                 yield self._sse("tool_result", {
                     "name": tc.name,
                     "status": status,
                     "result": outcome,
                 })
 
-                # Append assistant tool_call message + tool result for the next turn
-                messages.append({
-                    "role": "assistant",
-                    "content": None,
-                    "tool_calls": [{
+            # Append single assistant turn with ALL tool calls (OpenAI & Anthropic spec)
+            messages.append({
+                "role": "assistant",
+                "content": result.content or None,
+                "tool_calls": [
+                    {
                         "id": tc.id,
                         "type": "function",
                         "function": {
                             "name": tc.name,
                             "arguments": json.dumps(tc.arguments or {}, default=str),
                         },
-                    }],
-                })
+                    }
+                    for tc in result.tool_calls
+                ],
+            })
+
+            # Append tool responses for each call
+            for tc, outcome, _ in exec_results:
                 messages.append({
                     "role": "tool",
                     "tool_call_id": tc.id,

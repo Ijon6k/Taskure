@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { Toggle } from "@/components/ui/toggle";
 import { ModalContainer } from "@/components/ui/modal-container";
 import { ColorSwatchPicker } from "@/components/ui/color-swatch-picker";
+import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import { useQueryClient } from "@tanstack/react-query";
 import { invalidateFocusQueries } from "@/lib/api/queries/use-workspace";
 import { ConfirmDeleteProjectModal } from "./confirm-delete-project-modal";
@@ -153,13 +155,11 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
             </div>
           </div>
 
-          <button
-            type="button"
+          <IconButton
+            icon={X}
+            title="Close"
             onClick={onClose}
-            className="w-7 h-7 rounded-md text-theme-tertiary hover:text-theme-primary hover:bg-surface-l3 flex items-center justify-center transition-colors cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          />
         </div>
 
         {/* Form Body — Calm Editorial Layout */}
@@ -270,20 +270,22 @@ export function EditProjectModal({ isOpen, project, onClose, onSuccess }: EditPr
             </button>
 
             <div className="flex items-center gap-2">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="md"
                 onClick={onClose}
-                className="px-3.5 py-1.5 rounded-md text-[13px] font-medium text-theme-tertiary hover:text-theme-primary transition-colors cursor-pointer"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
+                variant="default"
+                size="md"
                 disabled={updateProjectMutation.isPending || !name.trim()}
-                className="px-4 py-2 bg-brand-accent hover:bg-brand-accent-hover text-white text-[13px] font-medium rounded-md transition-all shadow-xs active:scale-[0.98] disabled:opacity-40 cursor-pointer"
               >
                 {updateProjectMutation.isPending ? "Saving..." : "Save changes"}
-              </button>
+              </Button>
             </div>
           </div>
         </form>

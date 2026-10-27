@@ -82,6 +82,12 @@ class BaseProvider(ABC):
     async def embed(self, text: str, model: str | None = None) -> list[float]:
         ...
 
+    async def embed_batch(self, texts: list[str], model: str | None = None) -> list[list[float]]:
+        res = []
+        for t in texts:
+            res.append(await self.embed(t, model))
+        return res
+
     @abstractmethod
     async def test_connection(self) -> None:
         """Raise on failure — used by the provider test endpoint."""

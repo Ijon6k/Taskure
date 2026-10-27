@@ -423,7 +423,7 @@ func (s *taskService) GetFocusTask(projectID string, limit int, loc *time.Locati
 		return nil, err
 	}
 
-	projects, err := s.projectRepo.GetFocusProjects()
+	projects, err := s.projectRepo.GetFocusProjects(projectID)
 	if err != nil {
 		return nil, err
 	}

@@ -186,22 +186,29 @@ class AnthropicProvider(BaseProvider):
         )
 
     async def stream(self, messages: Messages, **kwargs) -> AsyncIterator[str]:
+        create_kwargs = self._build_kwargs(messages, kwargs)
+
+        stream_cm = None
+        stream = None
         async for attempt in AsyncRetrying(
             wait=wait_exponential_jitter(initial=1, max=60, jitter=2),
             stop=stop_after_attempt(5),
             retry=retry_if_exception(_is_retryable),
         ):
             with attempt:
-                async for chunk in self._stream_impl(messages, **kwargs):
-                    yield chunk
+                stream_cm = self._client.messages.stream(**create_kwargs)  # type: ignore[arg-type]
+                stream = await stream_cm.__aenter__()
+                break
 
-    async def _stream_impl(self, messages: Messages, **kwargs) -> AsyncIterator[str]:
-        create_kwargs = self._build_kwargs(messages, kwargs)
+        if stream is None or stream_cm is None:
+            return
 
-        async with self._client.messages.stream(**create_kwargs) as stream:  # type: ignore[arg-type]
+        try:
             async for event in stream:
                 if event.type == "content_block_delta" and event.delta.type == "text_delta":
                     yield event.delta.text
+        finally:
+            await stream_cm.__aexit__(None, None, None)
 
     async def embed(self, text: str, model: str | None = None) -> list[float]:
         raise NotImplementedError("Anthropic does not support embeddings")

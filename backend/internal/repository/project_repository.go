@@ -15,7 +15,7 @@ type ProjectRepository interface {
 	FindProject(idOrPublicID string) (*models.Project, error)
 	UpdateProject(project *models.Project, updates map[string]interface{}) error
 	DeleteProject(project *models.Project) error
-	GetFocusProjects() ([]models.Project, error)
+	GetFocusProjects(projectID ...string) ([]models.Project, error)
 	GetColumnTaskCounts(columnIDs []string) (map[string]int, error)
 	GetFocusOverview() (*FocusOverviewResult, error)
 	FindProjectLight(idOrPublicID string) (*models.Project, error)
@@ -165,11 +165,20 @@ func (r *projectRepository) DeleteProject(project *models.Project) error {
 
 // GetFocusProjects loads projects with their columns (column behaviors only),
 // without preloading every task row — used by the focus engine.
-func (r *projectRepository) GetFocusProjects() ([]models.Project, error) {
-	var projects []models.Project
-	err := r.db.Preload("Columns", func(db *gorm.DB) *gorm.DB {
+func (r *projectRepository) GetFocusProjects(projectID ...string) ([]models.Project, error) {
+	query := r.db.Preload("Columns", func(db *gorm.DB) *gorm.DB {
 		return db.Order("position asc")
-	}).Find(&projects).Error
+	})
+	if len(projectID) > 0 && projectID[0] != "" {
+		pid := projectID[0]
+		if util.IsUUID(pid) {
+			query = query.Where("id = ?", pid)
+		} else {
+			query = query.Where("public_id = ?", pid)
+		}
+	}
+	var projects []models.Project
+	err := query.Find(&projects).Error
 	return projects, err
 }
 

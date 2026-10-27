@@ -2,6 +2,8 @@
 
 import { X } from "lucide-react";
 import { ModalContainer } from "@/components/ui/modal-container";
+import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -32,13 +34,12 @@ export function ConfirmModal({
           <h2 className="text-base font-semibold text-theme-primary tracking-tight">
             {title}
           </h2>
-          <button
-            type="button"
+          <IconButton
+            icon={X}
+            title="Close"
             onClick={onClose}
-            className="w-6 h-6 rounded-md text-theme-tertiary hover:text-theme-primary hover:bg-theme-elevated flex items-center justify-center transition-colors cursor-pointer -mr-1 -mt-1"
-          >
-            <X className="w-4 h-4" />
-          </button>
+            className="-mr-1 -mt-1"
+          />
         </div>
 
         {/* Description */}
@@ -48,27 +49,25 @@ export function ConfirmModal({
 
         {/* Actions */}
         <div className="pt-2 flex items-center justify-end gap-2">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="md"
             onClick={onClose}
-            className="px-4 py-2 rounded-md text-[13px] font-medium text-theme-secondary hover:text-theme-primary hover:bg-theme-elevated transition-colors cursor-pointer"
           >
             {cancelLabel}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant={isDanger ? "danger" : "default"}
+            size="md"
             onClick={() => {
               onConfirm();
               onClose();
             }}
-            className={`px-4 py-2 rounded-md text-[13px] font-medium transition-all active:scale-[0.98] cursor-pointer shadow-xs ${
-              isDanger
-                ? "bg-red-500/90 hover:bg-red-500 text-white"
-                : "bg-brand-accent hover:opacity-90 text-black"
-            }`}
           >
             {confirmLabel}
-          </button>
+          </Button>
         </div>
       </div>
     </ModalContainer>

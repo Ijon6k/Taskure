@@ -3,10 +3,11 @@
 import React, { ButtonHTMLAttributes } from "react";
 
 export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string }> | React.ReactNode;
   variant?: "ghost" | "secondary" | "danger";
   size?: "sm" | "md";
   title?: string;
+  label?: string;
 }
 
 export function IconButton({
@@ -14,6 +15,7 @@ export function IconButton({
   variant = "ghost",
   size = "md",
   title,
+  label,
   className = "",
   disabled,
   ...props
@@ -37,14 +39,21 @@ export function IconButton({
     danger: "text-red-400 hover:text-red-300 hover:bg-red-500/10",
   };
 
+  const resolvedTitle = title || label;
+
   return (
     <button
-      title={title}
+      title={resolvedTitle}
+      aria-label={props["aria-label"] || resolvedTitle}
       disabled={disabled}
       className={`${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
       {...props}
     >
-      <Icon className={iconSizes[size]} />
+      {React.isValidElement(Icon) ? (
+        Icon
+      ) : typeof Icon === "function" ? (
+        <Icon className={iconSizes[size]} />
+      ) : null}
     </button>
   );
 }

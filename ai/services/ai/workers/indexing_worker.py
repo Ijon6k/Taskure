@@ -17,12 +17,18 @@ def _build_provider() -> OpenAIProvider:
 
 
 async def _index_content(content: str, project_id: str, context_type: str, source_id: str):
+    if not settings.openai_api_key:
+        return
     provider = _build_provider()
     chunks = chunk_text(content, chunk_size=settings.rag_chunk_size, overlap=settings.rag_chunk_overlap)
+    if not chunks:
+        return
+
+    texts = [c.content for c in chunks]
+    emb_vectors = await provider.embed_batch(texts)
 
     embeddings = []
-    for chunk in chunks:
-        emb = await provider.embed(chunk.content)
+    for chunk, emb in zip(chunks, emb_vectors):
         embeddings.append({
             "content": chunk.content,
             "embedding": emb,

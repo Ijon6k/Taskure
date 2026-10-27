@@ -9,6 +9,7 @@ import { createProjectSchema, CreateProjectSchema } from "@/lib/validations";
 import { ImportJsonModal } from "./import-json-modal";
 import { ModalContainer } from "@/components/ui/modal-container";
 import { ColorSwatchPicker } from "@/components/ui/color-swatch-picker";
+import { IconButton } from "@/components/ui/icon-button";
 import { toast } from "sonner";
 
 interface CreateProjectModalProps {
@@ -87,13 +88,11 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
               Start fresh or bring in a board from JSON.
             </p>
           </div>
-          <button
-            type="button"
+          <IconButton
+            icon={X}
+            title="Close"
             onClick={onClose}
-            className="w-8 h-8 rounded-full text-theme-tertiary hover:text-theme-primary hover:bg-surface-l4 flex items-center justify-center transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          />
         </div>
 
         {/* Form */}

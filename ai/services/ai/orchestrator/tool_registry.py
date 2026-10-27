@@ -85,7 +85,7 @@ class ToolRegistry:
         self._t("column_update", "Update a column name or color", ToolDomain.COLUMN, {"type": "object", "properties": {"column_id": {"type": "string"}, "name": {"type": "string"}, "color": {"type": "string", "description": "Hex color code e.g. #8B5CF6, #3B82F6, #10B981, #F59E0B, #EC4899, #06B6D4"}}}, ["column_id"], _WRITE_RISK)
         self._t("column_delete", "Delete a column", ToolDomain.COLUMN, {"type": "object", "properties": {"column_id": {"type": "string"}}}, ["column_id"], RiskLevel.CRITICAL)
 
-        self._t("notebook_search", "Search notebooks", ToolDomain.NOTEBOOK, q_obj, ["project_id", "query"], _READ_ONLY_RISK)
+        self._t("notebook_search", "Search notebooks or list all pages (empty query returns all)", ToolDomain.NOTEBOOK, q_obj, ["project_id"], _READ_ONLY_RISK)
         self._t("notebook_get", "Get a notebook", ToolDomain.NOTEBOOK, {"type": "object", "properties": {"notebook_id": {"type": "string"}}}, ["notebook_id"], _READ_ONLY_RISK)
         self._t("notebook_create", "Create a new notebook page with title and optional content", ToolDomain.NOTEBOOK, {"type": "object", "properties": {"project_id": {"type": "string"}, "title": {"type": "string"}, "content": {"type": "string"}}}, ["project_id", "title"], _WRITE_RISK)
         self._t("notebook_update", "Update a notebook page (title/content)", ToolDomain.NOTEBOOK, {"type": "object", "properties": {"notebook_id": {"type": "string"}, "title": {"type": "string"}, "content": {"type": "string"}}}, ["notebook_id"], _WRITE_RISK)

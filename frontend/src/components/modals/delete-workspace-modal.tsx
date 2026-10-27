@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { ModalContainer } from "@/components/ui/modal-container";
+import { Button } from "@/components/ui/button";
+import { FormInput } from "@/components/ui/form-input";
 
 interface DeleteWorkspaceModalProps {
   isOpen: boolean;
@@ -55,36 +57,36 @@ export function DeleteWorkspaceModal({
 
         {/* Verification Input Container */}
         <div className="space-y-2 p-3 bg-surface-l2 rounded-md border border-theme-subtle">
-          <label className="text-[11px] font-mono text-theme-tertiary uppercase tracking-wider block">
-            Type <span className="text-theme-primary font-semibold select-all font-mono">delete all my workspace</span>
-          </label>
-          <input
+          <FormInput
+            label="Type delete all my workspace to confirm"
             type="text"
             value={typedPhrase}
             onChange={(e) => setTypedPhrase(e.target.value)}
             placeholder="delete all my workspace"
-            className="w-full bg-surface-l3 border border-theme-subtle rounded-md px-3 py-1.5 text-[13px] font-mono text-theme-primary placeholder:text-theme-tertiary/40 outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all"
+            className="font-mono text-[13px]"
             autoFocus
           />
         </div>
 
         {/* Action Buttons */}
         <div className="flex items-center justify-end gap-2 pt-1">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="md"
             onClick={handleClose}
-            className="px-3 py-1.5 text-[13px] font-medium text-theme-secondary hover:text-theme-primary transition-colors cursor-pointer"
           >
             Cancel
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="submit"
+            variant="danger"
+            size="md"
             disabled={!isMatched || isDeleting}
-            className="px-3.5 py-1.5 bg-red-600 hover:bg-red-500 disabled:opacity-30 disabled:hover:bg-red-600 text-white font-medium text-[13px] rounded-md transition-all cursor-pointer disabled:cursor-not-allowed"
           >
             {isDeleting ? "Deleting..." : "Delete workspace"}
-          </button>
+          </Button>
         </div>
       </form>
     </ModalContainer>

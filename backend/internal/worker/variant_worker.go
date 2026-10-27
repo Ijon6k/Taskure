@@ -127,12 +127,14 @@ func (w *VariantWorker) Wait() {
 func (w *VariantWorker) run(ctx context.Context, id int) {
 	defer w.wg.Done()
 	currentInterval := pollInterval
+	timer := time.NewTimer(currentInterval)
+	defer timer.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-time.After(currentInterval):
+		case <-timer.C:
 			processed, err := w.processNextJob(ctx)
 			if err != nil {
 				w.logger.Error().Err(err).Msg("worker run error")
@@ -142,6 +144,7 @@ func (w *VariantWorker) run(ctx context.Context, id int) {
 			} else if currentInterval < 5*time.Second {
 				currentInterval += 500 * time.Millisecond
 			}
+			timer.Reset(currentInterval)
 		}
 	}
 }

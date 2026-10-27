@@ -97,20 +97,15 @@ class OpenAIProvider(BaseProvider):
         )
 
     async def stream(self, messages: Messages, **kwargs) -> AsyncIterator[str]:
-        async for attempt in AsyncRetrying(
-            wait=wait_exponential_jitter(initial=1, max=60, jitter=2),
-            stop=stop_after_attempt(5),
-            retry=retry_if_exception(_is_retryable),
-        ):
-            with attempt:
-                async for chunk in self._stream_impl(messages, **kwargs):
-                    yield chunk
-
-    async def _stream_impl(self, messages: Messages, **kwargs) -> AsyncIterator[str]:
         create_kwargs = self._build_kwargs(messages, kwargs)
-        stream = await self._client.chat.completions.create(
-            **create_kwargs, stream=True  # type: ignore[arg-type]
-        )
+
+        @_RETRY_DECORATOR
+        async def _open_stream():
+            return await self._client.chat.completions.create(
+                **create_kwargs, stream=True  # type: ignore[arg-type]
+            )
+
+        stream = await _open_stream()
         async for chunk in stream:
             if not chunk.choices:
                 continue
@@ -129,6 +124,20 @@ class OpenAIProvider(BaseProvider):
             input=text,
         )
         return response.data[0].embedding
+
+    async def embed_batch(self, texts: list[str], model: str | None = None) -> list[list[float]]:
+        if not texts:
+            return []
+        return await self._embed_batch_impl(texts, model)
+
+    @_RETRY_DECORATOR
+    async def _embed_batch_impl(self, texts: list[str], model: str | None = None) -> list[list[float]]:
+        embed_model = model or "text-embedding-3-small"
+        response = await self._client.embeddings.create(
+            model=embed_model,
+            input=texts,
+        )
+        return [item.embedding for item in response.data]
 
     async def test_connection(self) -> None:
         # models.list() validates key + endpoint with an unauthenticated-safe call.

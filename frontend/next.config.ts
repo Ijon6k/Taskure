@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
 
   // Tree-shake icon imports — reduces client bundle
   experimental: {
-    optimizePackageImports: ["lucide-react"],
+    optimizePackageImports: ["lucide-react", "@phosphor-icons/react"],
   },
 
   // Security headers added at Next.js level (complements Nginx)

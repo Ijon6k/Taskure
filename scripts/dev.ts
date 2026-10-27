@@ -407,39 +407,18 @@ function rebuildAll() {
 function resetAppData() {
   const engine = detectContainerEngine();
   print(`\n${YELLOW}Wiping app database & storage volumes using ${engine.name}...${RESET}`);
-  const fullArgs = [
-    ...engine.composeArgs,
-    "-f",
-    "compose.yaml",
-    "-f",
-    "compose.dev.yaml",
-    "--profile",
-    "*",
-    "down",
-    "-v",
-    "--remove-orphans",
-  ];
-  const res = spawnSync(engine.binary, fullArgs, { stdio: "inherit" });
-
-  if (res.status !== 0 && engine.binary !== "docker") {
-    print(`${YELLOW}Podman command failed, falling back to Docker Compose...${RESET}`);
-    spawnSync(
-      "docker",
-      [
-        "compose",
-        "-f",
-        "compose.yaml",
-        "-f",
-        "compose.dev.yaml",
-        "--profile",
-        "*",
-        "down",
-        "-v",
-        "--remove-orphans",
-      ],
-      { stdio: "inherit" }
-    );
-  }
+  // Stop dev stack
+  spawnSync(
+    engine.binary,
+    [...engine.composeArgs, "-f", "compose.dev.yaml", "--profile", "full", "down", "-v", "--remove-orphans"],
+    { stdio: "inherit" }
+  );
+  // Stop prod stack
+  spawnSync(
+    engine.binary,
+    [...engine.composeArgs, "-f", "compose.yaml", "down", "-v", "--remove-orphans"],
+    { stdio: "inherit" }
+  );
 
   print(`\n${GREEN}[OK] App database & volumes wiped successfully.${RESET}`);
   print(`${CYAN}Next start will launch with a fresh database & auto-migration.${RESET}\n`);
@@ -452,37 +431,18 @@ function cleanAllAndStop() {
 function stopContainers() {
   const engine = detectContainerEngine();
   print(`\n${YELLOW}Stopping development containers using ${engine.name}...${RESET}`);
-  const fullArgs = [
-    ...engine.composeArgs,
-    "-f",
-    "compose.yaml",
-    "-f",
-    "compose.dev.yaml",
-    "--profile",
-    "*",
-    "down",
-    "--remove-orphans",
-  ];
-  const res = spawnSync(engine.binary, fullArgs, { stdio: "inherit" });
-
-  if (res.status !== 0 && engine.binary !== "docker") {
-    print(`${YELLOW}Podman command failed, falling back to Docker Compose...${RESET}`);
-    spawnSync(
-      "docker",
-      [
-        "compose",
-        "-f",
-        "compose.yaml",
-        "-f",
-        "compose.dev.yaml",
-        "--profile",
-        "*",
-        "down",
-        "--remove-orphans",
-      ],
-      { stdio: "inherit" }
-    );
-  }
+  // Stop dev stack
+  spawnSync(
+    engine.binary,
+    [...engine.composeArgs, "-f", "compose.dev.yaml", "--profile", "full", "down", "--remove-orphans"],
+    { stdio: "inherit" }
+  );
+  // Stop prod stack
+  spawnSync(
+    engine.binary,
+    [...engine.composeArgs, "-f", "compose.yaml", "down", "--remove-orphans"],
+    { stdio: "inherit" }
+  );
 
   print(`${GREEN}Containers stopped successfully.${RESET}\n`);
 }
@@ -507,14 +467,12 @@ function runProdDockerCompose(args: string[]) {
 
 function runDockerCompose(args: string[]) {
   let engine = detectContainerEngine();
+  const profileArgs = args.includes("--profile") ? [] : ["--profile", "full"];
   let fullArgs = [
     ...engine.composeArgs,
     "-f",
-    "compose.yaml",
-    "-f",
     "compose.dev.yaml",
-    "--profile",
-    "*",
+    ...profileArgs,
     ...args,
   ];
   print(`\n${CYAN}Running (${engine.name}): ${engine.binary} ${fullArgs.join(" ")}${RESET}\n`);
@@ -525,11 +483,8 @@ function runDockerCompose(args: string[]) {
     const dockerArgs = [
       "compose",
       "-f",
-      "compose.yaml",
-      "-f",
       "compose.dev.yaml",
-      "--profile",
-      "*",
+      ...profileArgs,
       ...args,
     ];
     result = spawnSync("docker", dockerArgs, { stdio: "inherit" });
